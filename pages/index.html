@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#090b0c" />
+    <meta
+      name="description"
+      content="Deep Front. A world of strategy, solo campaigns, and multiplayer battles with friends. Built on OpenFront."
+    />
+    <title>Deep Front · Your next campaign</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./main.js" defer></script>
+  </head>
+  <body>
+    <div class="backdrop" aria-hidden="true"></div>
+    <header class="nav">
+      <a class="brand" href="./"
+        ><img src="./favicon.svg" alt="" width="38" height="38" /> DEEP<span
+          >FRONT</span
+        ></a
+      >
+      <nav aria-label="Main navigation">
+        <a href="#setup">Server setup</a
+        ><a
+          href="https://github.com/DeepInkGroup/deep-front"
+          target="_blank"
+          rel="noopener noreferrer"
+          >GitHub ↗</a
+        >
+      </nav>
+    </header>
+    <main>
+      <section class="hero" aria-labelledby="title">
+        <p class="eyebrow"><span class="dot"></span> YOUR NEXT CAMPAIGN</p>
+        <h1>A world of possibilities.<br /><span>Make your move.</span></h1>
+        <p class="intro">
+          Expand your borders. Build your strategy.<br class="mobile-break" />
+          Take the world.
+        </p>
+        <div class="actions">
+          <a
+            class="button primary"
+            id="play-button"
+            href="https://render.com/deploy?repo=https://github.com/DeepInkGroup/deep-front"
+            >Deploy multiplayer <span>↗</span></a
+          ><a class="button secondary" href="#setup"
+            >Set up your server <span>↓</span></a
+          >
+        </div>
+        <p class="status" id="server-status">
+          <span class="dot muted"></span> Connect a Render server to start
+          playing online.
+        </p>
+      </section>
+      <section class="modes" aria-label="Game modes">
+        <article class="mode">
+          <span class="number">01</span
+          ><span class="eyebrow">YOU VS. THE WORLD</span>
+          <h2>Solo</h2>
+          <p>
+            Choose a map and face AI opponents at your own pace. Your campaign
+            runs in the browser.
+          </p>
+          <span class="tag">Custom maps & difficulty</span>
+        </article>
+        <article class="mode">
+          <span class="number">02</span
+          ><span class="eyebrow">A SHARED BATTLEFIELD</span>
+          <h2>Multiplayer</h2>
+          <p>
+            Host a custom lobby, send the invite to your friends, and compete on
+            the same game server.
+          </p>
+          <span class="tag">Online & LAN</span>
+        </article>
+      </section>
+      <section class="launch panel" aria-labelledby="launch-title">
+        <div>
+          <p class="eyebrow">ALREADY DEPLOYED?</p>
+          <h2 id="launch-title">Open your battlefield.</h2>
+          <p>Paste the HTTPS address Render gave your service.</p>
+        </div>
+        <form id="server-form">
+          <label for="server-url">Your Render game URL</label>
+          <div class="input-row">
+            <input
+              id="server-url"
+              name="server"
+              type="url"
+              placeholder="https://your-game.onrender.com"
+              required
+              autocomplete="url"
+            /><button class="button primary" type="submit">Open game ↗</button>
+          </div>
+          <p id="form-message" role="status" class="form-message">
+            Your address is saved only in this browser.
+          </p>
+        </form>
+      </section>
+      <section class="setup" id="setup" aria-labelledby="setup-title">
+        <div class="section-heading">
+          <p class="eyebrow">FROM REPOSITORY TO BATTLEFIELD</p>
+          <h2 id="setup-title">Your server. Step by step.</h2>
+          <p>
+            This GitHub page introduces the game. Render runs the full game and
+            its multiplayer server.
+          </p>
+        </div>
+        <ol class="steps">
+          <li>
+            <div>
+              <h3>Sign in to Render</h3>
+              <p>
+                Open
+                <a
+                  href="https://dashboard.render.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Render’s dashboard</a
+                >
+                and sign in with GitHub. Allow Render access to
+                <code>DeepInkGroup/deep-front</code>.
+              </p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <h3>Create a Blueprint</h3>
+              <p>
+                Choose <strong>New → Blueprint</strong>. Connect
+                <code>DeepInkGroup/deep-front</code>, select branch
+                <code>main</code>, name it <code>deep-front</code>, and keep the
+                Blueprint path <code>render.yaml</code>.
+              </p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <h3>Review and deploy</h3>
+              <p>
+                Confirm one <strong>Node web service</strong>, the
+                <strong>Free</strong> plan, and <strong>Frankfurt</strong>. The
+                repository supplies the build command, start command,
+                environment variables, and health check. Click
+                <strong>Deploy Blueprint</strong>.
+              </p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <h3>Wait for Live</h3>
+              <p>
+                Open the service to follow its build logs. Once the status is
+                <strong>Live</strong>, copy the HTTPS
+                <code>onrender.com</code> URL shown on its page. Render chooses
+                the final hostname.
+              </p>
+            </div>
+          </li>
+          <li>
+            <div>
+              <h3>Invite your friends</h3>
+              <p>
+                Open that URL, choose <strong>Host a game</strong>, and share
+                the lobby invite. Your friends join the same server. Start the
+                match once everyone is ready.
+              </p>
+            </div>
+          </li>
+        </ol>
+        <div class="hosting-note">
+          <span aria-hidden="true">ⓘ</span>
+          <p>
+            The free service sleeps after 15 minutes without traffic and can
+            take about a minute to wake. Restarting or deploying ends active
+            matches.
+            <a
+              href="https://render.com/docs/free"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Free hosting details ↗</a
+            >
+          </p>
+        </div>
+        <a
+          class="text-link"
+          href="https://github.com/DeepInkGroup/deep-front/blob/main/docs/Hosting.md"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Full hosting guide & manual configuration →</a
+        >
+      </section>
+    </main>
+    <footer>
+      <span
+        >© OpenFront and Contributors <span class="separator">/</span> Deep
+        Front</span
+      ><span
+        ><a
+          href="https://github.com/DeepInkGroup/deep-front"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Source · AGPL-3.0</a
+        ><span class="separator">·</span
+        ><a
+          href="https://github.com/openfrontio/OpenFrontIO"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Original project ↗</a
+        ></span
+      >
+    </footer>
+  </body>
+</html>

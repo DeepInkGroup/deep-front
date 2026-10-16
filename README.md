@@ -4,6 +4,8 @@
 
 [GitHub repository](https://github.com/DeepInkGroup/deep-front) · [Multiplayer hosting guide](docs/Hosting.md)
 
+**Project page:** https://deepinkgroup.github.io/deep-front/
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="proprietary/images/OpenFrontLogoDark.svg">
