@@ -243,7 +243,7 @@ export async function startMaster() {
   });
 
   const PORT = 3000;
-  server.listen(PORT, () => {
+  server.listen(PORT, ServerEnv.standalone() ? "127.0.0.1" : undefined, () => {
     log.info(`Master HTTP server listening on port ${PORT}`);
   });
 

@@ -13,6 +13,7 @@ import { ServerEnv } from "./ServerEnv";
 const log = logger.child({ component: "Archive" });
 
 export async function archive(gameRecord: GameRecord) {
+  if (ServerEnv.standalone()) return;
   try {
     const parsed = GameRecordSchema.safeParse(gameRecord);
     if (!parsed.success) {

@@ -1,0 +1,22 @@
+# Free shared multiplayer service. Keep one instance: matches live in memory.
+services:
+  - type: web
+    name: deep-front
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    numInstances: 1
+    buildCommand: npx --yes npm@12.1.0 run inst -- --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: NODE_VERSION
+        value: 24.21.0
+      - key: NODE_ENV
+        value: production
+      - key: NUM_WORKERS
+        value: "1"
+      - key: BIND_HOST
+        value: 0.0.0.0

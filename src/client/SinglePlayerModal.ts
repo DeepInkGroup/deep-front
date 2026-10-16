@@ -288,6 +288,7 @@ export class SinglePlayerModal extends BaseModal {
   };
 
   private renderNotLoggedInBanner(): TemplateResult {
+    return html``;
     if (gamePortal.isOnGamePortal()) {
       return html``;
     }

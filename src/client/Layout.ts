@@ -13,7 +13,6 @@ export function initLayout() {
     }
 
     if (!hb) {
-      console.error("Hamburger button not found");
       return;
     }
 

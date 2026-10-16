@@ -1,3 +1,4 @@
+import { standalone } from "./Standalone";
 import {
   isGrantedSubscription,
   UserMeResponse,
@@ -877,6 +878,7 @@ export function cosmeticsJsonUrl(): string {
 }
 
 export async function fetchCosmetics(): Promise<Cosmetics | null> {
+  if (standalone) return null;
   if (__cosmetics !== null) {
     return __cosmetics;
   }

@@ -149,6 +149,7 @@ export class WinModal extends LitElement implements Controller {
         </h2>
         <div class="min-h-0 flex-1 overflow-y-auto pr-0.5">
           <game-xp-panel
+            hidden
             .view=${this.xpView}
             .onScreen=${this.isVisible}
             @xp-reveal-settled=${(e: CustomEvent<GameXpPanelState>) =>
@@ -404,6 +405,7 @@ export class WinModal extends LitElement implements Controller {
   }
 
   innerHtml() {
+    return html``;
     // The Steam desktop build has nothing to wishlist — fall through to the
     // other promos so the box is never empty.
     const canWishlist = !steamSDK.isOnSteam();

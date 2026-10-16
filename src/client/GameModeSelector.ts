@@ -1,4 +1,5 @@
 import { GameMapType, GameType } from "@openfront/engine-api/game/GameTypes";
+import { assetUrl } from "@openfront/shared/AssetUrls";
 import { UserMeResponse } from "@openfront/shared/ApiSchemas";
 import { PublicGameInfo, PublicGames } from "@openfront/shared/WireSchemas";
 import { html, LitElement, nothing, type TemplateResult } from "lit";
@@ -648,135 +649,91 @@ export class GameModeSelector extends LitElement {
   }
 
   render() {
-    const ffa = this.lobbies?.games?.["ffa"]?.[0];
-    const teams = this.lobbies?.games?.["team"]?.[0];
-    const special = this.lobbies?.games?.["special"]?.[0];
-    // The hero slot holds the spinner, then the FFA card; loaded without one
-    // it goes and the upcoming column takes the whole row.
-    const heroSlot = this.lobbies === null || ffa !== undefined;
-    // A lone secondary card takes both of the column's card rows.
-    const cardRows =
-      teams && special
-        ? { special: "sm:row-start-2", teams: "sm:row-start-3" }
-        : {
-            special: "sm:row-start-2 sm:row-span-2",
-            teams: "sm:row-start-2 sm:row-span-2",
-          };
-
-    // DOM is in phone order; sm+ places the same elements onto a grid and
-    // reading-flow keeps focus order following the rows (Chromium only).
-    return html`
-      <div
-        class="flex flex-col gap-4 w-full px-4 pb-4 mx-auto sm:px-0 sm:pb-0 sm:grid sm:grid-cols-[2fr_1fr] sm:grid-rows-[auto_min(24rem,40vh)_auto_auto] desktop:sm:grid-rows-[auto_40vh_auto_auto] sm:[reading-flow:grid-rows]"
-      >
-        <ios-add-to-home-screen-banner
-          class="no-game-portal [&:empty]:hidden sm:col-span-2 sm:row-start-1"
-        ></ios-add-to-home-screen-banner>
-
-        <div class="flex gap-4 h-14 sm:col-span-2 sm:row-start-3">
-          <div class="flex-[2]">
-            ${this.renderSmallActionCard(
-              translateText("main.solo"),
-              this.openSinglePlayerModal,
-              PRIMARY_ACTION,
-            )}
+    const games = Object.values(this.lobbies?.games ?? {})
+      .map((g) => g.find((lobby) => !lobby.gameConfig?.trusted))
+      .filter((g): g is PublicGameInfo => g !== undefined);
+    return html` <div class="front-modes">
+        <article class="mode-card solo-card">
+          <div class="mode-art">
+            <img
+              src=${assetUrl("maps/world/thumbnail.webp")}
+              alt="World map"
+            /><span class="map-label">THE WORLD IS YOURS</span
+            ><span class="map-coordinate">38° N / 15° E</span>
           </div>
-          ${getGamesPlayed() < TUTORIAL_CARD_MAX_GAMES
-            ? html`<div class="flex-1">
-                ${this.renderSmallActionCard(
-                  translateText("main.tutorial"),
-                  this.startTutorial,
-                  TUTORIAL_ACTION,
-                )}
-              </div>`
-            : nothing}
-        </div>
-        <div class="grid grid-cols-3 gap-4 h-14 sm:col-span-2 sm:row-start-4">
-          ${this.renderSmallActionCard(
-            translateText("main.create"),
-            this.openHostLobby,
-            SECONDARY_ACTION,
-            undefined,
-            true,
-          )}
-          ${this.renderSmallActionCard(
-            translateText("mode_selector.ranked_title"),
-            this.openRankedMenu,
-            SECONDARY_ACTION,
-            undefined,
-            true,
-            // Ranked admits trusted accounts only. A trusted viewer gets the
-            // green open lock; anyone else meets the red locks and the trust
-            // popup inside the ranked modal. Small, so it clears the label on
-            // narrow (mobile) buttons.
-            this.viewerTrusted
-              ? trustLockIcon(true, {
-                  tooltipTitle: translateText(
-                    "mode_selector.ranked_trust_tooltip_title",
-                  ),
-                  position: "top-1 right-1",
-                  small: true,
-                })
-              : nothing,
-          )}
-          ${this.renderSmallActionCard(
-            translateText("main.join"),
-            this.openJoinLobby,
-            SECONDARY_ACTION,
-            this.hostedLobbyCount(),
-            true,
-          )}
-        </div>
-
-        ${heroSlot
-          ? html`<div class="min-w-0 sm:col-start-1 sm:row-start-2">
-              ${ffa
-                ? this.renderLobbyCard(ffa, getGameModeLabel(ffa.gameConfig!))
-                : this.offlineForLobbies()
-                  ? this.renderLobbiesUnavailable()
-                  : html`<div
-                      class="flex items-center justify-center h-44 sm:h-full"
-                    >
-                      <span
-                        class="size-24 rounded-full border-[6px] border-blue-500/30 border-t-blue-500 animate-spin"
-                      ></span>
-                    </div>`}
-            </div>`
-          : nothing}
-
-        <!-- Always rendered: the heading is the only way into the lobby browser. -->
-        <section
-          class="flex flex-col gap-4 min-w-0 sm:grid sm:grid-rows-[auto_1fr_1fr] sm:row-start-2 sm:min-h-0 sm:[reading-flow:grid-rows] ${heroSlot
-            ? "sm:col-start-2"
-            : "sm:col-start-1 sm:col-span-2"}"
-        >
-          ${teams
-            ? html`<div class="min-w-0 sm:min-h-0 ${cardRows.teams}">
-                ${this.renderLobbyCard(
-                  teams,
-                  getGameModeLabel(teams.gameConfig!),
-                )}
-              </div>`
-            : nothing}
-          ${special
-            ? html`<div class="min-w-0 sm:min-h-0 ${cardRows.special}">
-                ${this.renderLobbyCard(
-                  special,
-                  getGameModeLabel(special.gameConfig!),
-                )}
-              </div>`
-            : nothing}
-          ${this.renderUpcomingHeading()}
-        </section>
-
-        ${this.showTrustRequired
-          ? trustRequiredDialog(
-              this.viewerSignedIn,
-              () => (this.showTrustRequired = false),
-            )
-          : nothing}
+          <div class="mode-body">
+            <span class="eyebrow">YOU VS. THE WORLD</span>
+            <div class="mode-title">
+              <h2>Solo</h2>
+              <span class="mode-number">01</span>
+            </div>
+            <p>
+              Master the map at your own pace. Choose your battlefield and take
+              on AI opponents.
+            </p>
+            <button class="front-primary" @click=${this.openSinglePlayerModal}>
+              Play solo <span aria-hidden="true">↗</span></button
+            ><span class="mode-note"
+              ><span class="small-dot"></span> Local play · Custom maps &
+              difficulty</span
+            >
+          </div>
+        </article>
+        <article class="mode-card multiplayer-card">
+          <div class="multiplayer-visual" aria-hidden="true">
+            <span class="orbit orbit-one"></span
+            ><span class="orbit orbit-two"></span
+            ><span class="player-node node-one">A</span
+            ><span class="player-node node-two">B</span
+            ><span class="player-node node-three">C</span
+            ><span class="multiplayer-symbol">◈</span
+            ><span class="visual-label"
+              >BETTER TOGETHER. BETTER AS RIVALS.</span
+            >
+          </div>
+          <div class="mode-body">
+            <span class="eyebrow">A SHARED BATTLEFIELD</span>
+            <div class="mode-title">
+              <h2>Multiplayer</h2>
+              <span class="mode-number">02</span>
+            </div>
+            <p>
+              Bring your friends. Host a custom game or join a lobby on this
+              server.
+            </p>
+            <div class="multiplayer-buttons">
+              <button class="front-primary" @click=${this.openHostLobby}>
+                Host a game <span aria-hidden="true">+</span></button
+              ><button class="front-secondary" @click=${this.openJoinLobby}>
+                Join game <span aria-hidden="true">↗</span>
+              </button>
+            </div>
+            <span class="mode-note"
+              ><span class="small-dot"></span> Online & LAN · Share an invite
+              link</span
+            >
+          </div>
+        </article>
       </div>
-    `;
+      <section class="server-lobbies">
+        <div class="lobby-section-heading">
+          <h2><span class="status-dot"></span> On this server</h2>
+          <button class="text-button" @click=${this.openJoinLobby}>
+            Join with a code →
+          </button>
+        </div>
+        ${games.length
+          ? html`<div class="public-lobby-grid">
+              ${games.map((g) =>
+                this.renderLobbyCard(g, getGameModeLabel(g.gameConfig!)),
+              )}
+            </div>`
+          : html`<p class="lobby-empty">
+              ${this.offlineForLobbies()
+                ? "Server connection unavailable. You can still play solo."
+                : "Host a game to start a match with friends, or wait for the next public lobby."}
+            </p>`}
+      </section>`;
   }
 
   /**

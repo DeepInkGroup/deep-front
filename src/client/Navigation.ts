@@ -16,6 +16,18 @@ export function closeMobileSidebar() {
 
 export function initNavigation() {
   const showPage = (pageId: string) => {
+    const allowed = new Set([
+      "page-play",
+      "page-single-player",
+      "page-host-lobby",
+      "page-join-lobby",
+      "page-settings",
+      "page-help",
+      "page-language",
+      "page-troubleshooting",
+      "page-detailed-view",
+    ]);
+    if (!allowed.has(pageId)) pageId = "page-play";
     window.currentPageId = pageId;
 
     // Close mobile sidebar if a nav item was clicked

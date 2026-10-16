@@ -1,5 +1,8 @@
 build/
 node_modules
+.tmp/
+artifacts/
+test-results/
 .worktrees/
 out/
 static/

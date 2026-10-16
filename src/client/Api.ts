@@ -1,3 +1,4 @@
+import { standalone } from "./Standalone";
 import type { NewsItem, StreamsFeed } from "@openfront/shared/ApiSchemas";
 import {
   ClaimAllRewardsResponse,
@@ -283,6 +284,7 @@ async function requestUserMe(): Promise<{
 }
 
 export async function getUserMe(): Promise<UserMeResponse | false> {
+  if (standalone) return false;
   if (__userMe !== null) {
     return __userMe;
   }

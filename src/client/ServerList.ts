@@ -1,3 +1,4 @@
+import { standalone } from "./Standalone";
 import { GameID } from "@openfront/engine-api/Schemas";
 import {
   commitsMatch,
@@ -410,6 +411,7 @@ function warnMalformedOnce(detail: unknown): void {
  * attempt leaves `cached` alone — the last good list keeps serving.
  */
 function fetchOnce(): Promise<ServerList | null> {
+  if (standalone) return Promise.resolve(null);
   if (inflight !== null) return inflight;
   const site = safeSite();
   if (site === undefined) return Promise.resolve(null);
@@ -438,6 +440,7 @@ function fetchOnce(): Promise<ServerList | null> {
  * rather than to a live server.
  */
 export function startServerListPolling(): void {
+  if (standalone) return;
   if (polling) return;
   try {
     if (safeSite() === undefined) return;
@@ -554,6 +557,7 @@ export function setServerListInGame(value: boolean): void {
  * still routes.
  */
 export async function ensureServerList(): Promise<ServerListStatus> {
+  if (standalone) return "fallback";
   try {
     if (cached === null) {
       // Join the attempt in flight (the page-load one, usually); otherwise

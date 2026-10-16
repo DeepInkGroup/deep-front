@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1200" viewBox="0 0 1800 1200" fill="none">
+  <defs>
+    <pattern id="grid" width="88" height="88" patternUnits="userSpaceOnUse"><path d="M88 0H0v88" stroke="#b2c4bd" stroke-opacity=".05"/></pattern>
+    <radialGradient id="glow"><stop stop-color="#7ba38c" stop-opacity=".13"/><stop offset="1" stop-color="#080a09" stop-opacity="0"/></radialGradient>
+  </defs>
+  <path fill="url(#grid)" d="M0 0h1800v1200H0z"/>
+  <ellipse cx="900" cy="300" rx="900" ry="650" fill="url(#glow)"/>
+  <g stroke="#a2b7ab" stroke-opacity=".08" stroke-width="1">
+    <path d="M-100 420c170-270 330-190 390-30s210 260 360 110 90-340 300-330 290 270 420 250 270-140 460-40"/>
+    <path d="M-100 450c170-270 330-190 390-30s210 260 360 110 90-340 300-330 290 270 420 250 270-140 460-40"/>
+    <path d="M-100 480c170-270 330-190 390-30s210 260 360 110 90-340 300-330 290 270 420 250 270-140 460-40"/>
+    <path d="M-100 510c170-270 330-190 390-30s210 260 360 110 90-340 300-330 290 270 420 250 270-140 460-40"/>
+    <path d="M-100 540c170-270 330-190 390-30s210 260 360 110 90-340 300-330 290 270 420 250 270-140 460-40"/>
+    <path d="M-100 570c170-270 330-190 390-30s210 260 360 110 90-340 300-330 290 270 420 250 270-140 460-40"/>
+    <circle cx="1510" cy="220" r="110"/><circle cx="1510" cy="220" r="145"/><circle cx="1510" cy="220" r="180"/>
+    <path d="M1510 15v410m-205-205h410M180 790v50m-25-25h50M1620 880v50m-25-25h50"/>
+  </g>
+</svg>

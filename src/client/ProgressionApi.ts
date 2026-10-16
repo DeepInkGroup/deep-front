@@ -1,3 +1,4 @@
+import { standalone } from "./Standalone";
 import {
   type GameXpResponse,
   GameXpResponseSchema,
@@ -220,6 +221,7 @@ let progressionConfig: {
 // on at all (404 when it is off). Memoised for as long as the server says it
 // stays fresh; a failure is not, so a later caller can try again.
 export function fetchProgressionConfig(): Promise<ProgressionConfig | false> {
+  if (standalone) return Promise.resolve(false);
   if (
     progressionConfig !== null &&
     Date.now() - progressionConfig.at < PROGRESSION_CONFIG_TTL_MS

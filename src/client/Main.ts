@@ -1,3 +1,4 @@
+import { standalone } from "./Standalone";
 import { GAME_ID_REGEX } from "@openfront/engine-api/Schemas";
 import {
   isRewardClaimable,
@@ -461,39 +462,14 @@ class Client {
     // Register modals with the URL router. Lobby modals (join/host) and
     // matchmaking are intentionally omitted — they own their own URL state
     // (path-based) or none at all.
-    modalRouter.register("store", {
-      tag: "store-modal",
-      pageId: "page-item-store",
-    });
     modalRouter.register("settings", {
       tag: "user-setting",
       pageId: "page-settings",
     });
-    modalRouter.register("leaderboard", {
-      tag: "leaderboard-modal",
-      pageId: "page-leaderboard",
-    });
-    modalRouter.register("clan", { tag: "clan-modal", pageId: "page-clan" });
-    modalRouter.register("account", {
-      tag: "account-modal",
-      pageId: "page-account",
-    });
     // Profile-menu modals: popup style, so no pageId.
-    modalRouter.register("account-settings", { tag: "account-settings-modal" });
-    modalRouter.register("change-username", { tag: "change-username-modal" });
-    modalRouter.register("subscription", { tag: "subscription-modal" });
-    modalRouter.register("stats", {
-      tag: "game-stats-modal",
-      pageId: "page-stats",
-    });
-    modalRouter.register("profile", {
-      tag: "player-profile-modal",
-      pageId: "page-profile",
-    });
     // The canonical profile link, `/player/<id>` (see playerProfileUrl).
-    modalRouter.registerPath("profile", playerProfileRouteArgs);
+
     modalRouter.register("help", { tag: "help-modal", pageId: "page-help" });
-    modalRouter.register("news", { tag: "news-modal", pageId: "page-news" });
     modalRouter.register("language", {
       tag: "language-modal",
       pageId: "page-language",
@@ -502,10 +478,6 @@ class Client {
       tag: "single-player-modal",
       pageId: "page-single-player",
     });
-    modalRouter.register("ranked", {
-      tag: "ranked-modal",
-      pageId: "page-ranked",
-    });
     modalRouter.register("detailed-view", {
       tag: "detailed-view-modal",
       pageId: "page-detailed-view",
@@ -513,10 +485,6 @@ class Client {
     modalRouter.register("troubleshooting", {
       tag: "troubleshooting-modal",
       pageId: "page-troubleshooting",
-    });
-    modalRouter.register("inventory", {
-      tag: "inventory-modal",
-      pageId: "page-inventory",
     });
 
     // Kick the server-list fetch off here, before anything below awaits the
@@ -534,7 +502,9 @@ class Client {
     // so rendering the widget there just fails — and replays never
     // send a token anyway (see getTurnstileToken below).
     const turnstilePrefetch =
-      isDesktopShell() || isReplayShellHost(window.location.hostname)
+      standalone ||
+      isDesktopShell() ||
+      isReplayShellHost(window.location.hostname)
         ? null
         : getTurnstileToken();
     // A prefetch that fails is not an error anyone has asked about yet: the
@@ -757,7 +727,10 @@ class Client {
       const isAdFree =
         userMeResponse !== false && userMeResponse.player?.adfree === true;
       window.adsEnabled =
-        !isAdFree && !gamePortal.isOnGamePortal() && !isDesktopShell();
+        !standalone &&
+        !isAdFree &&
+        !gamePortal.isOnGamePortal() &&
+        !isDesktopShell();
       // Ad-eligible users only: paid/adfree users must never load Admiral (its
       // adblock popup fires autonomously once the payload runs). Start watching
       // adblock state; once a blocker is ever detected the in-game ad is
@@ -2204,6 +2177,7 @@ class Client {
   private async getTurnstileToken(
     lobby: JoinLobbyEvent,
   ): Promise<string | null> {
+    if (standalone) return null;
     if (
       ClientEnv.env() === GameEnv.Dev ||
       isDesktopShell() ||
@@ -2308,3 +2282,5 @@ async function getTurnstileToken(): Promise<TurnstileToken> {
     container: "#turnstile-container",
   });
 }
+
+import "./standalone.css";

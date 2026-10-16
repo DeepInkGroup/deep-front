@@ -55,6 +55,8 @@ export function whenModalLoaded(tag: string, open: () => void): void {
 export function prefetchModals(): void {
   // A failed prefetch is left to the open that needs the chunk.
   whenPageIdle(() => {
-    for (const load of Object.values(modules)) void load().catch(() => {});
+    for (const tag of ["single-player-modal", "host-lobby-modal", "join-lobby-modal", "user-setting", "help-modal"]) {
+      void modules[tag]().catch(() => {});
+    }
   });
 }

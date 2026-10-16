@@ -1,3 +1,4 @@
+import { standalone } from "./Standalone";
 import { TokenPayload, TokenPayloadSchema } from "@openfront/shared/ApiSchemas";
 import { base64urlToUuid } from "@openfront/shared/Base64";
 import { decodeJwt } from "jose";
@@ -393,6 +394,7 @@ export function isSessionActive(sub: string): boolean {
 export async function userAuth(
   shouldRefresh: boolean = true,
 ): Promise<UserAuth> {
+  if (standalone) return false;
   try {
     const jwt = __jwt;
     if (!jwt) {

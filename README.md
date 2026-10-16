@@ -1,3 +1,9 @@
+> **Deep Front standalone edition:** for local play and self-hosting, see [README-LOCAL.md](README-LOCAL.md). This fork uses a black interface with solo and anonymous multiplayer.
+
+[![Deploy multiplayer on Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/DeepInkGroup/deep-front)
+
+[GitHub repository](https://github.com/DeepInkGroup/deep-front) · [Multiplayer hosting guide](docs/Hosting.md)
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="proprietary/images/OpenFrontLogoDark.svg">

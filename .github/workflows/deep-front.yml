@@ -1,0 +1,31 @@
+name: Deep Front
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: deep-front-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - name: Install locked dependencies without lifecycle scripts
+        run: npx --yes npm@12.1.0 run inst -- --include=dev
+      - run: npm run typecheck
+      - name: Multiplayer server regression tests
+        run: npx vitest run tests/server/Standalone.test.ts tests/server/MapPlaylistTrusted.test.ts tests/server/PrivateLobbyCap.test.ts tests/server/WorkerLobbyServiceClients.test.ts tests/core/ClusterConfig.test.ts
+      - run: npm run build
+      - name: Production dependency security check
+        run: npx --yes npm@12.1.0 audit --omit=dev --audit-level=high

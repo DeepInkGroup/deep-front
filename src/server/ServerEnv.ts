@@ -33,6 +33,9 @@ export class ServerEnv {
   // read from different sources (process.env vs window.BOOTSTRAP_CONFIG) but
   // the derived logic is identical. Consolidate into a shared helper that
   // takes a source so we don't have to keep them in sync by hand.
+  static standalone(): boolean {
+    return process.env.STANDALONE === "true";
+  }
   static env(): GameEnv {
     return ServerEnv.gameEnv;
   }
