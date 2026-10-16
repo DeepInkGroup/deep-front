@@ -565,9 +565,10 @@ describe("Attack immunity", () => {
     expect(playerA.outgoingAttacks()).toHaveLength(1);
   });
 
-  test("Can't send nuke during immunity phase", async () => {
+  test("Can't nuke another human during immunity phase", async () => {
     constructionExecution(game, playerA, 7, 0, UnitType.MissileSilo);
     expect(playerA.units(UnitType.MissileSilo)).toHaveLength(1);
+    playerB.conquer(game.ref(0, 11));
     // Player A sends a bomb to player B
     constructionExecution(game, playerA, 0, 11, UnitType.AtomBomb, 3);
     expect(playerA.units(UnitType.AtomBomb)).toHaveLength(0);

@@ -3,6 +3,7 @@ import { EventBus, GameEvent } from "@openfront/shared/EventBus";
 import { LitElement, html } from "lit";
 import { customElement } from "lit/decorators.js";
 import { Controller } from "../../Controller";
+import { renderDuration, translateText } from "../../Utils";
 import { GameView } from "../../view";
 
 export class ImmunityBarVisibleEvent implements GameEvent {
@@ -18,6 +19,7 @@ export class ImmunityTimer extends LitElement implements Controller {
   private _barVisible = false;
   private isActive = false;
   private progressRatio = 0;
+  private remainingSeconds = 0;
 
   createRenderRoot() {
     this.style.position = "fixed";
@@ -46,28 +48,22 @@ export class ImmunityTimer extends LitElement implements Controller {
     this.style.top = showTeamOwnershipBar ? "7px" : "0px";
 
     const immunityDuration = this.game.config().spawnImmunityDuration();
-    const spawnPhaseTurns = this.game.config().numSpawnPhaseTurns();
+    const elapsedSeconds = this.game.elapsedGameSeconds();
 
     if (
       !this.game.config().hasExtendedSpawnImmunity() ||
-      this.game.inSpawnPhase()
+      this.game.inSpawnPhase() ||
+      elapsedSeconds >= immunityDuration / 10
     ) {
       this.setInactive();
     } else {
-      const immunityEnd = spawnPhaseTurns + immunityDuration;
-      const ticks = this.game.ticks();
-
-      if (ticks >= immunityEnd || ticks < spawnPhaseTurns) {
-        this.setInactive();
-      } else {
-        const elapsedTicks = Math.max(0, ticks - spawnPhaseTurns);
-        this.progressRatio = Math.min(
-          1,
-          Math.max(0, elapsedTicks / immunityDuration),
-        );
-        this.isActive = true;
-        this.requestUpdate();
-      }
+      this.remainingSeconds = Math.ceil(immunityDuration / 10 - elapsedSeconds);
+      this.progressRatio = Math.min(
+        1,
+        Math.max(0, (elapsedSeconds * 10) / immunityDuration),
+      );
+      this.isActive = true;
+      this.requestUpdate();
     }
 
     this.emitBarVisibility();
@@ -101,6 +97,14 @@ export class ImmunityTimer extends LitElement implements Controller {
           class="h-full transition-all duration-100 ease-in-out"
           style="width: ${widthPercent}%; background-color: rgba(255, 165, 0, 0.9);"
         ></div>
+        <span
+          role="timer"
+          class="absolute right-3 top-14 rounded bg-black/80 px-3 py-1 text-xs font-bold text-white"
+          title=${translateText("host_modal.peace_time_description")}
+          >${translateText("host_modal.peace_time_remaining", {
+            time: renderDuration(this.remainingSeconds),
+          })}</span
+        >
       </div>
     `;
   }

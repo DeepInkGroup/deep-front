@@ -101,6 +101,7 @@ export class GameManager {
           gameMode: GameMode.FFA,
           bots: 400,
           disabledUnits: [],
+          spawnImmunityDuration: 0,
           ...gameConfig,
         },
         creatorPersistentID,

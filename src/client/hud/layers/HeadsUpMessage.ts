@@ -7,7 +7,7 @@ import { GameUpdateType } from "@openfront/engine-api/game/GameUpdates";
 import { LitElement, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { Controller } from "../../Controller";
-import { translateText } from "../../Utils";
+import { renderDuration, translateText } from "../../Utils";
 import { GameView } from "../../view";
 
 const COLLUSION_WARNING_CLOSED_KEY = "hasClosedCollusionWarning";
@@ -209,8 +209,13 @@ export class HeadsUpMessage extends LitElement implements Controller {
       }
     }
     if (this.isImmunityActive) {
-      return translateText("heads_up_message.pvp_immunity_active", {
-        seconds: Math.round(this.game.config().spawnImmunityDuration() / 10),
+      return translateText("host_modal.peace_time_remaining", {
+        time: renderDuration(
+          Math.ceil(
+            this.game.config().spawnImmunityDuration() / 10 -
+              this.game.elapsedGameSeconds(),
+          ),
+        ),
       });
     }
     if (this.isOvertimeNotice) {

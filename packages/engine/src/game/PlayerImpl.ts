@@ -1631,7 +1631,7 @@ export class PlayerImpl implements Player {
 
   nukeSpawn(tile: TileRef, nukeType: UnitType): TileRef | false {
     const mg = this.mg;
-    if (mg.isSpawnImmunityActive()) {
+    if (mg.inSpawnPhase()) {
       return false;
     }
     // Impassable terrain cannot be nuked.
@@ -1639,6 +1639,14 @@ export class PlayerImpl implements Player {
       return false;
     }
     const owner = this.mg.owner(tile);
+    // Peace time protects human targets without disabling strikes on AI.
+    if (
+      this.type() === PlayerType.Human &&
+      owner.isPlayer() &&
+      owner.isImmune()
+    ) {
+      return false;
+    }
     // Allow nuking teammates after the game is over (aftergame fun), but not in singleplayer.
     const gameOver =
       mg.getWinner() !== null &&

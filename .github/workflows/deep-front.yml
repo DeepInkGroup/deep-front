@@ -26,6 +26,8 @@ jobs:
       - run: npm run typecheck
       - name: Multiplayer server regression tests
         run: npx vitest run tests/server/Standalone.test.ts tests/server/MapPlaylistTrusted.test.ts tests/server/PrivateLobbyCap.test.ts tests/server/WorkerLobbyServiceClients.test.ts tests/core/ClusterConfig.test.ts
+      - name: Peace time and combat regression tests
+        run: npx vitest run tests/PeaceTime.test.ts tests/Attack.test.ts tests/core/executions/NukeExecution.test.ts tests/nukes/WaterNukes.test.ts tests/client/HostLobbyModalPeaceTime.test.ts tests/client/HostLobbyModalPlayerLimit.test.ts tests/client/ImmunityTimer.test.ts tests/client/HeadsUpMessage.test.ts tests/server/ConfigPatch.test.ts
       - run: npm run build
       - name: Production dependency security check
         run: npx --yes npm@12.1.0 audit --omit=dev --audit-level=high

@@ -1,6 +1,7 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
   MessageType,
+  PlayerType,
   Structures,
   TerraNullius,
   TrajectoryTile,
@@ -177,6 +178,7 @@ export class NukeExecution implements Execution {
       if (!attackedPlayer.isPlayer()) {
         continue;
       }
+      if (this.isProtectedPlayer(attackedPlayer)) continue;
 
       // Resolves exploit of alliance breaking in which a pending alliance request
       // was accepted in the middle of a missile attack.
@@ -399,6 +401,9 @@ export class NukeExecution implements Execution {
     const tilesPerPlayers = new Map<Player, number>();
     for (const tile of toDestroy) {
       const owner = mg.owner(tile);
+      // A strike on a bot or neutral tile must not bypass human peace time
+      // through splash damage, including terrain conversion and buildings.
+      if (owner.isPlayer() && this.isProtectedPlayer(owner)) continue;
       if (owner.isPlayer()) {
         owner.relinquish(tile);
         tilesPerPlayers.set(owner, (tilesPerPlayers.get(owner) ?? 0) + 1);
@@ -465,6 +470,7 @@ export class NukeExecution implements Execution {
     const dst = this.dst;
     for (const unit of mg.units()) {
       const type = unit.type();
+      if (this.isProtectedPlayer(unit.owner())) continue;
       if (
         type === UnitType.AtomBomb ||
         type === UnitType.HydrogenBomb ||
@@ -525,6 +531,10 @@ export class NukeExecution implements Execution {
         }
       }
     }
+  }
+
+  private isProtectedPlayer(player: Player): boolean {
+    return this.player.type() === PlayerType.Human && player.isImmune();
   }
 
   cancel(): void {

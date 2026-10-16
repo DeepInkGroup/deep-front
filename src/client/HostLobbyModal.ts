@@ -33,9 +33,15 @@ import { createLobby, getUserMe, queueLobby, setLobbyListed } from "./Api";
 import "./components/baseComponents/Modal";
 import { BaseModal } from "./components/BaseModal";
 import "./components/ConfirmDialog";
-import { CopyButton } from "./components/CopyButton";
+import "./components/CopyButton";
+import type { CopyButton } from "./components/CopyButton";
 import "./components/GameConfigSettings";
 import "./components/InputCard";
+import {
+  CARD_LABEL_CLASS,
+  cardClass,
+  INPUT_CLASS,
+} from "./components/InputCardStyles";
 import "./components/InsufficientCurrencyDialog";
 import "./components/ListLobbyDialog";
 import { ListLobbyOptions } from "./components/ListLobbyDialog";
@@ -75,8 +81,8 @@ export class HostLobbyModal extends BaseModal {
     this.id = "page-host-lobby";
   }
   @state() private bots: number = 400;
-  @state() private spawnImmunity: boolean = false;
-  @state() private spawnImmunityDurationMinutes: number | undefined = undefined;
+  @state() private peaceTimeMinutes = 0;
+  private peaceTimeLoadedFor: string | null = null;
   @state() private infiniteGold: boolean = false;
   @state() private donateGold: boolean = false;
   @state() private infiniteTroops: boolean = false;
@@ -160,6 +166,11 @@ export class HostLobbyModal extends BaseModal {
     const lobby = event.lobby;
     if (!this.lobbyId || lobby.gameID !== this.lobbyId) {
       return;
+    }
+    if (this.peaceTimeLoadedFor !== this.lobbyId && lobby.gameConfig) {
+      this.peaceTimeLoadedFor = this.lobbyId;
+      this.peaceTimeMinutes =
+        (lobby.gameConfig.spawnImmunityDuration ?? 0) / 600;
     }
     // A host returning to an existing lobby (?host) starts with default
     // settings; without this, their next change of any setting would send
@@ -489,21 +500,43 @@ export class HostLobbyModal extends BaseModal {
         .onChange=${this.handleStartDelayValueChanges}
         .onKeyDown=${this.handleStartDelayValueKeyDown}
       ></input-card>`,
-      html`<toggle-input-card
-        .labelKey=${"host_modal.player_immunity_duration"}
-        .checked=${this.spawnImmunity}
-        .inputMin=${0}
-        .inputMax=${120}
-        .inputStep=${1}
-        .inputValue=${this.spawnImmunityDurationMinutes}
-        .inputAriaLabel=${translateText("host_modal.player_immunity_duration")}
-        .inputPlaceholder=${translateText("game_settings.mins_placeholder")}
-        .defaultInputValue=${5}
-        .minValidOnEnable=${0}
-        .onToggle=${this.handleSpawnImmunityToggle}
-        .onInput=${this.handleSpawnImmunityDurationInput}
-        .onKeyDown=${this.handleSpawnImmunityDurationKeyDown}
-      ></toggle-input-card>`,
+      html`<div class=${cardClass(this.peaceTimeMinutes > 0)}>
+        <div
+          class="w-full h-full p-3 flex flex-col items-center justify-between gap-2"
+        >
+          <select
+            id="peace-time"
+            class=${INPUT_CLASS}
+            aria-labelledby="peace-time-label"
+            aria-describedby="peace-time-description"
+            @change=${this.handlePeaceTimeChange}
+          >
+            ${[0, 3, 5, 10].map(
+              (minutes) => html`<option
+                value=${minutes}
+                .selected=${this.peaceTimeMinutes === minutes}
+              >
+                ${minutes === 0
+                  ? translateText("host_modal.peace_time_off")
+                  : translateText("host_modal.peace_time_minutes", { minutes })}
+              </option>`,
+            )}
+          </select>
+          <label
+            id="peace-time-label"
+            for="peace-time"
+            class="${CARD_LABEL_CLASS} text-center text-white"
+          >
+            ${translateText("host_modal.peace_time")}
+          </label>
+          <span
+            id="peace-time-description"
+            class="text-xs text-center text-white/70"
+          >
+            ${translateText("host_modal.peace_time_description")}
+          </span>
+        </div>
+      </div>`,
       html`<toggle-input-card
         .labelKey=${"game_settings.custom_alliances"}
         .checked=${this.customAlliances}
@@ -1011,8 +1044,8 @@ export class HostLobbyModal extends BaseModal {
     this.gameMode = GameMode.FFA;
     this.teamCount = 2;
     this.bots = 400;
-    this.spawnImmunity = false;
-    this.spawnImmunityDurationMinutes = undefined;
+    this.peaceTimeMinutes = 0;
+    this.peaceTimeLoadedFor = null;
     this.infiniteGold = false;
     this.donateGold = false;
     this.infiniteTroops = false;
@@ -1258,12 +1291,12 @@ export class HostLobbyModal extends BaseModal {
     this.putGameConfig();
   };
 
-  private handleSpawnImmunityToggle = (
-    checked: boolean,
-    value: number | string | undefined,
-  ) => {
-    this.spawnImmunity = checked;
-    this.spawnImmunityDurationMinutes = toOptionalNumber(value);
+  private handlePeaceTimeChange = (event: Event) => {
+    const minutes = Number((event.target as HTMLSelectElement).value);
+    if (![0, 3, 5, 10].includes(minutes)) return;
+    this.peaceTimeMinutes = minutes;
+    // A delayed initial broadcast must not undo a host's selection.
+    this.peaceTimeLoadedFor = this.lobbyId;
     this.putGameConfig();
   };
 
@@ -1282,20 +1315,6 @@ export class HostLobbyModal extends BaseModal {
   ) => {
     this.startingGold = checked;
     this.startingGoldValue = toOptionalNumber(value);
-    this.putGameConfig();
-  };
-
-  private handleSpawnImmunityDurationKeyDown = (e: KeyboardEvent) => {
-    preventDisallowedKeys(e, ["-", "+", "e", "E"]);
-  };
-
-  private handleSpawnImmunityDurationInput = (e: Event) => {
-    const input = e.target as HTMLInputElement;
-    const value = parseBoundedIntegerFromInput(input, { min: 0, max: 120 });
-    if (value === undefined) {
-      return;
-    }
-    this.spawnImmunityDurationMinutes = value;
     this.putGameConfig();
   };
 
@@ -1627,9 +1646,6 @@ export class HostLobbyModal extends BaseModal {
   }
 
   private async putGameConfig() {
-    const spawnImmunityTicks = this.spawnImmunityDurationMinutes
-      ? this.spawnImmunityDurationMinutes * 60 * 10
-      : 0;
     const url = await this.constructUrl();
     this.updateLobbyHistory(url);
     this.dispatchEvent(
@@ -1650,9 +1666,12 @@ export class HostLobbyModal extends BaseModal {
             randomSpawn: this.randomSpawn,
             gameMode: this.gameMode,
             disabledUnits: this.disabledUnits,
-            spawnImmunityDuration: this.spawnImmunity
-              ? spawnImmunityTicks
-              : null,
+            // Shared simulation ticks; the countdown begins after spawning.
+            // Preserve an existing lobby's value until its settings arrive.
+            spawnImmunityDuration:
+              this.peaceTimeLoadedFor === this.lobbyId
+                ? this.peaceTimeMinutes * 60 * 10
+                : undefined,
             playerTeams: this.teamCount,
             nations: sliderToNationsConfig(
               this.nations,

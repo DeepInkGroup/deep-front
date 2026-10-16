@@ -88,7 +88,7 @@ export function notableLobbySettings(
     Math.round(c.spawnImmunityDuration / 10) !== 5
   ) {
     items.push({
-      label: translateText("private_lobby.pvp_immunity"),
+      label: translateText("host_modal.peace_time"),
       value: renderDuration(Math.round(c.spawnImmunityDuration / 10)),
     });
   }
