@@ -39,11 +39,17 @@ Oil Factories generate gold every ten seconds of game time. Each player may own 
 
 | Level | Build / upgrade cost | Gold every 10 seconds |
 | ----- | -------------------- | --------------------- |
-| 1     | 1,200,000            | 100,000               |
-| 2     | 1,300,000            | 135,000               |
-| 3     | 1,500,000            | 150,000               |
+| 1     | 1,200,000            | 50,000                |
+| 2     | 1,300,000            | 75,000                |
+| 3     | 1,500,000            | 90,000                |
 
 Oil Factory can be switched off in **Disable Units** in both solo and multiplayer settings.
+
+## Copper Mine
+
+Each player may own two Copper Mines, each with at most two levels. Level 1 costs 650,000 gold and pays 25,000 every ten game seconds. The level 2 upgrade costs 1,000,000 and pays 40,000 every ten seconds. Copper Mine is available in solo and multiplayer and can be switched off in **Disable Units**.
+
+AI tribes and nations build and upgrade both resource buildings when they have gold and space, following the same limits and disable settings. Bombs destroy both buildings and stop their income; human-versus-human peace-time protection still applies. Captured buildings beyond the ownership limit are destroyed.
 
 ## Verification
 

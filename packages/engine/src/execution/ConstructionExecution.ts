@@ -18,6 +18,7 @@ import { CityExecution } from "./CityExecution";
 import { DefensePostExecution } from "./DefensePostExecution";
 import { FactoryExecution } from "./FactoryExecution";
 import { OilFactoryExecution } from "./OilFactoryExecution";
+import { CopperMineExecution } from "./CopperMineExecution";
 import { MirvExecution } from "./MIRVExecution";
 import { MissileSiloExecution } from "./MissileSiloExecution";
 import { NukeExecution } from "./NukeExecution";
@@ -168,6 +169,9 @@ export class ConstructionExecution implements Execution {
       case UnitType.OilFactory:
         this.mg.addExecution(new OilFactoryExecution(this.structure!));
         break;
+      case UnitType.CopperMine:
+        this.mg.addExecution(new CopperMineExecution(this.structure!));
+        break;
       default:
         console.warn(
           `unit type ${this.constructionType} cannot be constructed`,
@@ -185,6 +189,7 @@ export class ConstructionExecution implements Execution {
       case UnitType.City:
       case UnitType.Factory:
       case UnitType.OilFactory:
+      case UnitType.CopperMine:
         return true;
       default:
         return false;

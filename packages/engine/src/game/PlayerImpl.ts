@@ -1663,6 +1663,7 @@ export class PlayerImpl implements Player {
       case UnitType.City:
       case UnitType.Factory:
       case UnitType.OilFactory:
+      case UnitType.CopperMine:
         return this.landBasedStructureSpawn(targetTile, validTiles);
       default:
         assertNever(unitType);

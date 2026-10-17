@@ -1,4 +1,5 @@
 import { OIL_FACTORY_COSTS } from "@openfront/engine-api/game/OilFactory";
+import { COPPER_MINE_COSTS } from "@openfront/engine-api/game/CopperMine";
 import {
   Difficulty,
   Gold,
@@ -388,15 +389,18 @@ export class EngineConfig extends Config {
           UnitType.Port,
         );
       case UnitType.OilFactory:
+      case UnitType.CopperMine:
         return (_game, player, extraLevels = 0, unitLevel = 0) => {
           if (
             player.type() === PlayerType.Human &&
             this.hasInfiniteGoldFor(player)
           )
             return 0n;
-          return OIL_FACTORY_COSTS[
-            Math.min(unitLevel + extraLevels, OIL_FACTORY_COSTS.length - 1)
-          ];
+          const costs =
+            type === UnitType.OilFactory
+              ? OIL_FACTORY_COSTS
+              : COPPER_MINE_COSTS;
+          return costs[Math.min(unitLevel + extraLevels, costs.length - 1)];
         };
       case UnitType.TransportShip:
       case UnitType.Shell:

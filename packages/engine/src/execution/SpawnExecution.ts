@@ -23,6 +23,7 @@ import type {
   SnapshotWriter,
 } from "../snapshot/SnapshotContext";
 import { PlayerExecution } from "./PlayerExecution";
+import { EconomyAIExecution } from "./EconomyAIExecution";
 import { TribeExecution } from "./TribeExecution";
 import { getSpawnTiles } from "./Util";
 
@@ -109,6 +110,9 @@ export class SpawnExecution implements Execution {
 
     if (!player.hasSpawned()) {
       this.mg.addExecution(new PlayerExecution(player));
+      if (player.type() !== PlayerType.Human) {
+        this.mg.addExecution(new EconomyAIExecution(player));
+      }
       if (player.type() === PlayerType.Bot) {
         this.mg.addExecution(new TribeExecution(player));
       }

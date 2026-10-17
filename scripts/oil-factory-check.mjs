@@ -2,7 +2,14 @@ import { chromium, expect } from "@playwright/test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 
-const OIL = "Oil Factory";
+// Keep the original command; --copper runs the same integration checks for mines.
+const copper = process.argv.includes("--copper");
+const RESOURCE = copper ? "Copper Mine" : "Oil Factory";
+const ICON = copper ? "copper_mine" : "oil_factory";
+const MAX_LEVEL = copper ? 2 : 3;
+const PAYOUT = copper ? 40_000n : 90_000n;
+const TOTAL_COST = copper ? 1_650_000n : 4_000_000n;
+const ARTIFACT = copper ? "copper-mine" : "oil-factory";
 const baseUrl = process.env.BASE_URL || "http://localhost:9000";
 fs.mkdirSync("artifacts", { recursive: true });
 const browser = await chromium.launch({ channel: "chrome", headless: true });
@@ -40,25 +47,25 @@ async function running(page) {
     )
     .toBe(false);
 }
-async function factoryLevel(page, ownerID) {
+async function buildingLevel(page, ownerID) {
   return page.evaluate(
-    ({ ownerID, OIL }) => {
+    ({ ownerID, RESOURCE }) => {
       const game = document.querySelector("control-panel")?.game;
       const units = game
-        ?.units(OIL)
+        ?.units(RESOURCE)
         .filter((unit) => !ownerID || unit.owner().id() === ownerID);
       return units?.[0]?.level() ?? 0;
     },
-    { ownerID, OIL },
+    { ownerID, RESOURCE },
   );
 }
 async function buildAndUpgrade(page, prefix) {
   await page.waitForTimeout(2000); // Let the spawn camera settle before placing a building.
-  const hotbar = page.locator('unit-display img[alt="oil_factory"]');
+  const hotbar = page.locator(`unit-display img[alt="${ICON}"]`);
   await expect(hotbar).toBeVisible();
   await expect(hotbar).toHaveJSProperty("complete", true);
   await expect(hotbar).not.toHaveJSProperty("naturalWidth", 0);
-  const target = await page.evaluate(async (OIL) => {
+  const target = await page.evaluate(async (RESOURCE) => {
     const game = document.querySelector("control-panel").game;
     const player = game.myPlayer();
     const center = player.nameLocation();
@@ -70,15 +77,15 @@ async function buildAndUpgrade(page, prefix) {
           if (!game.isValidCoord(x, y)) continue;
           const tile = game.ref(x, y);
           if (game.owner(tile).id() !== player.id()) continue;
-          const [candidate] = await player.buildables(tile, [OIL]);
+          const [candidate] = await player.buildables(tile, [RESOURCE]);
           if (candidate.canBuild !== false)
             return { tile: candidate.canBuild, ownerID: player.id() };
         }
       }
     }
     throw new Error("No valid oil factory site in the player's territory");
-  }, OIL);
-  for (const level of [1, 2, 3]) {
+  }, RESOURCE);
+  for (let level = 1; level <= MAX_LEVEL; level++) {
     await hotbar.click();
     const position = await page.evaluate((tile) => {
       const menu = document.querySelector("build-menu");
@@ -92,17 +99,17 @@ async function buildAndUpgrade(page, prefix) {
     await page.mouse.click(position.x, position.y);
     try {
       await expect
-        .poll(() => factoryLevel(page, target.ownerID), { timeout: 12000 })
+        .poll(() => buildingLevel(page, target.ownerID), { timeout: 12000 })
         .toBe(level);
     } catch (error) {
       await page.screenshot({
-        path: `artifacts/oil-factory-${prefix}-failure.png`,
+        path: `artifacts/${ARTIFACT}-${prefix}-failure.png`,
       });
       console.log(
         "PLACEMENT",
         { target, position, errors },
         await page.evaluate(
-          ({ position, OIL }) => {
+          ({ position, RESOURCE }) => {
             const display = document.querySelector("unit-display");
             const game = display.game;
             const cursor = document
@@ -118,30 +125,30 @@ async function buildAndUpgrade(page, prefix) {
               underneath: document
                 .elementFromPoint(position.x, position.y)
                 ?.outerHTML.slice(0, 500),
-              units: game.units(OIL).length,
+              units: game.units(RESOURCE).length,
             };
           },
-          { position, OIL },
+          { position, RESOURCE },
         ),
       );
       throw error;
     }
   }
   const preview = await page.evaluate(
-    async ({ tile, OIL }) => {
+    async ({ tile, RESOURCE }) => {
       const game = document.querySelector("control-panel").game;
-      const [result] = await game.myPlayer().buildables(tile, [OIL]);
+      const [result] = await game.myPlayer().buildables(tile, [RESOURCE]);
       return {
         canUpgrade: result.canUpgrade,
         gold: String(game.myPlayer().gold()),
       };
     },
-    { tile: target.tile, OIL },
+    { tile: target.tile, RESOURCE },
   );
   assert.equal(preview.canUpgrade, false);
   assert.ok(
-    BigInt(preview.gold) < 3_000_000n,
-    "The 4M total build and upgrade cost should be charged",
+    BigInt(preview.gold) < 6_000_000n - TOTAL_COST + 1_000_000n,
+    "The total build and upgrade cost should be charged",
   );
   await expect
     .poll(
@@ -155,8 +162,8 @@ async function buildAndUpgrade(page, prefix) {
         ),
       { timeout: 20000 },
     )
-    .toBeGreaterThanOrEqual(BigInt(preview.gold) + 150_000n);
-  await page.screenshot({ path: `artifacts/oil-factory-${prefix}.png` });
+    .toBeGreaterThanOrEqual(BigInt(preview.gold) + PAYOUT);
+  await page.screenshot({ path: `artifacts/${ARTIFACT}-${prefix}.png` });
   await page.setViewportSize({ width: 390, height: 950 });
   // Mobile uses the build menu rather than the desktop hotbar.
   await page
@@ -164,16 +171,16 @@ async function buildAndUpgrade(page, prefix) {
     .evaluate((menu, tile) => menu.showMenu(tile), target.tile);
   const mobileOil = page
     .locator("build-menu")
-    .getByRole("button", { name: /Oil Factory/ });
+    .getByRole("button", { name: new RegExp(RESOURCE) });
   await expect(mobileOil).toBeVisible();
-  await expect(mobileOil).toBeDisabled(); // The selected factory is already level three.
+  await expect(mobileOil).toBeDisabled(); // The selected building is at its level cap.
   assert.equal(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
     true,
   );
-  await page.screenshot({ path: `artifacts/oil-factory-${prefix}-mobile.png` });
+  await page.screenshot({ path: `artifacts/${ARTIFACT}-${prefix}-mobile.png` });
   await page.locator("build-menu").evaluate((menu) => menu.hideMenu());
   await page.setViewportSize({ width: 1440, height: 1000 });
   return target.ownerID;
@@ -186,7 +193,7 @@ try {
     .getByRole("button", { name: "Play solo", exact: true })
     .click();
   const disableOption = disabled.getByRole("button", {
-    name: OIL,
+    name: RESOURCE,
     exact: true,
   });
   await expect(disableOption).toHaveAttribute("aria-pressed", "true");
@@ -197,20 +204,20 @@ try {
   await running(disabled);
   assert.equal(
     await disabled.evaluate(
-      (OIL) =>
+      (RESOURCE) =>
         document
           .querySelector("control-panel")
           .game.config()
-          .isUnitDisabled(OIL),
-      OIL,
+          .isUnitDisabled(RESOURCE),
+      RESOURCE,
     ),
     true,
   );
-  await expect(
-    disabled.locator('unit-display img[alt="oil_factory"]'),
-  ).toHaveCount(0);
+  await expect(disabled.locator(`unit-display img[alt="${ICON}"]`)).toHaveCount(
+    0,
+  );
   await disabled.context().close();
-  console.log("Solo Disable Units: Oil Factory excluded from the game");
+  console.log(`Solo Disable Units: ${RESOURCE} excluded from the game`);
 
   const solo = await newPage("OilSolo");
   await solo.goto(baseUrl);
@@ -221,7 +228,7 @@ try {
   await buildAndUpgrade(solo, "solo");
   await solo.context().close();
   console.log(
-    "Solo Oil Factory: icon, construction, prices, income, level-three cap and mobile HUD passed",
+    `Solo ${RESOURCE}: icon, construction, prices, income, level cap and mobile HUD passed`,
   );
 
   const host = await newPage("OilHost");
@@ -232,7 +239,7 @@ try {
   await guest.goto(host.url());
   await expect(host.locator("host-lobby-modal")).toContainText("OilGuest");
   const multiplayerOption = host.getByRole("button", {
-    name: OIL,
+    name: RESOURCE,
     exact: true,
   });
   await multiplayerOption.click();
@@ -240,8 +247,10 @@ try {
     .poll(() =>
       guest
         .locator("join-lobby-modal")
-        .evaluate((modal) =>
-          modal.gameConfig?.disabledUnits?.includes("Oil Factory"),
+        .evaluate(
+          (modal, resource) =>
+            modal.gameConfig?.disabledUnits?.includes(resource),
+          RESOURCE,
         ),
     )
     .toBe(true);
@@ -250,8 +259,10 @@ try {
     .poll(() =>
       guest
         .locator("join-lobby-modal")
-        .evaluate((modal) =>
-          modal.gameConfig?.disabledUnits?.includes("Oil Factory"),
+        .evaluate(
+          (modal, resource) =>
+            modal.gameConfig?.disabledUnits?.includes(resource),
+          RESOURCE,
         ),
     )
     .toBe(false);
@@ -260,14 +271,28 @@ try {
   await running(host);
   await running(guest);
   const ownerID = await buildAndUpgrade(host, "multiplayer");
-  await expect.poll(() => factoryLevel(guest, ownerID)).toBe(3);
+  await expect.poll(() => buildingLevel(guest, ownerID)).toBe(MAX_LEVEL);
+  await expect
+    .poll(
+      () =>
+        guest.evaluate(
+          (resource) =>
+            document
+              .querySelector("control-panel")
+              .game.units(resource)
+              .filter((unit) => unit.owner().type() !== "HUMAN").length,
+          RESOURCE,
+        ),
+      { timeout: 60000 },
+    )
+    .toBeGreaterThan(0);
   await guest.waitForTimeout(11000);
   await expect(
     guest.getByText("Connection error!", { exact: true }),
   ).toHaveCount(0);
-  await expect.poll(() => factoryLevel(guest, ownerID)).toBe(3);
+  await expect.poll(() => buildingLevel(guest, ownerID)).toBe(MAX_LEVEL);
   console.log(
-    "Multiplayer Oil Factory: disable option synchronized, construction/upgrades synchronized, payout ticks remain connected",
+    `Multiplayer ${RESOURCE}: disable option, construction, upgrades, income and AI building verified`,
   );
   assert.deepEqual(errors, []);
 } finally {

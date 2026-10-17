@@ -31,5 +31,7 @@ jobs:
       - name: Oil Factory and economy regression tests
         run: npx vitest run tests/economy/OilFactory.test.ts tests/economy/ConstructionCost.test.ts tests/economy/ConstructionGold.test.ts tests/core/executions/UpgradeStructureExecution.test.ts tests/FindAndUpgradeNearestBuilding.test.ts tests/AutoUpgrade.test.ts tests/core/snapshot/StructureExecutions.test.ts tests/client/PlayerStatsTable.test.ts tests/client/graphics/layers/BuildMenuCost.test.ts tests/client/controllers/BuildPreviewController.test.ts tests/ApiSchemas.test.ts tests/core/ApiSchemas.test.ts tests/core/IntentTileRefSchemas.test.ts tests/core/game/RailNetwork.test.ts
       - run: npm run build
+      - name: Resource buildings, AI and bomb regression tests
+        run: npx vitest run tests/economy/CopperMine.test.ts tests/economy/EconomyAI.test.ts tests/economy/ResourceBombs.test.ts tests/NationStructureBehavior.test.ts tests/core/snapshot/BasicExecutions.test.ts tests/core/snapshot/SnapshotFixtures.test.ts
       - name: Production dependency security check
         run: npx --yes npm@12.1.0 audit --omit=dev --audit-level=high

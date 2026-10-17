@@ -177,6 +177,7 @@ export class SoundEffectController implements Controller {
         break;
       case UnitType.Factory:
       case UnitType.OilFactory:
+      case UnitType.CopperMine:
         if (unit.owner() === myPlayer) this.emit("build-factory");
         break;
       case UnitType.TransportShip:

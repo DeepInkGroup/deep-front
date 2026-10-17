@@ -92,9 +92,9 @@ describe("Oil Factory economy", () => {
   });
 
   it.each([
-    [1, 100_000n],
-    [2, 135_000n],
-    [3, 150_000n],
+    [1, 50_000n],
+    [2, 75_000n],
+    [3, 90_000n],
   ])(
     "pays level %i income every 100 ticks without an early payment",
     (level, income) => {
@@ -124,7 +124,7 @@ describe("Oil Factory economy", () => {
     execution.tick(99);
     expect(alice.gold()).toBe(before);
     execution.tick(100);
-    expect(alice.gold() - before).toBe(135_000n);
+    expect(alice.gold() - before).toBe(75_000n);
   });
 
   it("allows five separate buildings regardless of levels, with upgrades still allowed at the cap", () => {
@@ -159,7 +159,7 @@ describe("Oil Factory economy", () => {
     executeTicks(game, 20);
     expect(before - alice.gold()).toBe(6_000_000n);
     executeTicks(game, 101);
-    expect(before - alice.gold()).toBe(5_500_000n);
+    expect(before - alice.gold()).toBe(5_750_000n);
   });
 
   it("pays the new owner after capture and stops paying after destruction", () => {
@@ -171,10 +171,10 @@ describe("Oil Factory economy", () => {
     const beforeBob = bob.gold();
     execution.tick(100);
     expect(alice.gold()).toBe(beforeAlice);
-    expect(bob.gold() - beforeBob).toBe(100_000n);
+    expect(bob.gold() - beforeBob).toBe(50_000n);
     factory.delete(false);
     execution.tick(200);
-    expect(bob.gold() - beforeBob).toBe(100_000n);
+    expect(bob.gold() - beforeBob).toBe(50_000n);
     expect(execution.isActive()).toBe(false);
   });
 

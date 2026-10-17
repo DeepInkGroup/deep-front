@@ -17,6 +17,7 @@ import type {
 } from "../snapshot/SnapshotContext";
 import { AllianceExtensionExecution } from "./alliance/AllianceExtensionExecution";
 import { DeleteUnitExecution } from "./DeleteUnitExecution";
+import { ECONOMY_BUILDINGS } from "./EconomyAIExecution";
 import { AiAttackBehavior } from "./utils/AiAttackBehavior";
 
 export class TribeExecution implements Execution {
@@ -101,6 +102,7 @@ export class TribeExecution implements Execution {
     if (!this.tribe.canDeleteUnit()) return;
     for (const unit of this.tribe.units()) {
       if (!Structures.has(unit.type())) continue;
+      if (ECONOMY_BUILDINGS.includes(unit.type())) continue;
       if (unit.isMarkedForDeletion()) continue;
       this.mg.addExecution(new DeleteUnitExecution(this.tribe, unit.id()));
       return;

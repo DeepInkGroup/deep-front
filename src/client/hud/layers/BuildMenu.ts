@@ -30,6 +30,7 @@ const warshipIcon = assetUrl("images/BattleshipIconWhite.svg");
 const cityIcon = assetUrl("images/CityIconWhite.svg");
 const factoryIcon = assetUrl("images/FactoryIconWhite.svg");
 const oilFactoryIcon = assetUrl("images/OilFactoryIconWhite.svg");
+const copperMineIcon = assetUrl("images/CopperMineIconWhite.svg");
 const goldCoinIcon = assetUrl("images/GoldCoinIcon.svg");
 const mirvIcon = assetUrl("images/MIRVIcon.svg");
 const missileSiloIcon = assetUrl("images/MissileSiloIconWhite.svg");
@@ -124,6 +125,13 @@ export const buildTable: BuildItemDisplay[][] = [
       icon: oilFactoryIcon,
       description: "build_menu.desc.oil_factory",
       key: "unit_type.oil_factory",
+      countable: true,
+    },
+    {
+      unitType: UnitType.CopperMine,
+      icon: copperMineIcon,
+      description: "build_menu.desc.copper_mine",
+      key: "unit_type.copper_mine",
       countable: true,
     },
   ],
@@ -386,8 +394,9 @@ export class BuildMenu extends LitElement implements Controller {
     if (!player) {
       return "?";
     }
-    if (item.unitType === UnitType.OilFactory)
-      return `${player.units(item.unitType).length}/5`;
+    const maxCount = this.game.config().unitInfo(item.unitType).maxCount;
+    if (maxCount !== undefined)
+      return `${player.units(item.unitType).length}/${maxCount}`;
 
     return player.totalUnitLevels(item.unitType).toString();
   }

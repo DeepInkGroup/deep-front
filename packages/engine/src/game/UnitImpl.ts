@@ -126,6 +126,7 @@ export class UnitImpl implements Unit {
       case UnitType.City:
       case UnitType.Factory:
       case UnitType.OilFactory:
+      case UnitType.CopperMine:
         this.mg.stats().unitBuild(_owner, this._type);
     }
   }
@@ -252,7 +253,7 @@ export class UnitImpl implements Unit {
       maxCount !== undefined &&
       newOwner.units(this._type).length >= maxCount
     ) {
-      // Excess captured oil factories are destroyed so ownership never exceeds five.
+      // Destroy excess captured buildings to preserve their ownership limit.
       this.delete(true, newOwner);
       return;
     }
@@ -266,6 +267,7 @@ export class UnitImpl implements Unit {
       case UnitType.City:
       case UnitType.Factory:
       case UnitType.OilFactory:
+      case UnitType.CopperMine:
         this.mg.stats().unitCapture(newOwner, this._type);
         this.mg.stats().unitLose(this._owner, this._type);
         break;
@@ -400,6 +402,7 @@ export class UnitImpl implements Unit {
         case UnitType.Warship:
         case UnitType.Factory:
         case UnitType.OilFactory:
+        case UnitType.CopperMine:
           this.mg.stats().unitDestroy(destroyer, this._type);
           this.mg.stats().unitLose(this.owner(), this._type);
           break;

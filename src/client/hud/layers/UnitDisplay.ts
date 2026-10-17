@@ -21,6 +21,7 @@ import {
   defensePostIcon,
   factoryIcon,
   oilFactoryIcon,
+  copperMineIcon,
   goldCoinIcon,
   hydrogenBombIcon,
   mirvIcon,
@@ -42,6 +43,7 @@ export class UnitDisplay extends LitElement implements Controller {
   private _warships = 0;
   private _factories = 0;
   private _oilFactories = 0;
+  private _copperMines = 0;
   private _missileSilo = 0;
   private _port = 0;
   private _defensePost = 0;
@@ -126,6 +128,7 @@ export class UnitDisplay extends LitElement implements Controller {
     this._samLauncher = player.totalUnitLevels(UnitType.SAMLauncher);
     this._factories = player.totalUnitLevels(UnitType.Factory);
     this._oilFactories = player.units(UnitType.OilFactory).length;
+    this._copperMines = player.units(UnitType.CopperMine).length;
     this._warships = player.totalUnitLevels(UnitType.Warship);
     this.requestUpdate();
   }
@@ -166,6 +169,13 @@ export class UnitDisplay extends LitElement implements Controller {
             this._oilFactories,
             UnitType.OilFactory,
             "oil_factory",
+            "",
+          )}
+          ${this.renderUnitItem(
+            copperMineIcon,
+            this._copperMines,
+            UnitType.CopperMine,
+            "copper_mine",
             "",
           )}
           ${this.renderUnitItem(
@@ -330,8 +340,10 @@ export class UnitDisplay extends LitElement implements Controller {
             <img src=${icon} alt=${structureKey} class="align-middle size-5" />
             ${number !== null
               ? html`<span class="text-xs"
-                  >${renderNumber(number)}${unitType === UnitType.OilFactory
-                    ? "/5"
+                  >${renderNumber(number)}${this.game
+                    .config()
+                    .unitInfo(unitType).maxCount !== undefined
+                    ? `/${this.game.config().unitInfo(unitType).maxCount}`
                     : ""}</span
                 >`
               : null}

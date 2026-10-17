@@ -2,7 +2,7 @@
  * StructurePass — GPU-rendered structures with icon sprites.
  *
  * Renders a filled circle in player color with a white icon overlay,
- * sampled from the generated seven-column structure atlas.
+ * sampled from the generated structure atlas.
  *
  * Two LODs based on zoom:
  *   - zoom > 0.5: full icon with circle background
@@ -20,6 +20,7 @@ import {
   UT_DEFENSE_POST,
   UT_FACTORY,
   UT_OIL_FACTORY,
+  UT_COPPER_MINE,
   UT_MISSILE_SILO,
   UT_PORT,
   UT_SAM_LAUNCHER,
@@ -55,6 +56,7 @@ const STRUCTURE_ORDER = [
   UT_SAM_LAUNCHER,
   UT_MISSILE_SILO,
   UT_OIL_FACTORY,
+  UT_COPPER_MINE,
 ] as const;
 
 const ATLAS_COLS = STRUCTURE_ORDER.length;
