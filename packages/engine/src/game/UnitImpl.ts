@@ -1,4 +1,5 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
+import { customsPartner, hasCustomsOffice } from "./CustomsOffice";
 import {
   MessageType,
   NukeState,
@@ -128,6 +129,7 @@ export class UnitImpl implements Unit {
       case UnitType.OilFactory:
       case UnitType.CopperMine:
       case UnitType.LogisticsCenter:
+      case UnitType.CustomsOffice:
         this.mg.stats().unitBuild(_owner, this._type);
     }
   }
@@ -248,6 +250,15 @@ export class UnitImpl implements Unit {
   }
 
   setOwner(newOwner: PlayerImpl): void {
+    if (this._type === UnitType.CustomsOffice && newOwner !== this._owner) {
+      const oldPartner = customsPartner(this);
+      const partner = oldPartner === newOwner ? this._owner : oldPartner;
+      if (!partner || hasCustomsOffice(newOwner, partner)) {
+        this.delete(true, newOwner);
+        return;
+      }
+      this._targetPlayer = partner;
+    }
     const maxCount = this.info().maxCount;
     if (
       newOwner !== this._owner &&
@@ -270,6 +281,7 @@ export class UnitImpl implements Unit {
       case UnitType.OilFactory:
       case UnitType.CopperMine:
       case UnitType.LogisticsCenter:
+      case UnitType.CustomsOffice:
         this.mg.stats().unitCapture(newOwner, this._type);
         this.mg.stats().unitLose(this._owner, this._type);
         break;
@@ -406,6 +418,7 @@ export class UnitImpl implements Unit {
         case UnitType.OilFactory:
         case UnitType.CopperMine:
         case UnitType.LogisticsCenter:
+        case UnitType.CustomsOffice:
           this.mg.stats().unitDestroy(destroyer, this._type);
           this.mg.stats().unitLose(this.owner(), this._type);
           break;

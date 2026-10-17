@@ -168,11 +168,12 @@ describe("PlayerStatsTable", () => {
         text(candidate.querySelector("th")) === "player_stats_table.building",
     );
     expect(buildings, "buildings table should exist").toBeDefined();
-    // Nine structures; warships have their own section.
-    expect(buildings?.querySelectorAll("tbody tr")).toHaveLength(9);
+    // Ten structures; warships have their own section.
+    expect(buildings?.querySelectorAll("tbody tr")).toHaveLength(10);
     expect(buildings?.textContent).toContain("unit_type.oil_factory");
     expect(buildings?.textContent).toContain("unit_type.copper_mine");
     expect(buildings?.textContent).toContain("unit_type.logistics_center");
+    expect(buildings?.textContent).toContain("unit_type.customs_office");
     expect(buildings?.textContent).not.toContain("unit_type.warship");
 
     expect(columnsOf(table, "player_stats_table.warship_stats")).toEqual({

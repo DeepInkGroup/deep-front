@@ -1,0 +1,3 @@
+export const CUSTOMS_OFFICE_COST = 1_000_000n;
+export const CUSTOMS_OFFICE_BUILD_TICKS = 250;
+export const CUSTOMS_OFFICE_BONUS_PERCENT = 10n;

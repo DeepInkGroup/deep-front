@@ -11,6 +11,7 @@
     "build": "npm run build-prod && node scripts/source-archive.mjs",
     "start": "node scripts/serve.mjs",
     "test:community": "node scripts/community-check.mjs",
+    "test:customs": "node scripts/customs-office-check.mjs",
     "test:pages": "node scripts/pages-check.mjs",
     "test:browser": "node scripts/gameplay-check.mjs && node scripts/layout-check.mjs && node scripts/peace-time-check.mjs && node scripts/oil-factory-check.mjs && node scripts/oil-factory-check.mjs --copper && node scripts/oil-factory-check.mjs --logistics && node scripts/deepplace-check.mjs",
     "build-dev": "concurrently \"tsc --noEmit\" \"vite build --mode development\"",

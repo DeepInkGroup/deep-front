@@ -88,6 +88,7 @@ import {
   canBuildTransportShip,
 } from "./TransportShipUtils";
 import { UnitImpl } from "./UnitImpl";
+import { customsPartnerAt } from "./CustomsOffice";
 
 // Rot re-stamps every second, so a little slack keeps the cue from strobing.
 const DECAY_CUE_GRACE_TICKS = 30;
@@ -1412,6 +1413,16 @@ export class PlayerImpl implements Player {
       throw new Error(`Maximum number of ${type} buildings reached`);
     }
 
+    if (type === UnitType.CustomsOffice) {
+      const partner = customsPartnerAt(this.mg, this, spawnTile);
+      if (!partner || this.canSpawnUnitType(type, spawnTile, null) === false)
+        throw new Error(
+          "Customs Offices require a free border with another player and only one office per neighbor.",
+        );
+      // Derive the counterpart on the authoritative simulation, never from an intent.
+      params = { ...params, targetPlayer: partner } as UnitParams<T>;
+    }
+
     const cost = this.mg.unitInfo(type).cost(this.mg, this);
     const b = new UnitImpl(
       type,
@@ -1634,6 +1645,13 @@ export class PlayerImpl implements Player {
     if (maxCount !== undefined && this.units(unitType).length >= maxCount)
       return false;
     switch (unitType) {
+      case UnitType.CustomsOffice:
+        return customsPartnerAt(this.mg, this, targetTile) &&
+          (validTiles ?? this.validStructureSpawnTiles(targetTile)).includes(
+            targetTile,
+          )
+          ? targetTile
+          : false;
       case UnitType.MIRV:
         if (!this.mg.hasOwner(targetTile)) {
           return false;

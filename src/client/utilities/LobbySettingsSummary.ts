@@ -24,6 +24,7 @@ const DISABLED_UNIT_KEYS: Record<string, string> = {
   "Oil Factory": "unit_type.oil_factory",
   "Copper Mine": "unit_type.copper_mine",
   "Logistics Center": "unit_type.logistics_center",
+  "Customs Office": "unit_type.customs_office",
   "Atom Bomb": "unit_type.atom_bomb",
   "Hydrogen Bomb": "unit_type.hydrogen_bomb",
   MIRV: "unit_type.mirv",

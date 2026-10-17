@@ -118,6 +118,7 @@ const SAM_PROTECTED_TYPES: readonly UnitType[] = [
   UnitType.OilFactory,
   UnitType.CopperMine,
   UnitType.LogisticsCenter,
+  UnitType.CustomsOffice,
   UnitType.City,
   UnitType.Factory,
   UnitType.MissileSilo,
@@ -1594,6 +1595,7 @@ export class NationStructureBehavior {
         case UnitType.OilFactory:
         case UnitType.CopperMine:
         case UnitType.LogisticsCenter:
+        case UnitType.CustomsOffice:
         case UnitType.Port:
           protectEntries.push({
             tile: unit.tile(),

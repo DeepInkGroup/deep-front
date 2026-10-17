@@ -212,6 +212,7 @@ export enum UnitType {
   OilFactory = "Oil Factory",
   CopperMine = "Copper Mine",
   LogisticsCenter = "Logistics Center",
+  CustomsOffice = "Customs Office",
 }
 
 export enum TrainType {
@@ -244,6 +245,7 @@ export const Structures = unitTypeGroup([
   UnitType.OilFactory,
   UnitType.CopperMine,
   UnitType.LogisticsCenter,
+  UnitType.CustomsOffice,
 ] as const);
 
 /** Buildings that start a rail network and connect nearby economic structures. */
@@ -252,6 +254,7 @@ export const RailHubs = unitTypeGroup([
   UnitType.OilFactory,
   UnitType.CopperMine,
   UnitType.LogisticsCenter,
+  UnitType.CustomsOffice,
 ] as const);
 
 export const RailStructures = unitTypeGroup([

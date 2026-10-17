@@ -1165,6 +1165,7 @@ export class NationNukeBehavior {
             return 15_000 * level;
           case UnitType.OilFactory:
             return 50_000 * level;
+          case UnitType.CustomsOffice:
           case UnitType.LogisticsCenter:
             return 40_000;
           case UnitType.CopperMine:

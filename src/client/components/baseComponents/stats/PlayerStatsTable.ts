@@ -24,6 +24,7 @@ const BUILDING_ORDER = {
   oilf: 7,
   copp: 8,
   logi: 9,
+  cust: 10,
 } as const satisfies Record<
   Exclude<(typeof otherUnits)[number], "wshp">,
   number
@@ -45,6 +46,7 @@ const UNIT_LABEL_KEYS = {
   oilf: "unit_type.oil_factory",
   copp: "unit_type.copper_mine",
   logi: "unit_type.logistics_center",
+  cust: "unit_type.customs_office",
   port: "unit_type.port",
   saml: "unit_type.sam_launcher",
   silo: "unit_type.missile_silo",

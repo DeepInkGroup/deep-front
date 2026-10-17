@@ -1,6 +1,7 @@
 import { OIL_FACTORY_COSTS } from "@openfront/engine-api/game/OilFactory";
 import { COPPER_MINE_COSTS } from "@openfront/engine-api/game/CopperMine";
 import { LOGISTICS_CENTER_COST } from "@openfront/engine-api/game/LogisticsCenter";
+import { CUSTOMS_OFFICE_COST } from "@openfront/engine-api/game/CustomsOffice";
 import {
   Difficulty,
   Gold,
@@ -393,6 +394,11 @@ export class EngineConfig extends Config {
         return this.costWrapper(
           () => Number(LOGISTICS_CENTER_COST),
           UnitType.LogisticsCenter,
+        );
+      case UnitType.CustomsOffice:
+        return this.costWrapper(
+          () => Number(CUSTOMS_OFFICE_COST),
+          UnitType.CustomsOffice,
         );
       case UnitType.OilFactory:
       case UnitType.CopperMine:

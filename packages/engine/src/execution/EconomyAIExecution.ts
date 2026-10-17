@@ -27,6 +27,8 @@ import { UpgradeStructureExecution } from "./UpgradeStructureExecution";
 export const ECONOMY_BUILDINGS: readonly UnitType[] = [
   UnitType.OilFactory,
   UnitType.CopperMine,
+  UnitType.LogisticsCenter,
+  UnitType.CustomsOffice,
 ];
 const CHECK_INTERVAL = 50;
 type Investment = { type: UnitType; unit?: Unit; cost: Gold; income: Gold };
@@ -63,6 +65,26 @@ export class EconomyAIExecution implements Execution {
     for (const type of ECONOMY_BUILDINGS) {
       if (this.game.config().isUnitDisabled(type)) continue;
       const info = this.game.unitInfo(type);
+      if (
+        type === UnitType.LogisticsCenter ||
+        type === UnitType.CustomsOffice
+      ) {
+        const cost = info.cost(this.game, this.player);
+        if (
+          this.player.gold() >= cost &&
+          (type === UnitType.CustomsOffice ||
+            this.player.units(type).length === 0)
+        ) {
+          // Establish the resource economy first, then invest in rail bonuses.
+          // A baseline value also lets tribes start a rail economy of their own.
+          investments.push({
+            type,
+            cost,
+            income: type === UnitType.LogisticsCenter ? 3_000n : 2_000n,
+          });
+        }
+        continue;
+      }
       const income =
         type === UnitType.OilFactory ? OIL_FACTORY_INCOME : COPPER_MINE_INCOME;
       const owned = this.player.units(type);
@@ -92,6 +114,28 @@ export class EconomyAIExecution implements Execution {
           new UpgradeStructureExecution(this.player, investment.unit.id()),
         );
         return;
+      }
+      if (investment.type === UnitType.CustomsOffice) {
+        // Limit expensive placement checks on large frontiers and give
+        // different borders a turn through a deterministic sample window.
+        const border = [...this.player.borderTiles()];
+        if (!border.length) continue;
+        const start = this.random.nextInt(0, border.length);
+        for (let i = 0; i < Math.min(128, border.length); i++) {
+          const tile = border[(start + i) % border.length];
+          const spawn = this.player.canBuild(UnitType.CustomsOffice, tile);
+          if (spawn !== false) {
+            this.game.addExecution(
+              new ConstructionExecution(
+                this.player,
+                UnitType.CustomsOffice,
+                spawn,
+              ),
+            );
+            return;
+          }
+        }
+        continue;
       }
       candidates ??= randTerritoryTileArray(
         this.random,

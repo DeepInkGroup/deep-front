@@ -32,6 +32,7 @@ const factoryIcon = assetUrl("images/FactoryIconWhite.svg");
 const oilFactoryIcon = assetUrl("images/OilFactoryIconWhite.svg");
 const copperMineIcon = assetUrl("images/CopperMineIconWhite.svg");
 const logisticsCenterIcon = assetUrl("images/LogisticsCenterIconWhite.svg");
+const customsOfficeIcon = assetUrl("images/CustomsOfficeIconWhite.svg");
 const goldCoinIcon = assetUrl("images/GoldCoinIcon.svg");
 const mirvIcon = assetUrl("images/MIRVIcon.svg");
 const missileSiloIcon = assetUrl("images/MissileSiloIconWhite.svg");
@@ -140,6 +141,13 @@ export const buildTable: BuildItemDisplay[][] = [
       icon: logisticsCenterIcon,
       description: "build_menu.desc.logistics_center",
       key: "unit_type.logistics_center",
+      countable: true,
+    },
+    {
+      unitType: UnitType.CustomsOffice,
+      icon: customsOfficeIcon,
+      description: "build_menu.desc.customs_office",
+      key: "unit_type.customs_office",
       countable: true,
     },
   ],

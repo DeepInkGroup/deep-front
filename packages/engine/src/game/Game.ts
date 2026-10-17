@@ -106,6 +106,7 @@ export interface UnitParamsMap {
   [UnitType.OilFactory]: Record<string, never>;
   [UnitType.CopperMine]: Record<string, never>;
   [UnitType.LogisticsCenter]: Record<string, never>;
+  [UnitType.CustomsOffice]: { targetPlayer?: Player };
 
   [UnitType.MissileSilo]: Record<string, never>;
 

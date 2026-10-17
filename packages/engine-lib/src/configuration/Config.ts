@@ -3,6 +3,7 @@ import {
   COPPER_MINE_MAX_LEVEL,
 } from "@openfront/engine-api/game/CopperMine";
 import { LOGISTICS_CENTER_BUILD_TICKS } from "@openfront/engine-api/game/LogisticsCenter";
+import { CUSTOMS_OFFICE_BUILD_TICKS } from "@openfront/engine-api/game/CustomsOffice";
 import {
   OIL_FACTORY_MAX_BUILDINGS,
   OIL_FACTORY_MAX_LEVEL,
@@ -280,6 +281,15 @@ export class Config {
           upgradable: false,
           maxLevel: 1,
           maxCount: 1,
+        };
+        break;
+      case UnitType.CustomsOffice:
+        info = {
+          constructionDuration: this.instantBuild()
+            ? 0
+            : CUSTOMS_OFFICE_BUILD_TICKS,
+          upgradable: false,
+          maxLevel: 1,
         };
         break;
       case UnitType.TransportShip:

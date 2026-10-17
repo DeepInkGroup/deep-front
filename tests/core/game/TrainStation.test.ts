@@ -78,6 +78,7 @@ describe("TrainStation", () => {
     UnitType.OilFactory,
     UnitType.CopperMine,
     UnitType.LogisticsCenter,
+    UnitType.CustomsOffice,
   ])("handles %s trade stop", (type) => {
     unit.type.mockReturnValue(type);
     const station = new TrainStation(game, unit);

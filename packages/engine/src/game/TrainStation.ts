@@ -1,6 +1,5 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { UnitType } from "@openfront/engine-api/game/GameTypes";
-import { logisticsTrainIncome } from "@openfront/engine-api/game/LogisticsCenter";
 import { GameUpdateType } from "@openfront/engine-api/game/GameUpdates";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
 import {
@@ -16,6 +15,7 @@ import type {
 } from "../snapshot/SnapshotContext";
 import { Game, Player, Unit } from "./Game";
 import { Railroad } from "./Railroad";
+import { trainTradeIncome } from "./TrainIncome";
 
 /**
  * Handle train stops at various station types
@@ -41,12 +41,12 @@ class TradeStationStopHandler implements TrainStopHandler {
       );
     // Share revenue with the station owner if it's not the current player
     if (trainOwner !== stationOwner) {
-      const stationGold = logisticsTrainIncome(stationOwner, gold);
+      const stationGold = trainTradeIncome(stationOwner, trainOwner, gold);
       stationOwner.addGold(stationGold, station.tile());
       stationOwner.addTrainGold(stationGold);
       mg.stats().trainExternalTrade(stationOwner, stationGold);
     }
-    const trainGold = logisticsTrainIncome(trainOwner, gold);
+    const trainGold = trainTradeIncome(trainOwner, stationOwner, gold);
     trainOwner.addGold(trainGold, station.tile());
     trainOwner.addTrainGold(trainGold);
     mg.stats().trainSelfTrade(trainOwner, trainGold);
@@ -71,6 +71,7 @@ export function createTrainStopHandlers(
     [UnitType.OilFactory]: new TradeStationStopHandler(),
     [UnitType.CopperMine]: new TradeStationStopHandler(),
     [UnitType.LogisticsCenter]: new TradeStationStopHandler(),
+    [UnitType.CustomsOffice]: new TradeStationStopHandler(),
   };
 }
 
@@ -226,7 +227,8 @@ export class Cluster {
       type === UnitType.Port ||
       type === UnitType.OilFactory ||
       type === UnitType.CopperMine ||
-      type === UnitType.LogisticsCenter
+      type === UnitType.LogisticsCenter ||
+      type === UnitType.CustomsOffice
     );
   }
 

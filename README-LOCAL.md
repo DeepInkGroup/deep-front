@@ -75,6 +75,38 @@ client construction, icon, lobby synchronization, level cap and mobile menu.
 `npx vitest run tests/economy/LogisticsCenter.test.ts` covers its economy,
 construction timing, conquest limits, bombs, rail connections and snapshots.
 
+## Customs Office
+
+Customs Offices cost **1,000,000 gold**, take **25 game seconds** to build, and
+have one level. Place one on your own land directly touching another player's
+land. Interior locations, neutral borders and diagonal contact do not qualify.
+The placement preview uses the same rule as the server and does not move an
+invalid interior placement onto a nearby border.
+
+You may own **one office per neighboring player**, including unfinished offices.
+An office stays linked to the player it was built beside, even if borders move.
+It adds **10% to its owner's train earnings from trade with that player**, in
+either direction. Domestic trade and trade with other players receive no Customs
+bonus. Each side needs its own office to receive its own bonus. With a completed
+Logistics Center, the bonuses add to **25%**, rounded down to whole gold.
+
+Offices connect to nearby rail buildings and serve as train stops. Destruction
+removes their bonus and frees that neighbor's slot. Capture retains the trade
+partner; if the partner captures the office, it instead links to the previous
+owner. A captured office is destroyed if it would duplicate the captor's office
+for that partner.
+
+Both AI tribes and nations build Logistics Centers and Customs Offices with real
+gold after developing their resource economy, obeying placement, limits and
+disabled-unit settings. They retain these buildings and can rebuild them after
+loss. Customs Office is available in solo and multiplayer under **Disable Units**.
+`npx vitest run tests/economy/CustomsOffice.test.ts tests/economy/EconomyAI.test.ts`
+checks these rules, income, construction, capture, bombs and save restoration.
+With a server using an isolated `COMMUNITY_DATA_DIR`, `npm run test:customs`
+checks real solo and two-player multiplayer border placement, disabled units,
+the icon and the mobile building menu. It publishes a tiny test map into that
+test database; use your normal database again after verification.
+
 ## DeepPlace
 
 Select **DeepPlace** in the map picker's **Fictional** or **New** category, or search for its name. This original 2048 × 1440 map is available in solo and multiplayer, at normal and compact size. Four main land regions surround Deep Strait, with two cross passages, island chains, mountain ridges, sheltered gulfs and twelve fictional nations.
