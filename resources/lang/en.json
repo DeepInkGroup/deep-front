@@ -191,7 +191,7 @@
       "atom_bomb": "Small explosion",
       "city": "Increases max population",
       "copper_mine": "25K / 40K gold every 10s (L1–2)",
-      "logistics_center": "+15% train income after completion. Build time: 35s. Maximum 1 building, level 1. Connects nearby rail stations.",
+      "logistics_center": "Train income +15%. 35s build. Max 1 (L1).",
       "defense_post": "Increases defenses of nearby borders",
       "factory": "Creates railroads and spawns trains",
       "hydrogen_bomb": "Large explosion",
