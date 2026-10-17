@@ -9,7 +9,15 @@ import {
   createCommunityRouter,
   rejectAdminUpgrade,
 } from "../../src/server/community/Routes";
-import { compileDraft } from "../../src/server/community/MapCompiler";
+import {
+  compileDraft,
+  validateDraft,
+} from "../../src/server/community/MapCompiler";
+import {
+  worldTemplate,
+  WORLD_TEMPLATES,
+  terrainStats,
+} from "../../src/client/community/MapDesign";
 import {
   communityMapKey,
   MapDraft,
@@ -53,6 +61,82 @@ afterEach(() => {
 });
 
 describe("community accounts and durable storage", () => {
+  it("migrates an existing database without changing accounts, sessions or drafts", () => {
+    const author = store.createUser("ExistingMaker", "password123"),
+      token = store.createSession(author.id);
+    const map = store.submit(author, draft());
+    store.db.exec(
+      "ALTER TABLE users DROP COLUMN last_login_at; DROP TABLE activity;",
+    );
+    store.close();
+    store = new CommunityStore(folder);
+    expect(store.session(token)?.id).toBe(author.id);
+    expect(store.draft(map.id, author)).toEqual(draft());
+    expect(
+      store.dashboard().users.find((u) => u.id === author.id)?.lastLoginAt,
+    ).toBeNull();
+    expect(store.authenticate("Admin", "Admin123")?.role).toBe("admin");
+  });
+  it("reports exact admin totals and profile data, revokes only the selected player's sessions, and records moderation", () => {
+    const maker = store.createUser("Maker", "password123"),
+      other = store.createUser("OtherMaker", "password123");
+    const token = store.createSession(maker.id),
+      otherToken = store.createSession(other.id);
+    store.createSession(maker.id);
+    const map = store.submit(maker, draft());
+    expect(store.profile(maker)).toMatchObject({
+      submissions: 1,
+      published: 0,
+      pending: 1,
+      sessions: 2,
+    });
+    let dashboard = store.dashboard();
+    expect(dashboard.stats).toMatchObject({
+      accounts: 2,
+      disabled: 0,
+      sessions: 3,
+      pending: 1,
+      approved: 0,
+      assetBytes: 0,
+    });
+    expect(dashboard.users.find((u) => u.id === maker.id)).toMatchObject({
+      submissions: 1,
+      sessions: 2,
+      lastLoginAt: expect.any(Number),
+    });
+    store.revokeSessions(maker.id, "Admin");
+    expect(store.session(token)).toBeNull();
+    expect(store.session(otherToken)?.id).toBe(other.id);
+    expect(() =>
+      store.revokeSessions(
+        store.authenticate("Admin", "Admin123")!.id,
+        "Admin",
+      ),
+    ).toThrow();
+    store.review(map.id, "approve", "Ready", "Admin");
+    const assets = store.asset(map.id, "map.bin");
+    store.withdraw(map.id, "Admin");
+    expect(store.dashboard().stats.withdrawn).toBe(1);
+    store.republish(map.id, "Admin");
+    expect(store.asset(map.id, "map.bin")).toEqual(assets);
+    expect(() => store.republish(map.id, "Admin")).toThrow();
+    dashboard = store.dashboard();
+    expect(dashboard.stats).toMatchObject({
+      sessions: 1,
+      approved: 1,
+      pending: 0,
+      withdrawn: 0,
+    });
+    expect(dashboard.stats.assetBytes).toBeGreaterThan(1024 * 768);
+    expect(dashboard.activity[0]).toMatchObject({
+      actor: "Admin",
+      action: "Map republished",
+      target: draft().name,
+    });
+    expect(JSON.stringify(dashboard)).not.toMatch(
+      /password_hash|token_hash|salt|password123/,
+    );
+  });
   it("reserves the admin, hashes passwords, and keeps accounts and sessions across restart", () => {
     const admin = store.authenticate("Admin", "Admin123")!;
     expect(admin.role).toBe("admin");
@@ -122,7 +206,7 @@ describe("community accounts and durable storage", () => {
 });
 
 describe("community map compiler and review lifecycle", () => {
-  it.each([8, 12] as const)(
+  it.each([8, 12, 16] as const)(
     "compiles %s scale terrain, accurate land counts, spawns, and open straits at both game sizes",
     async (scale) => {
       const input = { ...draft(), scale },
@@ -167,6 +251,42 @@ describe("community map compiler and review lifecycle", () => {
       }
     },
   );
+  it("preserves a one-cell canal and smooths diagonal shores at Grand size", () => {
+    const input = { ...draft(), scale: 16, nations: [] };
+    for (let y = 0; y < H; y++) input.tiles[y * W + 45] = 0;
+    const compiled = compileDraft(input);
+    for (const [file, scale] of [
+      ["map.bin", 16],
+      ["map4x.bin", 8],
+      ["map16x.bin", 4],
+    ] as const) {
+      const data = compiled.files[file],
+        width = W * scale;
+      for (let y = 0; y < H * scale; y++)
+        expect(data[y * width + 45 * scale + scale / 2] & 128).toBe(0);
+      // Interpolated corners no longer occupy an entire square editor cell.
+      expect(data[10 * scale * width + 10 * scale] & 128).toBe(0);
+      expect(
+        data[(10 * scale + scale / 2) * width + 10 * scale + scale / 2] & 128,
+      ).toBe(128);
+    }
+  });
+  it("generates repeatable, varied, playable worlds for every nonblank template", () => {
+    for (const preset of WORLD_TEMPLATES.filter((p) => p.id !== "blank"))
+      for (const seed of [1, 42, 3571, 999999]) {
+        const input = { ...worldTemplate(preset.id, seed), name: preset.name };
+        expect(validateDraft(input)).toEqual(input);
+        expect(input.scale).toBe(16);
+        const stats = terrainStats(input);
+        expect(stats.landPercent).toBeGreaterThan(15);
+        expect(stats.landPercent).toBeLessThan(80);
+        expect(stats.cells[2] + stats.cells[3]).toBeGreaterThan(20);
+        expect(worldTemplate(preset.id, seed).tiles).toEqual(input.tiles);
+        expect(worldTemplate(preset.id, seed + 1).tiles).not.toEqual(
+          input.tiles,
+        );
+      }
+  });
   it("rejects malformed terrain and invalid nation positions", () => {
     expect(() => compileDraft({ ...draft(), tiles: [1] })).toThrow();
     expect(() =>
@@ -263,6 +383,13 @@ describe("community HTTP authorization", () => {
     expect(header).toMatch(/SameSite=Lax/i);
     const cookie = header.split(";")[0];
     expect((await request("/admin", undefined, cookie)).status).toBe(403);
+    expect((await request("/profile")).status).toBe(401);
+    expect((await request("/profile", undefined, cookie)).status).toBe(200);
+    for (const route of [
+      "/admin/maps/00000000-0000-4000-8000-000000000000/republish",
+      "/admin/users/00000000-0000-4000-8000-000000000000/revoke-sessions",
+    ])
+      expect((await request(route, {}, cookie)).status).toBe(403);
     expect(
       (await request("/maps", draft(), cookie, "https://attacker.example"))
         .status,

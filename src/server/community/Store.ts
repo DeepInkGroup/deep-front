@@ -11,6 +11,7 @@ import path from "node:path";
 import {
   CommunityUser,
   CommunityMapSummary,
+  CommunityAdminData,
   communityMapId,
   MAP_EDITOR_WIDTH,
   MAP_EDITOR_HEIGHT,
@@ -40,6 +41,24 @@ export class CommunityStore {
       CREATE TABLE IF NOT EXISTS map_assets(map_id TEXT NOT NULL REFERENCES maps(id),name TEXT NOT NULL,data BLOB NOT NULL,PRIMARY KEY(map_id,name));
       CREATE INDEX IF NOT EXISTS map_status ON maps(status);
       CREATE INDEX IF NOT EXISTS session_user ON sessions(user_id);`);
+    // Serialize the migration across master and worker processes.
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      if (
+        !this.db
+          .prepare("PRAGMA table_info(users)")
+          .all()
+          .some((r) => r.name === "last_login_at")
+      )
+        this.db.exec("ALTER TABLE users ADD COLUMN last_login_at INTEGER");
+      this.db.exec(
+        `CREATE TABLE IF NOT EXISTS activity(id INTEGER PRIMARY KEY AUTOINCREMENT,at INTEGER NOT NULL,actor TEXT NOT NULL,action TEXT NOT NULL,target TEXT NOT NULL)`,
+      );
+      this.db.exec("COMMIT");
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
     if (
       !this.db.prepare("SELECT id FROM users WHERE username=?").get("Admin")
     ) {
@@ -60,6 +79,11 @@ export class CommunityStore {
   }
   close() {
     this.db.close();
+  }
+  private record(actor: string, action: string, target: string) {
+    this.db
+      .prepare("INSERT INTO activity(at,actor,action,target) VALUES(?,?,?,?)")
+      .run(Date.now(), actor, action, target);
   }
   private publicUser(row: any): CommunityUser {
     return {
@@ -90,6 +114,7 @@ export class CommunityStore {
         "INSERT INTO users(id,username,password_hash,salt,role,created_at) VALUES(?,?,?,?,?,?)",
       )
       .run(id, username, passwordHash(password, salt), salt, "player", now);
+    this.record(username, "Account created", username);
     return { id, username, role: "player", createdAt: now, disabled: false };
   }
   authenticate(username: string, password: string): CommunityUser | null {
@@ -112,6 +137,9 @@ export class CommunityStore {
     this.db
       .prepare("INSERT INTO sessions VALUES(?,?,?)")
       .run(digest(token), userId, now + SESSION_LIFETIME);
+    this.db
+      .prepare("UPDATE users SET last_login_at=? WHERE id=?")
+      .run(now, userId);
     return token;
   }
   session(token: string | undefined): CommunityUser | null {
@@ -139,6 +167,88 @@ export class CommunityStore {
       .prepare("UPDATE users SET password_hash=?,salt=? WHERE id=?")
       .run(passwordHash(next, salt), salt, user.id);
     this.db.prepare("DELETE FROM sessions WHERE user_id=?").run(user.id);
+    this.record(user.username, "Password changed", user.username);
+  }
+  profile(user: CommunityUser) {
+    const counts = this.db
+      .prepare(
+        "SELECT COUNT(*) AS total,SUM(status='approved') AS published,SUM(status='pending') AS pending FROM maps WHERE owner_id=?",
+      )
+      .get(user.id) as any;
+    const sessions = this.db
+      .prepare(
+        "SELECT COUNT(*) AS n FROM sessions WHERE user_id=? AND expires_at>?",
+      )
+      .get(user.id, Date.now()) as any;
+    return {
+      user,
+      submissions: counts.total,
+      published: counts.published || 0,
+      pending: counts.pending || 0,
+      sessions: sessions.n,
+    };
+  }
+  dashboard(): CommunityAdminData {
+    const now = Date.now();
+    const users = this.db
+      .prepare(`SELECT u.*,
+      (SELECT COUNT(*) FROM sessions s WHERE s.user_id=u.id AND s.expires_at>?) AS sessions,
+      (SELECT COUNT(*) FROM maps m WHERE m.owner_id=u.id) AS submissions,
+      (SELECT COUNT(*) FROM maps m WHERE m.owner_id=u.id AND m.status='approved') AS published
+      FROM users u ORDER BY u.created_at DESC LIMIT 1000`)
+      .all(now)
+      .map((r: any) => ({
+        ...this.publicUser(r),
+        lastLoginAt: r.last_login_at ?? null,
+        sessions: r.sessions,
+        submissions: r.submissions,
+        published: r.published,
+      }));
+    const count = (sql: string, ...args: (string | number)[]) =>
+      Number((this.db.prepare(sql).get(...args) as any).n);
+    return {
+      maps: this.listMaps("admin"),
+      users,
+      activity: this.db
+        .prepare("SELECT * FROM activity ORDER BY id DESC LIMIT 100")
+        .all()
+        .map((r: any) => ({
+          id: r.id,
+          at: r.at,
+          actor: r.actor,
+          action: r.action,
+          target: r.target,
+        })),
+      stats: {
+        accounts: count("SELECT COUNT(*) AS n FROM users WHERE role='player'"),
+        disabled: count("SELECT COUNT(*) AS n FROM users WHERE disabled=1"),
+        sessions: count(
+          "SELECT COUNT(*) AS n FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.expires_at>? AND u.disabled=0",
+          now,
+        ),
+        pending: count("SELECT COUNT(*) AS n FROM maps WHERE status='pending'"),
+        approved: count(
+          "SELECT COUNT(*) AS n FROM maps WHERE status='approved'",
+        ),
+        rejected: count(
+          "SELECT COUNT(*) AS n FROM maps WHERE status='rejected'",
+        ),
+        withdrawn: count(
+          "SELECT COUNT(*) AS n FROM maps WHERE status='withdrawn'",
+        ),
+        assetBytes: count(
+          "SELECT COALESCE(SUM(length(data)),0) AS n FROM map_assets",
+        ),
+      },
+    };
+  }
+  revokeSessions(id: string, actor: string) {
+    const account = this.db
+      .prepare("SELECT username FROM users WHERE id=? AND role='player'")
+      .get(id) as any;
+    if (!account) throw new Error("Player account not found.");
+    this.db.prepare("DELETE FROM sessions WHERE user_id=?").run(id);
+    this.record(actor, "Sessions revoked", account.username);
   }
   users(): CommunityUser[] {
     return this.db
@@ -146,12 +256,20 @@ export class CommunityStore {
       .all()
       .map((r) => this.publicUser(r));
   }
-  setDisabled(id: string, disabled: boolean) {
+  setDisabled(id: string, disabled: boolean, actor = "System") {
     const result = this.db
       .prepare("UPDATE users SET disabled=? WHERE id=? AND role='player'")
       .run(disabled ? 1 : 0, id);
     if (!result.changes) throw new Error("Player account not found.");
     this.db.prepare("DELETE FROM sessions WHERE user_id=?").run(id);
+    const account = this.db
+      .prepare("SELECT username FROM users WHERE id=?")
+      .get(id) as any;
+    this.record(
+      actor,
+      disabled ? "Account disabled" : "Account enabled",
+      account.username,
+    );
   }
   private summary(row: any): CommunityMapSummary {
     return {
@@ -216,6 +334,7 @@ export class CommunityStore {
         Date.now(),
         draft.scale,
       );
+    this.record(user.username, "Map submitted", draft.name);
     return this.listMaps(user.id).find((m) => m.id === id)!;
   }
   draft(id: string, user: CommunityUser) {
@@ -224,7 +343,12 @@ export class CommunityStore {
       return null;
     return JSON.parse(row.draft);
   }
-  review(id: string, action: "approve" | "reject", notes: string) {
+  review(
+    id: string,
+    action: "approve" | "reject",
+    notes: string,
+    actor = "System",
+  ) {
     this.db.exec("BEGIN IMMEDIATE");
     try {
       const row = this.db
@@ -252,19 +376,42 @@ export class CommunityStore {
           action === "approve" ? now : null,
           id,
         );
+      this.record(
+        actor,
+        action === "approve" ? "Map approved" : "Map rejected",
+        row.name,
+      );
       this.db.exec("COMMIT");
     } catch (error) {
       this.db.exec("ROLLBACK");
       throw error;
     }
   }
-  withdraw(id: string) {
+  withdraw(id: string, actor = "System") {
     const result = this.db
       .prepare(
         "UPDATE maps SET status='withdrawn' WHERE id=? AND status='approved'",
       )
       .run(id);
     if (!result.changes) throw new Error("Published map not found.");
+    this.record(
+      actor,
+      "Map unpublished",
+      (this.db.prepare("SELECT name FROM maps WHERE id=?").get(id) as any).name,
+    );
+  }
+  republish(id: string, actor: string) {
+    const result = this.db
+      .prepare(
+        "UPDATE maps SET status='approved' WHERE id=? AND status='withdrawn' AND approved_at IS NOT NULL",
+      )
+      .run(id);
+    if (!result.changes) throw new Error("Withdrawn map not found.");
+    this.record(
+      actor,
+      "Map republished",
+      (this.db.prepare("SELECT name FROM maps WHERE id=?").get(id) as any).name,
+    );
   }
   isPublished(id: string) {
     return !!this.db

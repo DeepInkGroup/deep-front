@@ -6,9 +6,10 @@ account is required to submit maps; guests can still play.
 
 ## Create a map
 
-1. Sign in, enter a map name and description, and choose Standard or Large.
-2. Paint Water, Plains, Hills and Mountains. Use the Islands or Continents
-   templates, or start with Blank. Undo restores the previous terrain stroke.
+1. Sign in, enter a map name and description, and choose Standard, Large or Grand.
+2. Paint Water, Plains, Hills and Mountains. Start with Archipelago, Continents,
+   Twin Straits, Inland Sea, Caldera or Blank ocean. Set a repeatable world seed
+   or choose Surprise me. Undo and Redo restore terrain and nation spawns.
 3. Select Nation spawn, enter a nation name, then click land to add it.
 4. Save draft to keep an editable copy on this device. Drafts also save
    automatically after edits. They are separate for each account and browser.
@@ -17,7 +18,11 @@ account is required to submit maps; guests can still play.
    creates a new revision for review without modifying a published map.
 
 The editor has 128 × 96 cells. Standard output is 1024 × 768; Large is
-1536 × 1152. The server validates the terrain, land area and nation locations,
+1536 × 1152; Grand is 2048 × 1536 and is the default for new drafts. Older drafts
+retain their chosen size. Use River / canal for narrow waterways, Smooth for
+terrain edges, Fill connected terrain for large changes, and 100–300% zoom
+to work on detail. Coastlines and elevations are interpolated at game resolution.
+The server validates the terrain, land area and nation locations,
 then generates full-size and compact game binaries when the administrator
 approves it. Approved maps appear under **Community maps** in both solo and
 multiplayer settings and can be found using the map search. No server rebuild
@@ -27,7 +32,15 @@ or GitHub commit is needed for publication.
 
 Open the map icon and sign in with **Admin / Admin123** on a new server. The
 administrator can inspect terrain and nation spawns, approve maps, reject them
-with feedback, unpublish maps, and enable or disable creator accounts. An
+with feedback, unpublish or republish maps, and enable or disable creator accounts.
+Search maps by name, author or ID, filter by status, and sort by age or size.
+The dashboard shows exact account, map and signed-in session totals, disabled
+accounts and stored asset size. Account rows include join and last sign-in dates,
+submission counts and sessions; **Sign out devices** revokes that player's sessions.
+Sessions measure signed-in devices, not players currently in a match.
+Review details show land coverage, elevation, dimensions and timestamps. The
+latest 100 account and moderation actions appear in a durable activity history;
+existing databases migrate automatically without losing their users or maps. An
 administrator cannot create or join games. The client navigation and the game
 server both enforce this restriction while the admin account is signed in.
 
@@ -40,6 +53,13 @@ Unpublishing removes a map from new selections. Its immutable game files remain
 available to existing matches and replays. A new submission always receives a
 new map ID. Disabled accounts cannot sign in or submit maps; guest play remains
 available separately.
+
+## Profile
+
+After signing in, the header shows a profile icon. It opens account details,
+join date, submission and review counts, and the number of signed-in sessions.
+Change the password or sign out here. A password change revokes every session.
+The profile is available to administrators too; their gameplay restriction remains.
 
 ## Storage and Render, step by step
 

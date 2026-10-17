@@ -18,7 +18,7 @@ export const MapDraftSchema = z
   .object({
     name: z.string().trim().min(3).max(60),
     description: z.string().trim().max(600),
-    scale: z.union([z.literal(8), z.literal(12)]),
+    scale: z.union([z.literal(8), z.literal(12), z.literal(16)]),
     tiles: z
       .array(z.number().int().min(0).max(3))
       .length(MAP_EDITOR_WIDTH * MAP_EDITOR_HEIGHT),
@@ -68,4 +68,32 @@ export interface CommunityMapSummary {
   reviewedAt: number | null;
   width: number;
   height: number;
+}
+export interface CommunityAdminUser extends CommunityUser {
+  lastLoginAt: number | null;
+  sessions: number;
+  submissions: number;
+  published: number;
+}
+export interface CommunityActivity {
+  id: number;
+  at: number;
+  actor: string;
+  action: string;
+  target: string;
+}
+export interface CommunityAdminData {
+  maps: CommunityMapSummary[];
+  users: CommunityAdminUser[];
+  activity: CommunityActivity[];
+  stats: {
+    accounts: number;
+    disabled: number;
+    sessions: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+    withdrawn: number;
+    assetBytes: number;
+  };
 }

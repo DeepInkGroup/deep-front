@@ -70,6 +70,9 @@ export function createCommunityRouter(store = communityStore()) {
     next();
   };
   router.get("/session", (req, res) => res.json({ user: user(req, store) }));
+  router.get("/profile", requireUser, (req, res) =>
+    res.json(store.profile(user(req, store)!)),
+  );
   router.post("/signup", signupLimiter, (req, res) => {
     const input = Credentials.parse(req.body);
     const account = store.createUser(input.username, input.password);
@@ -165,9 +168,7 @@ export function createCommunityRouter(store = communityStore()) {
       )
       .send(data);
   });
-  router.get("/admin", admin, (_req, res) =>
-    res.json({ maps: store.listMaps("admin"), users: store.users() }),
-  );
+  router.get("/admin", admin, (_req, res) => res.json(store.dashboard()));
   router.post("/admin/maps/:id/review", admin, (req, res) => {
     const input = z
       .object({
@@ -180,16 +181,38 @@ export function createCommunityRouter(store = communityStore()) {
       z.string().uuid().parse(req.params.id),
       input.action,
       input.notes,
+      user(req, store)!.username,
     );
     res.json({ ok: true });
   });
   router.post("/admin/maps/:id/withdraw", admin, (req, res) => {
-    store.withdraw(z.string().uuid().parse(req.params.id));
+    store.withdraw(
+      z.string().uuid().parse(req.params.id),
+      user(req, store)!.username,
+    );
+    res.json({ ok: true });
+  });
+  router.post("/admin/maps/:id/republish", admin, (req, res) => {
+    store.republish(
+      z.string().uuid().parse(req.params.id),
+      user(req, store)!.username,
+    );
+    res.json({ ok: true });
+  });
+  router.post("/admin/users/:id/revoke-sessions", admin, (req, res) => {
+    store.revokeSessions(
+      z.string().uuid().parse(req.params.id),
+      user(req, store)!.username,
+    );
     res.json({ ok: true });
   });
   router.post("/admin/users/:id", admin, (req, res) => {
     const input = z.object({ disabled: z.boolean() }).strict().parse(req.body);
-    store.setDisabled(z.string().uuid().parse(req.params.id), input.disabled);
+    store.setDisabled(
+      z.string().uuid().parse(req.params.id),
+      input.disabled,
+      user(req, store)!.username,
+    );
     res.json({ ok: true });
   });
   router.use(

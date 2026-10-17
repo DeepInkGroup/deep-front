@@ -1,6 +1,7 @@
 import { standalone } from "./Standalone";
 import { communityUser, initializeCommunity } from "./community/Community";
 import "./community/CommunityPage";
+import "./community/ProfilePage";
 import "./community/community.css";
 import { GAME_ID_REGEX } from "@openfront/engine-api/Schemas";
 import {
@@ -2227,6 +2228,7 @@ const hidePortalElements = () => {
 
 // Initialize the client when the DOM is loaded
 const bootstrap = async () => {
+  const openProfile = window.location.hash === "#profile";
   const openCommunity =
     window.location.hash === "#community" ||
     sessionStorage.getItem("deepfront.open-community") === "1";
@@ -2254,7 +2256,8 @@ const bootstrap = async () => {
   initLayout();
   new Client().initialize();
   initNavigation();
-  if (communityUser()?.role === "admin" || openCommunity)
+  if (openProfile && communityUser()) window.showPage?.("page-profile");
+  else if (communityUser()?.role === "admin" || openCommunity)
     window.showPage?.("page-community");
   prefetchGameClient();
   prefetchModals();

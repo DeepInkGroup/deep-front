@@ -19,6 +19,7 @@ export function initNavigation() {
   const showPage = (pageId: string) => {
     const allowed = new Set([
       "page-community",
+      "page-profile",
       "page-play",
       "page-single-player",
       "page-host-lobby",
@@ -30,15 +31,18 @@ export function initNavigation() {
       "page-detailed-view",
     ]);
     if (!allowed.has(pageId)) pageId = "page-play";
-    if (communityUser()?.role === "admin") pageId = "page-community";
+    if (communityUser()?.role === "admin" && pageId !== "page-profile")
+      pageId = "page-community";
     window.currentPageId = pageId;
-    if (pageId === "page-community")
+    if (pageId === "page-community" || pageId === "page-profile")
       history.replaceState(
         null,
         "",
-        window.location.pathname + window.location.search + "#community",
+        window.location.pathname +
+          window.location.search +
+          (pageId === "page-profile" ? "#profile" : "#community"),
       );
-    else if (window.location.hash === "#community")
+    else if (["#community", "#profile"].includes(window.location.hash))
       history.replaceState(
         null,
         "",
@@ -70,7 +74,7 @@ export function initNavigation() {
     document.body.classList.toggle("page-open", pageId !== "page-play");
     document.body.classList.toggle(
       "community-open",
-      pageId === "page-community",
+      pageId === "page-community" || pageId === "page-profile",
     );
 
     // Handle page-play separately (it's not a page-content element)

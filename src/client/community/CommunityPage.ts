@@ -4,6 +4,8 @@ import { z } from "zod";
 import {
   CommunityMapSummary,
   CommunityUser,
+  CommunityAdminData,
+  CommunityAdminUser,
   MapDraft,
   MapDraftSchema,
   MAP_EDITOR_WIDTH as W,
@@ -15,27 +17,10 @@ import {
   reloadAccountHome,
   signOutCommunity,
 } from "./Community";
+import { WORLD_TEMPLATES, worldTemplate, terrainStats } from "./MapDesign";
+import { accountDate } from "./ProfilePage";
 
 const COLORS = ["#315a70", "#a9bb7d", "#b6a477", "#d3d0c2"];
-function template(kind = "islands"): MapDraft {
-  const tiles = Array(W * H).fill(0);
-  if (kind !== "blank")
-    for (let y = 0; y < H; y++)
-      for (let x = 0; x < W; x++) {
-        const split =
-          kind === "continents"
-            ? Math.abs(x - 64 - 5 * Math.sin(y / 11)) > 3
-            : true;
-        const land =
-          kind === "continents"
-            ? x > 6 && x < 122 && y > 6 && y < 90
-            : Math.hypot((x - 38) / 28, (y - 42) / 31) < 1 ||
-              Math.hypot((x - 94) / 23, (y - 55) / 28) < 1;
-        if (land && split)
-          tiles[y * W + x] = Math.abs(Math.sin(x / 9 + y / 13)) < 0.12 ? 3 : 1;
-      }
-  return { name: "", description: "", scale: 8, tiles, nations: [] };
-}
 @customElement("community-page")
 export class CommunityPage extends LitElement {
   @state() private user: CommunityUser | null = communityUser();
@@ -43,18 +28,29 @@ export class CommunityPage extends LitElement {
   @state() private busy = false;
   @state() private message = "";
   @state() private error = "";
-  @state() private draft: MapDraft = template();
+  @state() private draft: MapDraft = worldTemplate();
+  @state() private templateKind = "islands";
+  @state() private seed = 42;
+  @state() private zoom = 1;
+  @state() private grid = false;
+  @state() private fill = false;
   @state() private tool = 1;
   @state() private brush = 4;
   @state() private nationName = "";
   @state() private maps: CommunityMapSummary[] = [];
-  @state() private accounts: CommunityUser[] = [];
+  @state() private accounts: CommunityAdminUser[] = [];
+  @state() private dashboard: CommunityAdminData | null = null;
+  @state() private mapSearch = "";
+  @state() private accountSearch = "";
+  @state() private accountFilter = "all";
+  @state() private mapSort = "newest";
   @state() private selected: CommunityMapSummary | null = null;
   @state() private selectedDraft: MapDraft | null = null;
   @state() private filter = "pending";
   private painting = false;
   private dashboardTimer: ReturnType<typeof setInterval> | undefined;
   private undo: { tiles: number[]; nations: MapDraft["nations"] }[] = [];
+  private redo: { tiles: number[]; nations: MapDraft["nations"] }[] = [];
   private lastPoint: { x: number; y: number } | null = null;
   createRenderRoot() {
     return this;
@@ -122,7 +118,8 @@ export class CommunityPage extends LitElement {
     }
     try {
       if (this.user.role === "admin") {
-        const result = await communityRequest("/admin");
+        const result = await communityRequest<CommunityAdminData>("/admin");
+        this.dashboard = result;
         this.maps = result.maps;
         this.accounts = result.users;
       } else this.maps = (await communityRequest("/my-maps")).maps;
@@ -159,6 +156,7 @@ export class CommunityPage extends LitElement {
     });
   };
   private remember() {
+    this.redo = [];
     this.undo.push({
       tiles: [...this.draft.tiles],
       nations: this.draft.nations.map((n) => ({ ...n })),
@@ -168,7 +166,7 @@ export class CommunityPage extends LitElement {
   private newTerrain(kind: string) {
     this.remember();
     this.draft = {
-      ...template(kind),
+      ...worldTemplate(kind, this.seed),
       name: this.draft.name,
       description: this.draft.description,
       scale: this.draft.scale,
@@ -178,11 +176,25 @@ export class CommunityPage extends LitElement {
   private undoTerrain() {
     const previous = this.undo.pop();
     if (!previous) return;
+    this.redo.push({
+      tiles: [...this.draft.tiles],
+      nations: this.draft.nations.map((n) => ({ ...n })),
+    });
     this.draft = {
       ...this.draft,
       tiles: previous.tiles,
       nations: previous.nations,
     };
+    this.saveDraft();
+  }
+  private redoTerrain() {
+    const next = this.redo.pop();
+    if (!next) return;
+    this.undo.push({
+      tiles: [...this.draft.tiles],
+      nations: this.draft.nations.map((n) => ({ ...n })),
+    });
+    this.draft = { ...this.draft, ...next };
     this.saveDraft();
   }
   private draw() {
@@ -198,13 +210,13 @@ export class CommunityPage extends LitElement {
       }
     ctx.strokeStyle = "#ffffff0a";
     ctx.lineWidth = 1;
-    for (let x = 0; x <= W; x += 8) {
+    for (let x = 0; this.grid && x <= W; x += 8) {
       ctx.beginPath();
       ctx.moveTo(x * s, 0);
       ctx.lineTo(x * s, canvas.height);
       ctx.stroke();
     }
-    for (let y = 0; y <= H; y += 8) {
+    for (let y = 0; this.grid && y <= H; y += 8) {
       ctx.beginPath();
       ctx.moveTo(0, y * s);
       ctx.lineTo(canvas.width, y * s);
@@ -246,7 +258,8 @@ export class CommunityPage extends LitElement {
     };
   }
   private paint(x: number, y: number) {
-    const radius = (this.brush - 1) / 2;
+    const radius = this.tool === 6 ? 0.6 : (this.brush - 1) / 2;
+    const source = this.tool === 5 ? [...this.draft.tiles] : this.draft.tiles;
     for (
       let py = Math.max(0, Math.floor(y - radius));
       py <= Math.min(H - 1, Math.ceil(y + radius));
@@ -257,8 +270,41 @@ export class CommunityPage extends LitElement {
         px <= Math.min(W - 1, Math.ceil(x + radius));
         px++
       )
-        if ((px - x) ** 2 + (py - y) ** 2 <= (radius + 0.5) ** 2)
-          this.draft.tiles[py * W + px] = this.tool;
+        if ((px - x) ** 2 + (py - y) ** 2 <= (radius + 0.5) ** 2) {
+          const index = py * W + px;
+          if (this.tool === 5) {
+            const counts = [0, 0, 0, 0];
+            for (let dy = -1; dy <= 1; dy++)
+              for (let dx = -1; dx <= 1; dx++) {
+                const nx = px + dx,
+                  ny = py + dy;
+                if (nx >= 0 && nx < W && ny >= 0 && ny < H)
+                  counts[source[ny * W + nx]]++;
+              }
+            this.draft.tiles[index] = counts.indexOf(Math.max(...counts));
+          } else this.draft.tiles[index] = this.tool === 6 ? 0 : this.tool;
+        }
+  }
+  private fillTerrain(x: number, y: number) {
+    const original = this.draft.tiles[y * W + x];
+    if (original === this.tool) return;
+    const queue = [y * W + x];
+    this.draft.tiles[queue[0]] = this.tool;
+    for (let i = 0; i < queue.length; i++) {
+      const t = queue[i],
+        px = t % W,
+        py = Math.floor(t / W);
+      const visit = (n: number) => {
+        if (this.draft.tiles[n] === original) {
+          this.draft.tiles[n] = this.tool;
+          queue.push(n);
+        }
+      };
+      if (px > 0) visit(t - 1);
+      if (px < W - 1) visit(t + 1);
+      if (py > 0) visit(t - W);
+      if (py < H - 1) visit(t + W);
+    }
   }
   private pointerDown = (event: PointerEvent) => {
     if (this.busy || this.user?.role !== "player") return;
@@ -277,6 +323,7 @@ export class CommunityPage extends LitElement {
         this.error = "A map can have up to 24 named nations.";
         return;
       }
+      this.remember();
       this.draft = {
         ...this.draft,
         nations: [
@@ -290,6 +337,17 @@ export class CommunityPage extends LitElement {
     }
     this.error = "";
     this.remember();
+    if (this.fill && this.tool < 4) {
+      this.fillTerrain(point.x, point.y);
+      this.draft = {
+        ...this.draft,
+        nations: this.draft.nations.filter(
+          (n) => this.draft.tiles[n.y * W + n.x] !== 0,
+        ),
+      };
+      this.saveDraft();
+      return;
+    }
     this.painting = true;
     this.lastPoint = point;
     (event.currentTarget as HTMLCanvasElement).setPointerCapture(
@@ -347,6 +405,7 @@ export class CommunityPage extends LitElement {
         name: (result.draft.name + " v2").slice(0, 60),
       };
       this.undo = [];
+      this.redo = [];
       this.saveDraft();
       this.querySelector(".map-workspace")?.scrollIntoView({
         behavior: "smooth",
@@ -502,6 +561,7 @@ export class CommunityPage extends LitElement {
       </div>`;
   }
   private editor() {
+    const stats = terrainStats(this.draft);
     return html`<form class="map-workspace" @submit=${this.publish}>
         <div class="community-panel map-details">
           <h2>Map details</h2>
@@ -535,19 +595,28 @@ export class CommunityPage extends LitElement {
             ></textarea></label
           ><label
             >Map size<select
+              aria-label="Map size"
               .value=${String(this.draft.scale)}
               @change=${(e: Event) => {
                 this.draft = {
                   ...this.draft,
                   scale: Number((e.target as HTMLSelectElement).value) as
                     | 8
-                    | 12,
+                    | 12
+                    | 16,
                 };
                 this.saveDraft();
               }}
             >
-              <option value="8">Standard · 1024 × 768</option>
-              <option value="12">Large · 1536 × 1152</option>
+              <option value="8" ?selected=${this.draft.scale === 8}>
+                Standard · 1024 × 768
+              </option>
+              <option value="12" ?selected=${this.draft.scale === 12}>
+                Large · 1536 × 1152
+              </option>
+              <option value="16" ?selected=${this.draft.scale === 16}>
+                Grand · 2048 × 1536
+              </option>
             </select></label
           >
           <div class="draft-actions">
@@ -570,9 +639,28 @@ export class CommunityPage extends LitElement {
           </p>
         </div>
         <div class="community-panel terrain-panel">
+          <div class="map-metrics" aria-label="Map statistics">
+            <span
+              ><strong
+                >${W * this.draft.scale} × ${H * this.draft.scale}</strong
+              >
+              world size</span
+            ><span><strong>${stats.landPercent}%</strong> land</span
+            ><span
+              ><strong>${this.draft.nations.length}/24</strong> nations</span
+            >
+          </div>
           <div class="editor-toolbar">
             <div role="group" aria-label="Terrain brush">
-              ${["Water", "Plains", "Hills", "Mountains", "Nation spawn"].map(
+              ${[
+                "Water",
+                "Plains",
+                "Hills",
+                "Mountains",
+                "Nation spawn",
+                "Smooth",
+                "River / canal",
+              ].map(
                 (name, type) =>
                   html`<button
                     type="button"
@@ -596,11 +684,45 @@ export class CommunityPage extends LitElement {
               >
                 ${[1, 4, 8, 12].map(
                   (n) =>
-                    html`<option value=${n}>
+                    html`<option value=${n} ?selected=${this.brush === n}>
                       ${n} ${n === 1 ? "cell" : "cells"}
                     </option>`,
                 )}
               </select></label
+            >
+          </div>
+          <div class="editor-view-controls">
+            <label
+              >Paint mode<select
+                aria-label="Paint mode"
+                .value=${this.fill ? "fill" : "brush"}
+                @change=${(e: Event) =>
+                  (this.fill =
+                    (e.target as HTMLSelectElement).value === "fill")}
+              >
+                <option value="brush">Brush</option>
+                <option value="fill">Fill connected terrain</option>
+              </select></label
+            ><label
+              >Zoom<select
+                aria-label="Editor zoom"
+                .value=${String(this.zoom)}
+                @change=${(e: Event) =>
+                  (this.zoom = Number((e.target as HTMLSelectElement).value))}
+              >
+                <option value="1">100%</option>
+                <option value="1.5">150%</option>
+                <option value="2">200%</option>
+                <option value="3">300%</option>
+              </select></label
+            ><label class="grid-toggle"
+              ><input
+                type="checkbox"
+                .checked=${this.grid}
+                @change=${(e: Event) =>
+                  (this.grid = (e.target as HTMLInputElement).checked)}
+              />
+              Grid</label
             >
           </div>
           ${this.tool === 4
@@ -612,16 +734,24 @@ export class CommunityPage extends LitElement {
                     (this.nationName = (e.target as HTMLInputElement).value)}
                   placeholder="Name a nation, then click the map"
               /></label>`
-            : nothing}<canvas
-            class="terrain-editor"
-            width="768"
-            height="576"
-            aria-label="Map terrain editor. Drag to paint terrain."
-            @pointerdown=${this.pointerDown}
-            @pointermove=${this.pointerMove}
-            @pointerup=${this.pointerUp}
-            @pointercancel=${this.pointerUp}
-          ></canvas>
+            : nothing}
+          <div
+            class="terrain-viewport"
+            tabindex="0"
+            aria-label="Map canvas. Scroll to pan when zoomed."
+          >
+            <canvas
+              class="terrain-editor"
+              style=${`width:${this.zoom * 100}%;max-width:none`}
+              width="768"
+              height="576"
+              aria-label="Map terrain editor. Drag to paint terrain."
+              @pointerdown=${this.pointerDown}
+              @pointermove=${this.pointerMove}
+              @pointerup=${this.pointerUp}
+              @pointercancel=${this.pointerUp}
+            ></canvas>
+          </div>
           <div class="editor-bottom">
             <span class="community-muted"
               >Drag to paint · ${W} × ${H} editable cells</span
@@ -633,18 +763,75 @@ export class CommunityPage extends LitElement {
             >
               Undo
             </button>
+            <button
+              type="button"
+              class="community-button small"
+              ?disabled=${!this.redo.length}
+              @click=${() => this.redoTerrain()}
+            >
+              Redo
+            </button>
           </div>
           <div class="template-actions">
-            <span>Start with</span>${["islands", "continents", "blank"].map(
-              (kind) =>
+            <span>World ideas</span>${WORLD_TEMPLATES.map(
+              (preset) =>
                 html`<button
                   type="button"
                   class="community-button small"
-                  @click=${() => this.newTerrain(kind)}
+                  aria-pressed=${this.templateKind === preset.id}
+                  @click=${() => {
+                    this.templateKind = preset.id;
+                    this.newTerrain(preset.id);
+                  }}
                 >
-                  ${kind[0].toUpperCase() + kind.slice(1)}
+                  ${preset.name}
                 </button>`,
             )}
+          </div>
+          <div class="world-idea">
+            <p>
+              ${WORLD_TEMPLATES.find((p) => p.id === this.templateKind)?.idea}
+            </p>
+            <div class="seed-controls">
+              <label
+                >World seed<input
+                  aria-label="World seed"
+                  type="number"
+                  min="1"
+                  max="999999"
+                  .value=${String(this.seed)}
+                  @change=${(e: Event) =>
+                    (this.seed = Math.max(
+                      1,
+                      Math.min(
+                        999999,
+                        Math.floor(
+                          Number((e.target as HTMLInputElement).value) || 42,
+                        ),
+                      ),
+                    ))} /></label
+              ><button
+                type="button"
+                class="community-button small"
+                @click=${() => this.newTerrain(this.templateKind)}
+              >
+                Generate world</button
+              ><button
+                type="button"
+                class="community-button small"
+                @click=${() => {
+                  this.seed = 1 + Math.floor(Math.random() * 999999);
+                  this.newTerrain(this.templateKind);
+                }}
+              >
+                Surprise me
+              </button>
+            </div>
+            <p class="community-muted">
+              Generating a world replaces terrain and spawns. Undo restores
+              them. Use River / canal for narrow waterways, Smooth to soften
+              painted edges, and zoom to work on details.
+            </p>
           </div>
           ${this.draft.nations.length
             ? html`<ul class="nation-list">
@@ -656,6 +843,7 @@ export class CommunityPage extends LitElement {
                         type="button"
                         aria-label=${`Remove ${n.name}`}
                         @click=${() => {
+                          this.remember();
                           this.draft = {
                             ...this.draft,
                             nations: this.draft.nations.filter(
@@ -709,6 +897,12 @@ export class CommunityPage extends LitElement {
               <p class="community-muted">
                 ${map.author} · ${map.width} × ${map.height}
               </p>
+              <p class="community-muted">
+                Submitted
+                ${accountDate(map.createdAt)}${map.reviewedAt
+                  ? ` · Reviewed ${accountDate(map.reviewedAt)}`
+                  : ""}
+              </p>
               <p>${map.description}</p>
               ${map.notes
                 ? html`<p class="review-feedback">
@@ -745,30 +939,77 @@ export class CommunityPage extends LitElement {
                     Unpublish
                   </button>`
                 : nothing}
+              ${admin && map.status === "withdrawn"
+                ? html`<button
+                    class="community-button small"
+                    ?disabled=${this.busy}
+                    @click=${() =>
+                      void this.work(async () => {
+                        await communityRequest(
+                          `/admin/maps/${map.id}/republish`,
+                          {},
+                        );
+                        await this.loadDashboard();
+                        this.message = "Map republished.";
+                        window.dispatchEvent(
+                          new Event("community-maps-changed"),
+                        );
+                      })}
+                  >
+                    Republish
+                  </button>`
+                : nothing}
             </div>
           </article>`,
       )}
     </div>`;
   }
   private admin() {
-    const pending = this.maps.filter((m) => m.status === "pending").length;
-    const list = this.maps.filter(
-      (m) => this.filter === "all" || m.status === this.filter,
+    const stats = this.dashboard?.stats;
+    const list = this.maps
+      .filter(
+        (m) =>
+          (this.filter === "all" || m.status === this.filter) &&
+          `${m.name} ${m.author} ${m.description} ${m.id}`
+            .toLowerCase()
+            .includes(this.mapSearch.toLowerCase().trim()),
+      )
+      .sort((a, b) =>
+        this.mapSort === "oldest"
+          ? a.createdAt - b.createdAt
+          : this.mapSort === "largest"
+            ? b.width * b.height - a.width * a.height
+            : b.createdAt - a.createdAt,
+      );
+    const accounts = this.accounts.filter(
+      (u) =>
+        `${u.username} ${u.id}`
+          .toLowerCase()
+          .includes(this.accountSearch.toLowerCase().trim()) &&
+        (this.accountFilter === "all" ||
+          (this.accountFilter === "disabled"
+            ? u.disabled
+            : this.accountFilter === "active"
+              ? u.sessions > 0
+              : u.submissions > 0)),
     );
     return html`<div class="admin-stats">
-        <div class="community-panel">
-          <strong>${pending}</strong><span>Awaiting review</span>
-        </div>
-        <div class="community-panel">
-          <strong
-            >${this.maps.filter((m) => m.status === "approved").length}</strong
-          ><span>Published maps</span>
-        </div>
-        <div class="community-panel">
-          <strong
-            >${this.accounts.filter((u) => u.role === "player").length}</strong
-          ><span>Player accounts</span>
-        </div>
+        ${[
+          [stats?.pending ?? 0, "Awaiting review"],
+          [stats?.approved ?? 0, "Published maps"],
+          [stats?.accounts ?? 0, "Player accounts"],
+          [stats?.sessions ?? 0, "Signed-in sessions"],
+          [stats?.disabled ?? 0, "Disabled accounts"],
+          [
+            `${((stats?.assetBytes ?? 0) / 1048576).toFixed(1)} MB`,
+            "Stored map assets",
+          ],
+        ].map(
+          ([n, label]) =>
+            html`<div class="community-panel">
+              <strong>${n}</strong><span>${label}</span>
+            </div>`,
+        )}
       </div>
       <section class="community-panel">
         <div class="section-title">
@@ -780,17 +1021,54 @@ export class CommunityPage extends LitElement {
             Refresh
           </button>
         </div>
+        <div class="admin-filters">
+          <label
+            >Search maps<input
+              type="search"
+              placeholder="Name, creator or map ID"
+              .value=${this.mapSearch}
+              @input=${(e: Event) =>
+                (this.mapSearch = (
+                  e.target as HTMLInputElement
+                ).value)} /></label
+          ><label
+            >Sort maps<select
+              .value=${this.mapSort}
+              @change=${(e: Event) =>
+                (this.mapSort = (e.target as HTMLSelectElement).value)}
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="largest">Largest first</option>
+            </select></label
+          >
+        </div>
         <div class="community-tabs">
-          ${["pending", "approved", "rejected", "all"].map(
+          ${["pending", "approved", "rejected", "withdrawn", "all"].map(
             (status) =>
               html`<button
                 aria-pressed=${this.filter === status}
                 @click=${() => (this.filter = status)}
               >
                 ${status[0].toUpperCase() + status.slice(1)}
+                ${status === "all"
+                  ? this.maps.length
+                  : (stats?.[
+                      status as
+                        | "pending"
+                        | "approved"
+                        | "rejected"
+                        | "withdrawn"
+                    ] ?? 0)}
               </button>`,
           )}
         </div>
+        <p class="community-muted">
+          Showing ${list.length} of ${this.maps.length} loaded maps (latest
+          1,000). Dashboard totals include every record. Sessions count
+          signed-in devices, including admin, rather than players currently in a
+          game.
+        </p>
         ${list.length
           ? this.mapList(list, true)
           : html`<p class="community-empty">
@@ -825,6 +1103,45 @@ export class CommunityPage extends LitElement {
               ${this.selected.height} · ${this.selectedDraft.nations.length}
               nation spawns
             </p>
+            <dl class="review-metadata">
+              <div>
+                <dt>Map ID</dt>
+                <dd>${this.selected.id}</dd>
+              </div>
+              <div>
+                <dt>Submitted</dt>
+                <dd>${accountDate(this.selected.createdAt)}</dd>
+              </div>
+              <div>
+                <dt>Reviewed</dt>
+                <dd>
+                  ${this.selected.reviewedAt
+                    ? accountDate(this.selected.reviewedAt)
+                    : "Awaiting review"}
+                </dd>
+              </div>
+              <div>
+                <dt>Terrain</dt>
+                <dd>
+                  ${terrainStats(this.selectedDraft).landPercent}% land ·
+                  ${terrainStats(this.selectedDraft).landTiles.toLocaleString()}
+                  approximate land tiles
+                </dd>
+              </div>
+              <div>
+                <dt>Elevation</dt>
+                <dd>
+                  ${Math.round(
+                    (terrainStats(this.selectedDraft).cells[2] / (W * H)) * 100,
+                  )}%
+                  hills ·
+                  ${Math.round(
+                    (terrainStats(this.selectedDraft).cells[3] / (W * H)) * 100,
+                  )}%
+                  mountains
+                </dd>
+              </div>
+            </dl>
             ${this.selectedDraft.nations.length
               ? html`<p>
                   ${this.selectedDraft.nations.map((n) => n.name).join(" · ")}
@@ -860,8 +1177,35 @@ export class CommunityPage extends LitElement {
         : nothing}
       <section class="community-panel">
         <h2>Accounts</h2>
+        <div class="admin-filters">
+          <label
+            >Search accounts<input
+              type="search"
+              placeholder="Username or account ID"
+              .value=${this.accountSearch}
+              @input=${(e: Event) =>
+                (this.accountSearch = (
+                  e.target as HTMLInputElement
+                ).value)} /></label
+          ><label
+            >Account filter<select
+              .value=${this.accountFilter}
+              @change=${(e: Event) =>
+                (this.accountFilter = (e.target as HTMLSelectElement).value)}
+            >
+              <option value="all">All accounts</option>
+              <option value="active">With signed-in sessions</option>
+              <option value="disabled">Disabled accounts</option>
+              <option value="creators">Map creators</option>
+            </select></label
+          >
+        </div>
+        <p class="community-muted">
+          ${accounts.length} matching accounts (latest 1,000). Disabling an
+          account also signs out all its devices.
+        </p>
         <div class="account-list">
-          ${this.accounts.map(
+          ${accounts.map(
             (account) =>
               html`<div>
                 <span
@@ -871,24 +1215,76 @@ export class CommunityPage extends LitElement {
                       ? " · disabled"
                       : ""}</small
                   ></span
-                >${account.role === "player"
-                  ? html`<button
-                      class="community-button small"
-                      ?disabled=${this.busy}
-                      @click=${() =>
-                        void this.work(async () => {
-                          await communityRequest(`/admin/users/${account.id}`, {
-                            disabled: !account.disabled,
-                          });
-                          await this.loadDashboard();
-                          this.message = "Account updated.";
-                        })}
-                    >
-                      ${account.disabled ? "Enable account" : "Disable account"}
-                    </button>`
+                >
+                <div class="account-details">
+                  <span>Joined ${accountDate(account.createdAt)}</span
+                  ><span>Last sign-in ${accountDate(account.lastLoginAt)}</span
+                  ><span
+                    >${account.submissions} submitted · ${account.published}
+                    published · ${account.sessions} sessions</span
+                  ><code>${account.id}</code>
+                </div>
+                ${account.role === "player"
+                  ? html`<div class="account-actions">
+                      <button
+                        class="community-button small"
+                        ?disabled=${this.busy || !account.sessions}
+                        @click=${() =>
+                          void this.work(async () => {
+                            await communityRequest(
+                              `/admin/users/${account.id}/revoke-sessions`,
+                              {},
+                            );
+                            await this.loadDashboard();
+                            this.message = `${account.username} signed out on all devices.`;
+                          })}
+                      >
+                        Sign out devices</button
+                      ><button
+                        class="community-button small"
+                        ?disabled=${this.busy}
+                        @click=${() =>
+                          void this.work(async () => {
+                            await communityRequest(
+                              `/admin/users/${account.id}`,
+                              {
+                                disabled: !account.disabled,
+                              },
+                            );
+                            await this.loadDashboard();
+                            this.message = "Account updated.";
+                          })}
+                      >
+                        ${account.disabled
+                          ? "Enable account"
+                          : "Disable account"}
+                      </button>
+                    </div>`
                   : html`<span class="community-muted">Management only</span>`}
               </div>`,
           )}
+        </div>
+      </section>
+      <section class="community-panel">
+        <h2>Activity history</h2>
+        <p class="community-muted">
+          The latest 100 account, map and moderation actions. Times use your
+          device timezone.
+        </p>
+        <div class="activity-list">
+          ${this.dashboard?.activity.length
+            ? this.dashboard.activity.map(
+                (entry) =>
+                  html`<article>
+                    <time datetime=${new Date(entry.at).toISOString()}
+                      >${accountDate(entry.at)}</time
+                    ><strong>${entry.action}</strong><span>${entry.target}</span
+                    ><small>by ${entry.actor}</small>
+                  </article>`,
+              )
+            : html`<p class="community-muted">
+                New actions will appear here.
+              </p>`}
         </div>
       </section>`;
   }

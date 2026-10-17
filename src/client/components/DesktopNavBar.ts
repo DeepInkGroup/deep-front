@@ -1,11 +1,13 @@
-import { LitElement, html } from "lit";
+import { LitElement, html, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { communityUser } from "../community/Community";
 @customElement("desktop-nav-bar")
 export class DesktopNavBar extends LitElement {
   @state() private admin = communityUser()?.role === "admin";
+  @state() private account = communityUser();
   private onSession = () => {
     this.admin = communityUser()?.role === "admin";
+    this.account = communityUser();
   };
   connectedCallback() {
     super.connectedCallback();
@@ -102,6 +104,28 @@ export class DesktopNavBar extends LitElement {
             <circle cx="11.6" cy="12" r="3" />
           </svg>
         </button>
+        ${this.account
+          ? html`<button
+              class="nav-menu-item profile-nav"
+              data-page="page-profile"
+              aria-label="Profile"
+              title=${`Profile: ${this.account.username}`}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="8" r="3.5" />
+                <path
+                  d="M4.5 21v-2a7.5 7.5 0 0 1 15 0v2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>`
+          : nothing}
       </div>
       <span id="game-version" hidden></span>
     </nav>`;

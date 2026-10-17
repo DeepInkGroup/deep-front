@@ -83,13 +83,42 @@ function terrainAtScale(draft: MapDraft, scale: number) {
     head = 0,
     landCount = 0;
   const levels = [0, 2, 13, 25];
+  const sample = (x: number, y: number) =>
+    draft.tiles[
+      Math.max(0, Math.min(H - 1, y)) * W + Math.max(0, Math.min(W - 1, x))
+    ];
   for (let y = 0; y < height; y++)
     for (let x = 0; x < width; x++) {
-      const type =
-          draft.tiles[Math.floor(y / scale) * W + Math.floor(x / scale)],
-        ref = y * width + x;
-      if (type) {
-        terrain[ref] = 128 | levels[type];
+      // Interpolate cell centers so coastlines and ridges curve naturally at
+      // full resolution, while one-cell canals remain navigable at every size.
+      const gx = (x + 0.5) / scale - 0.5,
+        gy = (y + 0.5) / scale - 0.5;
+      const ix = Math.floor(gx),
+        iy = Math.floor(gy),
+        fx = gx - ix,
+        fy = gy - iy;
+      const neighbors = [
+        sample(ix, iy),
+        sample(ix + 1, iy),
+        sample(ix, iy + 1),
+        sample(ix + 1, iy + 1),
+      ];
+      const weights = [
+        (1 - fx) * (1 - fy),
+        fx * (1 - fy),
+        (1 - fx) * fy,
+        fx * fy,
+      ];
+      let coverage = 0,
+        elevation = 0;
+      for (let i = 0; i < 4; i++)
+        if (neighbors[i]) {
+          coverage += weights[i];
+          elevation += levels[neighbors[i]] * weights[i];
+        }
+      const ref = y * width + x;
+      if (coverage >= 0.5) {
+        terrain[ref] = 128 | Math.round(elevation / coverage);
         distance[ref] = 0;
         queue[tail++] = ref;
         landCount++;

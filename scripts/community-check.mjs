@@ -70,7 +70,7 @@ async function running(page, key) {
     await page.evaluate(() =>
       document.querySelector("control-panel").game.width(),
     ),
-    1024,
+    2048,
   );
   await expect(
     page.getByText("Connection error!", { exact: true }),
@@ -103,6 +103,9 @@ try {
   const owner = await pageFor(username);
   await owner.goto(base);
   await expect(
+    owner.getByRole("button", { name: "Profile", exact: true }),
+  ).toHaveCount(0);
+  await expect(
     owner.getByRole("link", { name: "Telegram", exact: true }),
   ).toHaveAttribute("href", "https://t.me/DeepFrontGame");
   await expect(
@@ -130,10 +133,103 @@ try {
   await expect(
     owner.getByRole("heading", { name: "Build a world worth conquering." }),
   ).toBeVisible({ timeout: 20000 });
+  await owner.getByRole("button", { name: "Profile", exact: true }).click();
+  await expect(owner.locator("profile-page")).toBeVisible();
+  await expect(owner.locator(".profile-identity")).toContainText(username);
+  await expect(owner.locator(".profile-stats")).toContainText(
+    "Signed-in sessions",
+  );
+  await owner.reload();
+  await expect(owner.locator("profile-page")).toBeVisible();
+  for (const width of [390, 320]) {
+    await owner.setViewportSize({ width, height: 950 });
+    assert.equal(
+      await owner.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+      true,
+      `Profile fits at ${width}px`,
+    );
+    assert.equal(
+      await owner
+        .getByRole("button", { name: "Profile", exact: true })
+        .evaluate((el) => el.getBoundingClientRect().right <= innerWidth),
+      true,
+      `Profile icon is fully visible at ${width}px`,
+    );
+  }
+  await owner.screenshot({ path: "artifacts/community-profile-mobile.png" });
+  await owner.setViewportSize({ width: 1440, height: 1000 });
+  await owner.getByRole("button", { name: "Map studio", exact: true }).click();
   const canvas = owner.locator(".terrain-editor");
   await expect(canvas).toBeVisible();
-  const box = await canvas.boundingBox();
+  await expect(
+    owner.getByRole("combobox", { name: "Map size", exact: true }),
+  ).toHaveValue("16");
+  await owner
+    .getByRole("button", { name: "Twin Straits", exact: true })
+    .click();
+  await expect(owner.locator(".world-idea")).toContainText("Four rival shores");
+  const savedTiles = () =>
+    owner.evaluate(
+      () =>
+        JSON.parse(
+          localStorage.getItem(
+            `deepfront.map-draft.${document.querySelector("community-page").user.id}`,
+          ),
+        ).tiles,
+    );
+  const straits = await savedTiles();
+  await owner.getByRole("button", { name: "Inland Sea", exact: true }).click();
+  assert.notDeepEqual(await savedTiles(), straits);
+  await owner.getByRole("button", { name: "Undo", exact: true }).click();
+  assert.deepEqual(await savedTiles(), straits);
+  await owner.getByRole("button", { name: "Redo", exact: true }).click();
+  assert.notDeepEqual(await savedTiles(), straits);
+  await owner.getByRole("button", { name: "Archipelago", exact: true }).click();
+  await owner.getByLabel("Editor zoom", { exact: true }).selectOption("2");
+  assert.equal(
+    await owner
+      .locator(".terrain-viewport")
+      .evaluate((el) => el.scrollWidth > el.clientWidth),
+    true,
+  );
+  await owner.getByLabel("Editor zoom", { exact: true }).selectOption("1");
+  await owner.getByLabel("Grid", { exact: true }).check();
+  const archipelago = await savedTiles();
+  const clickCell = async (x, y) => {
+    await canvas.scrollIntoViewIfNeeded();
+    const area = await canvas.boundingBox();
+    await owner.mouse.click(
+      area.x + (area.width * (x + 0.5)) / 128,
+      area.y + (area.height * (y + 0.5)) / 96,
+    );
+  };
+  await owner
+    .getByRole("button", { name: "River / canal", exact: true })
+    .click();
+  await clickCell(38, 42);
+  assert.equal((await savedTiles())[42 * 128 + 38], 0);
+  await owner.getByRole("button", { name: "Undo", exact: true }).click();
+  assert.deepEqual(await savedTiles(), archipelago);
+  await owner.getByRole("button", { name: "Mountains", exact: true }).click();
+  await owner.getByLabel("Paint mode", { exact: true }).selectOption("fill");
+  await clickCell(0, 0);
+  assert.equal((await savedTiles())[0], 3);
+  await owner.getByRole("button", { name: "Undo", exact: true }).click();
+  assert.deepEqual(await savedTiles(), archipelago);
+  await owner.getByLabel("Paint mode", { exact: true }).selectOption("brush");
+  await owner.getByRole("button", { name: "Smooth", exact: true }).click();
+  await clickCell(38, 42);
+  const smoothed = await savedTiles();
+  assert.equal(smoothed.length, archipelago.length);
+  assert(smoothed.every((t) => t >= 0 && t <= 3));
+  await owner.getByRole("button", { name: "Undo", exact: true }).click();
+  assert.deepEqual(await savedTiles(), archipelago);
+  await canvas.scrollIntoViewIfNeeded();
   await owner.getByRole("button", { name: "Hills", exact: true }).click();
+  await canvas.scrollIntoViewIfNeeded();
+  const box = await canvas.boundingBox();
   await owner.mouse.move(box.x + box.width * 0.26, box.y + box.height * 0.35);
   await owner.mouse.down();
   await owner.mouse.move(box.x + box.width * 0.35, box.y + box.height * 0.44, {
@@ -144,10 +240,7 @@ try {
     .getByRole("button", { name: "Nation spawn", exact: true })
     .click();
   await owner.getByLabel("Nation name", { exact: true }).fill("QA Nation");
-  await owner.mouse.click(
-    box.x + (box.width * 38) / 128,
-    box.y + (box.height * 42) / 96,
-  );
+  await clickCell(38, 42);
   // Unnamed painted drafts must survive a reload too.
   await owner.reload();
   await expect(owner.locator(".nation-list")).toContainText("QA Nation");
@@ -202,6 +295,23 @@ try {
   await expect(
     admin.getByRole("heading", { name: "Admin panel", exact: true }),
   ).toBeVisible({ timeout: 20000 });
+  await admin.getByRole("button", { name: "Profile", exact: true }).click();
+  await expect(admin.locator(".profile-identity")).toContainText(
+    "Management only",
+  );
+  await admin
+    .getByRole("button", { name: "Back to admin panel", exact: true })
+    .click();
+  await expect(admin.locator("community-page .admin-stats")).toContainText(
+    "Stored map assets",
+  );
+  await admin.getByLabel("Search maps", { exact: true }).fill(name);
+  await expect(admin.locator(".submission-card")).toHaveCount(1);
+  await admin
+    .getByLabel("Search maps", { exact: true })
+    .fill("absent-map-12345");
+  await expect(admin.locator(".submission-card")).toHaveCount(0);
+  await admin.getByLabel("Search maps", { exact: true }).fill("");
   await expect(
     admin.getByRole("button", { name: "Play solo", exact: true }),
   ).toHaveCount(0);
@@ -317,6 +427,57 @@ try {
     guest.getByText("Connection error!", { exact: true }),
   ).toHaveCount(0);
   await owner.screenshot({ path: "artifacts/community-multiplayer.png" });
+  await admin.setViewportSize({ width: 1440, height: 1000 });
+  await admin.getByRole("button", { name: /^Approved \d+$/ }).click();
+  await admin
+    .locator(".submission-card")
+    .filter({ hasText: approvedName })
+    .getByRole("button", { name: "Unpublish", exact: true })
+    .click();
+  assert.equal(
+    (await (await api(owner, "/maps")).json()).maps.some(
+      (m) => m.id === approved.id,
+    ),
+    false,
+  );
+  assert.equal(
+    (await api(owner, `/maps/${approved.id}/map.bin`)).status(),
+    200,
+  );
+  await admin.getByRole("button", { name: /^Withdrawn \d+$/ }).click();
+  await admin
+    .locator(".submission-card")
+    .filter({ hasText: approvedName })
+    .getByRole("button", { name: "Republish", exact: true })
+    .click();
+  await expect(admin.getByRole("status")).toContainText("Map republished");
+  await admin.getByLabel("Search accounts", { exact: true }).fill(username);
+  const row = admin
+    .locator(".account-list > div")
+    .filter({ hasText: username });
+  await expect(row).toHaveCount(1);
+  await expect(row).toContainText("2 submitted");
+  await row
+    .getByRole("button", { name: "Sign out devices", exact: true })
+    .click();
+  assert.equal((await api(owner, "/profile")).status(), 401);
+  await row
+    .getByRole("button", { name: "Disable account", exact: true })
+    .click();
+  await expect(row).toContainText("disabled");
+  await row
+    .getByRole("button", { name: "Enable account", exact: true })
+    .click();
+  await expect(admin.locator(".activity-list")).toContainText(
+    "Map republished",
+  );
+  await expect(admin.locator(".activity-list")).toContainText(
+    "Sessions revoked",
+  );
+  await owner.goto(base);
+  await expect(
+    owner.getByRole("button", { name: "Profile", exact: true }),
+  ).toHaveCount(0);
   assert.deepEqual(errors, []);
   console.log(
     "Approved user map runs in multiplayer on two connected clients; no browser errors",
