@@ -1,3 +1,4 @@
+import { OIL_FACTORY_COSTS } from "@openfront/engine-api/game/OilFactory";
 import {
   Difficulty,
   Gold,
@@ -386,6 +387,17 @@ export class EngineConfig extends Config {
           UnitType.Factory,
           UnitType.Port,
         );
+      case UnitType.OilFactory:
+        return (_game, player, extraLevels = 0, unitLevel = 0) => {
+          if (
+            player.type() === PlayerType.Human &&
+            this.hasInfiniteGoldFor(player)
+          )
+            return 0n;
+          return OIL_FACTORY_COSTS[
+            Math.min(unitLevel + extraLevels, OIL_FACTORY_COSTS.length - 1)
+          ];
+        };
       case UnitType.TransportShip:
       case UnitType.Shell:
       case UnitType.SAMMissile:

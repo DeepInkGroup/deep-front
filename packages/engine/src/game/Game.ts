@@ -103,6 +103,7 @@ export interface UnitParamsMap {
   };
 
   [UnitType.Factory]: Record<string, never>;
+  [UnitType.OilFactory]: Record<string, never>;
 
   [UnitType.MissileSilo]: Record<string, never>;
 
@@ -196,7 +197,12 @@ export function isUnit(unit: unknown): unit is Unit {
 export interface EngineUnitInfo extends UnitInfo {
   // extraUnits shifts the cost curve as if the player already had that many
   // additional units/levels — used to price the later steps of a bulk upgrade.
-  cost: (game: Game, player: Player, extraUnits?: number) => Gold;
+  cost: (
+    game: Game,
+    player: Player,
+    extraUnits?: number,
+    unitLevel?: number,
+  ) => Gold;
 }
 
 export interface Unit extends UnitLike {

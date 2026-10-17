@@ -1,4 +1,8 @@
 import {
+  OIL_FACTORY_MAX_BUILDINGS,
+  OIL_FACTORY_MAX_LEVEL,
+} from "@openfront/engine-api/game/OilFactory";
+import {
   Difficulty,
   GameType,
   PlayerType,
@@ -245,6 +249,14 @@ export class Config {
         info = {
           constructionDuration: this.instantBuild() ? 0 : 2 * 10,
           upgradable: true,
+        };
+        break;
+      case UnitType.OilFactory:
+        info = {
+          constructionDuration: this.instantBuild() ? 0 : 2 * 10,
+          upgradable: true,
+          maxLevel: OIL_FACTORY_MAX_LEVEL,
+          maxCount: OIL_FACTORY_MAX_BUILDINGS,
         };
         break;
       case UnitType.TransportShip:

@@ -1407,6 +1407,11 @@ export class PlayerImpl implements Player {
       );
     }
 
+    const maxCount = this.mg.unitInfo(type).maxCount;
+    if (maxCount !== undefined && this.units(type).length >= maxCount) {
+      throw new Error(`Maximum number of ${type} buildings reached`);
+    }
+
     const cost = this.mg.unitInfo(type).cost(this.mg, this);
     const b = new UnitImpl(
       type,
@@ -1491,7 +1496,15 @@ export class PlayerImpl implements Player {
     if (!this.canUpgradeUnitType(unit.type())) {
       return false;
     }
-    if (!this.canBuildUnitType(unit.type())) {
+    const info = this.mg.unitInfo(unit.type());
+    if (info.maxLevel !== undefined && unit.level() >= info.maxLevel)
+      return false;
+    if (
+      !this.canBuildUnitType(
+        unit.type(),
+        info.cost(this.mg, this, 0, unit.level()),
+      )
+    ) {
       return false;
     }
     if (!this.isUnitValidToUpgrade(unit)) {
@@ -1501,7 +1514,10 @@ export class PlayerImpl implements Player {
   }
 
   upgradeUnit(unit: Unit) {
-    const cost = this.mg.unitInfo(unit.type()).cost(this.mg, this);
+    if (!this.canUpgradeUnit(unit)) return;
+    const cost = this.mg
+      .unitInfo(unit.type())
+      .cost(this.mg, this, 0, unit.level());
     this.removeGold(cost);
     unit.increaseLevel();
     this.recordUnitConstructed(unit.type());
@@ -1527,20 +1543,35 @@ export class PlayerImpl implements Player {
     for (let i = 0; i < len; i++) {
       const u = units[i];
 
-      const cost = config.unitInfo(u).cost(mg, this);
+      const info = config.unitInfo(u);
+      let cost = info.cost(mg, this);
       let canUpgrade: number | false = false;
       let canBuild: TileRef | false = false;
+      let upgradeLevel = 0;
+      const existingUnit =
+        tile !== null && this.canUpgradeUnitType(u)
+          ? this.findExistingUnitToUpgrade(u, tile)
+          : false;
+      const upgradeTarget =
+        existingUnit !== false && this.isUnitValidToUpgrade(existingUnit)
+          ? existingUnit
+          : false;
+      if (upgradeTarget !== false) {
+        upgradeLevel = upgradeTarget.level();
+        cost = info.cost(mg, this, 0, upgradeLevel);
+      }
+      const atMaxLevel =
+        upgradeTarget !== false &&
+        info.maxLevel !== undefined &&
+        upgradeLevel >= info.maxLevel;
 
-      if (tile !== null && this.canBuildUnitType(u, cost) && !inSpawnPhase) {
-        if (this.canUpgradeUnitType(u)) {
-          const existingUnit = this.findExistingUnitToUpgrade(u, tile);
-          if (
-            existingUnit !== false &&
-            this.isUnitValidToUpgrade(existingUnit)
-          ) {
-            canUpgrade = existingUnit.id();
-          }
-        }
+      if (
+        tile !== null &&
+        this.canBuildUnitType(u, cost) &&
+        !inSpawnPhase &&
+        !atMaxLevel
+      ) {
+        if (upgradeTarget !== false) canUpgrade = upgradeTarget.id();
         canBuild = this.canSpawnUnitType(u, tile, validTiles);
       }
 
@@ -1551,10 +1582,14 @@ export class PlayerImpl implements Player {
       // already had n extra units — cost(mg, this, n).
       let upgradeCosts: Gold[] | undefined;
       if (canUpgrade !== false) {
-        upgradeCosts = new Array<Gold>(MAX_UPGRADE_AMOUNT);
+        const remainingLevels =
+          info.maxLevel === undefined
+            ? MAX_UPGRADE_AMOUNT
+            : info.maxLevel - upgradeLevel;
+        upgradeCosts = new Array<Gold>(remainingLevels);
         let total = 0n;
-        for (let n = 0; n < MAX_UPGRADE_AMOUNT; n++) {
-          total += config.unitInfo(u).cost(mg, this, n);
+        for (let n = 0; n < remainingLevels; n++) {
+          total += info.cost(mg, this, n, upgradeLevel);
           upgradeCosts[n] = total;
         }
       }
@@ -1594,6 +1629,10 @@ export class PlayerImpl implements Player {
     targetTile: TileRef,
     validTiles: TileRef[] | null,
   ): TileRef | false {
+    const maxCount = this.mg.unitInfo(unitType).maxCount;
+    // Count separate buildings, including construction, rather than levels.
+    if (maxCount !== undefined && this.units(unitType).length >= maxCount)
+      return false;
     switch (unitType) {
       case UnitType.MIRV:
         if (!this.mg.hasOwner(targetTile)) {
@@ -1623,6 +1662,7 @@ export class PlayerImpl implements Player {
       case UnitType.SAMLauncher:
       case UnitType.City:
       case UnitType.Factory:
+      case UnitType.OilFactory:
         return this.landBasedStructureSpawn(targetTile, validTiles);
       default:
         assertNever(unitType);

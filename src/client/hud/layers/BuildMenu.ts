@@ -29,6 +29,7 @@ import { GameView } from "../../view";
 const warshipIcon = assetUrl("images/BattleshipIconWhite.svg");
 const cityIcon = assetUrl("images/CityIconWhite.svg");
 const factoryIcon = assetUrl("images/FactoryIconWhite.svg");
+const oilFactoryIcon = assetUrl("images/OilFactoryIconWhite.svg");
 const goldCoinIcon = assetUrl("images/GoldCoinIcon.svg");
 const mirvIcon = assetUrl("images/MIRVIcon.svg");
 const missileSiloIcon = assetUrl("images/MissileSiloIconWhite.svg");
@@ -116,6 +117,13 @@ export const buildTable: BuildItemDisplay[][] = [
       icon: factoryIcon,
       description: "build_menu.desc.factory",
       key: "unit_type.factory",
+      countable: true,
+    },
+    {
+      unitType: UnitType.OilFactory,
+      icon: oilFactoryIcon,
+      description: "build_menu.desc.oil_factory",
+      key: "unit_type.oil_factory",
       countable: true,
     },
   ],
@@ -378,6 +386,8 @@ export class BuildMenu extends LitElement implements Controller {
     if (!player) {
       return "?";
     }
+    if (item.unitType === UnitType.OilFactory)
+      return `${player.units(item.unitType).length}/5`;
 
     return player.totalUnitLevels(item.unitType).toString();
   }

@@ -179,6 +179,8 @@ export interface UnitInfo {
   damage?: number;
   constructionDuration?: number;
   upgradable?: boolean;
+  maxLevel?: number;
+  maxCount?: number;
 }
 
 function unitTypeGroup<T extends readonly UnitType[]>(types: T) {
@@ -207,6 +209,7 @@ export enum UnitType {
   MIRVWarhead = "MIRV Warhead",
   Train = "Train",
   Factory = "Factory",
+  OilFactory = "Oil Factory",
 }
 
 export enum TrainType {
@@ -236,6 +239,7 @@ export const Structures = unitTypeGroup([
   UnitType.MissileSilo,
   UnitType.Port,
   UnitType.Factory,
+  UnitType.OilFactory,
 ] as const);
 
 export const BuildMenus = unitTypeGroup([
@@ -365,7 +369,10 @@ export interface BuildableUnit {
 // Total price of buying `amount` of a buildable in one intent. Upgrades use
 // the escalating totals from core; flat-cost units (nukes) scale linearly.
 export function bulkCost(bu: BuildableUnit, amount: number): Gold {
-  return bu.upgradeCosts?.[amount - 1] ?? bu.cost * BigInt(amount);
+  return (
+    bu.upgradeCosts?.[Math.min(amount, bu.upgradeCosts.length) - 1] ??
+    bu.cost * BigInt(amount)
+  );
 }
 
 // Largest amount (up to MAX_UPGRADE_AMOUNT) whose bulk total fits in `gold`.

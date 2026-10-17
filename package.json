@@ -10,9 +10,9 @@
   "scripts": {
     "build": "npm run build-prod && node scripts/source-archive.mjs",
     "start": "node scripts/serve.mjs",
-    "test:browser": "node scripts/gameplay-check.mjs && node scripts/layout-check.mjs && node scripts/peace-time-check.mjs",
+    "test:browser": "node scripts/gameplay-check.mjs && node scripts/layout-check.mjs && node scripts/peace-time-check.mjs && node scripts/oil-factory-check.mjs",
     "build-dev": "concurrently \"tsc --noEmit\" \"vite build --mode development\"",
-    "build-prod": "concurrently --kill-others-on-fail \"tsc --noEmit\" \"vite build\" && tsx scripts/buildAssetHashes.ts",
+    "build-prod": "node scripts/build-structure-atlas.mjs && concurrently --kill-others-on-fail \"tsc --noEmit\" \"vite build\" && tsx scripts/buildAssetHashes.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p packages/engine-api && tsc --noEmit -p packages/engine-lib && tsc --noEmit -p packages/engine && tsc --noEmit -p packages/engine/src/worker && tsc --noEmit -p packages/shared && tsc --noEmit -p packages/zbin",
     "start:client": "vite",
     "start:server": "tsx src/server/Server.ts",

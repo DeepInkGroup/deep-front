@@ -33,6 +33,18 @@ This is an anonymous game server. Each browser keeps its own local identity; no 
 
 Development exposes the Vite source server and should be used for local development. For an internet-facing instance use the built `npm start` command. See [public multiplayer hosting](docs/Hosting.md) for the included Render deployment configuration.
 
+## Oil Factory
+
+Oil Factories generate gold every ten seconds of game time. Each player may own five separate buildings, each upgradable to level three. Capturing an extra factory while at the limit destroys it.
+
+| Level | Build / upgrade cost | Gold every 10 seconds |
+| ----- | -------------------- | --------------------- |
+| 1     | 1,200,000            | 100,000               |
+| 2     | 1,300,000            | 135,000               |
+| 3     | 1,500,000            | 150,000               |
+
+Oil Factory can be switched off in **Disable Units** in both solo and multiplayer settings.
+
 ## Verification
 
 `npm run typecheck` checks all workspace packages. With a server running and Chrome installed, `npm run test:browser` verifies a solo simulation, a two-player multiplayer match, mobile layouts, settings/help, health, and the source download. Screenshots are saved under `artifacts/`.

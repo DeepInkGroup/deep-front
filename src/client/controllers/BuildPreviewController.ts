@@ -482,7 +482,10 @@ export class BuildPreviewController implements Controller {
     const isNuke = u.type === UnitType.AtomBomb;
     const multiplier =
       u.canUpgrade !== false || isNuke
-        ? (this.uiState.upgradeMultiplier ?? 1)
+        ? Math.min(
+            this.uiState.upgradeMultiplier ?? 1,
+            u.upgradeCosts?.length ?? 50,
+          )
         : 1;
     const cost = bulkCost(u, multiplier);
     // Drives the red cost label: gold short of the bulk total, or (for
@@ -543,7 +546,10 @@ export class BuildPreviewController implements Controller {
         new SendUpgradeStructureIntentEvent(
           this.ghostUnit.buildableUnit.canUpgrade,
           this.ghostUnit.buildableUnit.type,
-          this.uiState.upgradeMultiplier || 1,
+          Math.min(
+            this.uiState.upgradeMultiplier || 1,
+            this.ghostUnit.buildableUnit.upgradeCosts?.length ?? 50,
+          ),
         ),
       );
       this.removeGhostStructure();
