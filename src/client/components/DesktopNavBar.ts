@@ -1,7 +1,20 @@
 import { LitElement, html } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, state } from "lit/decorators.js";
+import { communityUser } from "../community/Community";
 @customElement("desktop-nav-bar")
 export class DesktopNavBar extends LitElement {
+  @state() private admin = communityUser()?.role === "admin";
+  private onSession = () => {
+    this.admin = communityUser()?.role === "admin";
+  };
+  connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener("community-session", this.onSession);
+  }
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener("community-session", this.onSession);
+  }
   createRenderRoot() {
     return this;
   }
@@ -12,6 +25,26 @@ export class DesktopNavBar extends LitElement {
         ><span class="edition">OPENFRONT EDITION</span></a
       >
       <div class="front-nav-actions">
+        <button
+          class="nav-menu-item"
+          data-page="page-community"
+          aria-label=${this.admin ? "Admin panel" : "Create map"}
+          title=${this.admin ? "Admin panel" : "Create map"}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            aria-hidden="true"
+          >
+            <path
+              d="m3 6 6-3 6 3 6-3v10M3 6v15l6-3 5 2M9 3v15M15 6v5"
+              stroke-linejoin="round"
+            />
+            <path d="M18 14v8m-4-4h8" stroke-linecap="round" />
+          </svg>
+        </button>
         <button
           class="nav-menu-item"
           data-page="page-play"

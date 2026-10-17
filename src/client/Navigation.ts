@@ -1,4 +1,5 @@
 import { loadModal } from "./LazyModals";
+import { communityUser } from "./community/Community";
 
 export function closeMobileSidebar() {
   const sidebar = document.getElementById("sidebar-menu");
@@ -17,6 +18,7 @@ export function closeMobileSidebar() {
 export function initNavigation() {
   const showPage = (pageId: string) => {
     const allowed = new Set([
+      "page-community",
       "page-play",
       "page-single-player",
       "page-host-lobby",
@@ -28,7 +30,20 @@ export function initNavigation() {
       "page-detailed-view",
     ]);
     if (!allowed.has(pageId)) pageId = "page-play";
+    if (communityUser()?.role === "admin") pageId = "page-community";
     window.currentPageId = pageId;
+    if (pageId === "page-community")
+      history.replaceState(
+        null,
+        "",
+        window.location.pathname + window.location.search + "#community",
+      );
+    else if (window.location.hash === "#community")
+      history.replaceState(
+        null,
+        "",
+        window.location.pathname + window.location.search,
+      );
 
     // Close mobile sidebar if a nav item was clicked
     closeMobileSidebar();
@@ -53,6 +68,10 @@ export function initNavigation() {
     // styles.css). Set after closing the previous modal: an inline modal's
     // close() re-enters showPage("page-play"), which would clear this.
     document.body.classList.toggle("page-open", pageId !== "page-play");
+    document.body.classList.toggle(
+      "community-open",
+      pageId === "page-community",
+    );
 
     // Handle page-play separately (it's not a page-content element)
     const pagePlayEl = document.getElementById("page-play");

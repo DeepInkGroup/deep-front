@@ -17,6 +17,7 @@ import {
   UnitType,
 } from "./game/GameTypes";
 import { PlayerStatsSchema } from "./StatsSchemas";
+import { COMMUNITY_MAP_PATTERN } from "./game/CommunityMaps";
 
 export type GameID = string;
 export type ClientID = string;
@@ -243,8 +244,14 @@ export const PoolConfigSchema = z
   });
 export type PoolConfig = z.infer<typeof PoolConfigSchema>;
 
+// Keep user map IDs distinct from built-in names, and encode them as strings.
+export const GameMapSchema = z.union([
+  z.enum(GameMapType),
+  z.string().regex(COMMUNITY_MAP_PATTERN) as unknown as z.ZodType<GameMapType>,
+]);
+
 export const GameConfigSchema = z.object({
-  gameMap: z.enum(GameMapType),
+  gameMap: GameMapSchema,
   difficulty: z.enum(Difficulty),
   donateGold: z.boolean(), // Configures donations to humans only
   donateTroops: z.boolean(), // Configures donations to humans only

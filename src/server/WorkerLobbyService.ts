@@ -20,6 +20,7 @@ import {
 } from "./IPCBridgeSchema";
 import { logger } from "./Logger";
 import { ServerEnv } from "./ServerEnv";
+import { rejectAdminUpgrade } from "./community/Routes";
 
 // The game config advertised for a listed private lobby: everything the
 // host configured minus host-only fields. The server already rejects
@@ -301,6 +302,7 @@ export class WorkerLobbyService {
 
   private setupUpgradeHandler() {
     this.server.on("upgrade", (request, socket, head) => {
+      if (ServerEnv.standalone() && rejectAdminUpgrade(request, socket)) return;
       const pathname = (request.url ?? "").split("?")[0];
       if (pathname === "/lobbies" || pathname.endsWith("/lobbies")) {
         this.lobbiesWss.handleUpgrade(request, socket, head, (ws) => {

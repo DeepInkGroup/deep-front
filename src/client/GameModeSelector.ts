@@ -52,6 +52,7 @@ import {
   translateText,
 } from "./Utils";
 import { isReplayShellHost } from "./VersionedReplay";
+import { communityUser } from "./community/Community";
 
 const PRIMARY_ACTION =
   "bg-malibu-blue hover:bg-aquarius active:bg-malibu-blue/80 hover:scale-y-105 hover:scale-x-[1.01]";
@@ -555,6 +556,7 @@ export class GameModeSelector extends LitElement {
   }
 
   private openLobbyFeed(refreshList = false) {
+    if (communityUser()?.role === "admin") return;
     this.feedWanted = true;
     this.feedGaveUp = false;
     if (lobbyFeedSuspended(this.desktopSessionState)) {
@@ -676,13 +678,12 @@ export class GameModeSelector extends LitElement {
       </article>
       <article class="mode-card multiplayer-card">
         <div class="multiplayer-visual" aria-hidden="true">
-          <span class="orbit orbit-one"></span
-          ><span class="orbit orbit-two"></span
-          ><span class="player-node node-one">A</span
-          ><span class="player-node node-two">B</span
-          ><span class="player-node node-three">C</span
-          ><span class="multiplayer-symbol">◈</span
-          ><span class="visual-label">BETTER TOGETHER. BETTER AS RIVALS.</span>
+          <img
+            class="multiplayer-art"
+            src=${assetUrl("images/DeepFrontMultiplayer.png")}
+            alt="Rival island strongholds connected by railroads across a shared sea"
+          />
+          <span class="visual-label">BETTER TOGETHER. BETTER AS RIVALS.</span>
         </div>
         <div class="mode-body">
           <span class="eyebrow">A SHARED BATTLEFIELD</span>

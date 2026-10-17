@@ -4,6 +4,8 @@ import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 import { getRuntimeAssetManifest } from "./RuntimeAssetManifest";
+import { communityMapId } from "@openfront/engine-api/game/CommunityMaps";
+import { communityStore } from "./community/Store";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,6 +25,12 @@ export async function readMapFile(
   map: GameMapType,
   fileName: string,
 ): Promise<Buffer> {
+  const customId = communityMapId(map);
+  if (customId) {
+    const data = communityStore().asset(customId, fileName);
+    if (!data) throw new Error("Published map file not found");
+    return data;
+  }
   const relativePath = `maps/${mapDirName(map)}/${fileName}`;
 
   // Production: resolve via the asset manifest to the hashed file under static/_assets/.

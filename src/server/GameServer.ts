@@ -80,6 +80,7 @@ import { friendsLookup, NameVisibility } from "./NameVisibility";
 import { poolTargetFor } from "./PoolRouting";
 import { Roster } from "./Roster";
 import { ServerEnv } from "./ServerEnv";
+import { mapIsAvailable } from "./community/Store";
 import { SocketIngress } from "./SocketIngress";
 import {
   noopMatchTelemetryEmitter,
@@ -369,6 +370,8 @@ export class GameServer {
   }
 
   public updateGameConfig(gameConfig: GameConfigPatch): void {
+    if (gameConfig.gameMap !== undefined && !mapIsAvailable(gameConfig.gameMap))
+      return;
     applyGameConfigPatch(this.gameConfig, gameConfig);
     // A lowered cap (the admin bot can set one) may already be met; without
     // this the lobby would wait for the next join to notice it is full.
@@ -462,6 +465,11 @@ export class GameServer {
       }
 
       case "update_game_config": {
+        if (
+          stamped.config.gameMap !== undefined &&
+          !mapIsAvailable(stamped.config.gameMap)
+        )
+          return finish({ status: 400, error: "Choose a published map." });
         this.updateGameConfig(stamped.config);
         return finish({ status: 200 });
       }

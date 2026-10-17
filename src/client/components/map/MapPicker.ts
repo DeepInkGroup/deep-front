@@ -7,12 +7,17 @@ import {
   maps,
 } from "@openfront/engine-api/game/GameTypes";
 import { assetUrl } from "@openfront/shared/AssetUrls";
-import { html, LitElement } from "lit";
+import { html, LitElement, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
 import { translateText } from "../../Utils";
 import "./MapDisplay";
 import { getFavoriteMaps, starIcon, toggleFavoriteMap } from "./MapFavorites";
+import {
+  CommunityMapSummary,
+  communityMapKey,
+} from "@openfront/engine-api/game/CommunityMaps";
+import { loadPublishedMaps } from "../../community/Community";
 const randomMap = assetUrl("images/RandomMap.webp");
 
 type MapTab = "featured" | "all" | "favorites";
@@ -44,6 +49,34 @@ export class MapPicker extends LitElement {
   @state() private activeTab: MapTab = "featured";
   @state() private expandedCategories: Set<string> = new Set();
   @state() private favorites: GameMapType[] = getFavoriteMaps();
+  @state() private communityMaps: CommunityMapSummary[] = [];
+  private refreshCommunity = () => {
+    void loadPublishedMaps()
+      .then((maps) => (this.communityMaps = maps))
+      .catch(() => {});
+  };
+  private communityTimer: ReturnType<typeof setInterval> | undefined;
+  connectedCallback() {
+    super.connectedCallback();
+    this.refreshCommunity();
+    this.communityTimer = setInterval(() => {
+      if (
+        document.visibilityState === "visible" &&
+        this.getClientRects().length
+      )
+        this.refreshCommunity();
+    }, 5000);
+    window.addEventListener("showPage", this.refreshCommunity);
+    window.addEventListener("focus", this.refreshCommunity);
+    window.addEventListener("community-maps-changed", this.refreshCommunity);
+  }
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    clearInterval(this.communityTimer);
+    window.removeEventListener("showPage", this.refreshCommunity);
+    window.removeEventListener("focus", this.refreshCommunity);
+    window.removeEventListener("community-maps-changed", this.refreshCommunity);
+  }
 
   createRenderRoot() {
     return this;
@@ -311,6 +344,11 @@ export class MapPicker extends LitElement {
 
   render() {
     const isSearching = this.searchQuery.trim().length > 0;
+    const communityMatches = this.communityMaps.filter((m) =>
+      `${m.name} ${m.author}`
+        .toLowerCase()
+        .includes(this.searchQuery.trim().toLowerCase()),
+    );
     return html`
       <div class="space-y-8">
         <div class="w-full flex items-center gap-2">
@@ -333,7 +371,39 @@ export class MapPicker extends LitElement {
                 </div>
                 ${this.activeTab === "all" ? this.renderExpandToggle() : null}`}
         </div>
-        ${isSearching ? this.renderSearchResults() : this.renderActiveTab()}
+        ${isSearching
+          ? this.filteredMaps.length || !communityMatches.length
+            ? this.renderSearchResults()
+            : nothing
+          : this.renderActiveTab()}
+        ${communityMatches.length
+          ? html`<section class="approved-map-section">
+              <h4>Community maps <span>Reviewed and approved</span></h4>
+              <div class="approved-map-grid">
+                ${communityMatches.map(
+                  (map) =>
+                    html`<button
+                      type="button"
+                      class="approved-map-card"
+                      aria-label=${map.name}
+                      aria-selected=${!this.useRandomMap &&
+                      this.selectedMap === communityMapKey(map.id)}
+                      @click=${() =>
+                        this.handleMapSelection(communityMapKey(map.id))}
+                    >
+                      <img
+                        src=${`/api/community/maps/${map.id}/thumbnail.svg`}
+                        alt=${map.name}
+                        loading="lazy"
+                      /><strong>${map.name}</strong
+                      ><span
+                        >by ${map.author} · ${map.width} × ${map.height}</span
+                      >
+                    </button>`,
+                )}
+              </div>
+            </section>`
+          : nothing}
         <div
           class="w-full ${this.randomMapDivider
             ? "pt-4 border-t border-white/5"

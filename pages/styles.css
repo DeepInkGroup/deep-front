@@ -75,6 +75,58 @@ footer {
   font-size: 12px;
   color: #9bafa2;
 }
+.map-studio-link svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+.social-links {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+.social-links a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.social-links svg,
+.social-links img {
+  width: 18px;
+  height: 18px;
+}
+.multiplayer-mode .multiplayer-art {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  opacity: 0.3;
+}
+.multiplayer-mode > :not(.multiplayer-art) {
+  position: relative;
+  z-index: 1;
+}
+.multiplayer-mode .number {
+  position: absolute;
+}
+@media (max-width: 700px) {
+  .nav {
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+    gap: 10px !important;
+  }
+  .nav nav {
+    gap: 10px !important;
+  }
+  .nav .brand {
+    font-size: 15px !important;
+  }
+  .map-studio-link svg {
+    width: 19px;
+    height: 19px;
+  }
+}
 .nav a:hover,
 footer a:hover {
   color: #dcf1e4;

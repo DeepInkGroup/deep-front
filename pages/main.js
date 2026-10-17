@@ -14,6 +14,10 @@ function gameUrl(value) {
   }
 }
 function showServer(url) {
+  const studio = document.getElementById("map-studio-link");
+  studio.href = `${url}/#community`;
+  studio.target = "_blank";
+  studio.rel = "noopener noreferrer";
   input.value = url;
   button.href = url;
   button.textContent = "Play Deep Front ↗";

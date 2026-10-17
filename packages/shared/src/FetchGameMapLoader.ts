@@ -1,5 +1,6 @@
 import { GameMapType } from "@openfront/engine-api/game/GameTypes";
 import { GameMapLoader, MapData } from "./GameMapLoader";
+import { communityMapId } from "@openfront/engine-api/game/CommunityMaps";
 
 export class FetchGameMapLoader implements GameMapLoader {
   private maps: Map<GameMapType, MapData>;
@@ -19,7 +20,10 @@ export class FetchGameMapLoader implements GameMapLoader {
     const key = Object.keys(GameMapType).find(
       (k) => GameMapType[k as keyof typeof GameMapType] === map,
     );
-    const fileName = key?.toLowerCase();
+    const customId = communityMapId(map);
+    const fileName = customId
+      ? `/api/community/maps/${customId}`
+      : key?.toLowerCase();
 
     if (!fileName) {
       throw new Error(`Unknown map: ${map}`);
@@ -30,7 +34,10 @@ export class FetchGameMapLoader implements GameMapLoader {
       map4xBin: () => this.loadBinaryFromUrl(this.url(fileName, "map4x.bin")),
       map16xBin: () => this.loadBinaryFromUrl(this.url(fileName, "map16x.bin")),
       manifest: () => this.loadJsonFromUrl(this.url(fileName, "manifest.json")),
-      webpPath: this.url(fileName, "thumbnail.webp"),
+      webpPath: this.url(
+        fileName,
+        customId ? "thumbnail.svg" : "thumbnail.webp",
+      ),
       layerImage: (layerId: string, compact: boolean) =>
         this.loadImageBitmap(
           this.url(fileName, `${layerId}${compact ? ".4x" : ""}.webp`),
@@ -49,6 +56,7 @@ export class FetchGameMapLoader implements GameMapLoader {
   }
 
   private url(map: string, path: string) {
+    if (map.startsWith("/api/community/maps/")) return `${map}/${path}`;
     return this.resolveUrl(`${map}/${path}`);
   }
 

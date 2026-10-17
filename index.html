@@ -154,7 +154,6 @@
 
     <!-- Structured Data -->
 
-
     <!--
       Injected from Server env.
 
@@ -202,30 +201,19 @@
 
     <!-- CrazyGames SDK -->
 
-
     <!-- Cloudflare Turnstile -->
-
 
     <!-- AdShield -->
     <!-- prettier-ignore -->
 
-
-
-
-
-
     <!-- Analytics -->
 
-
     <!-- Google tag (gtag.js) -->
-
-
   </head>
 
   <body
     class="select-none font-sans min-h-screen bg-slate-50 transition-opacity duration-300 ease-in-out flex flex-row flex-wrap content-start"
   >
-
     <div class="front-backdrop" aria-hidden="true"></div>
     <div id="hex-grid" class="fixed inset-0 -z-50 pointer-events-none">
       <div
@@ -255,8 +243,6 @@
       aria-hidden="true"
     ></div>
 
-
-
     <!-- MAIN CONTENT AREA -->
     <div
       class="in-[.in-game]:hidden flex-1 basis-full min-w-0 min-h-dvh in-[.page-open]:min-h-0 in-[.page-open]:overflow-hidden relative pt-[var(--top-ad-pad,0px)] in-[.page-open]:pt-[var(--top-ad-height,0px)] transition-[margin] duration-500 ease-out will-change-[margin-left] flex flex-col"
@@ -274,15 +260,15 @@
         class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-99999"
       ></div>
 
-
       <banned-modal></banned-modal>
-
-
 
       <!-- Main container with responsive padding -->
       <main-layout class="contents">
         <play-page class="contents"></play-page>
-
+        <community-page
+          id="page-community"
+          class="hidden w-full h-full page-content relative z-50"
+        ></community-page>
 
         <single-player-modal
           id="page-single-player"
@@ -312,10 +298,6 @@
           class="hidden w-full h-full page-content relative z-50"
         ></troubleshooting-modal>
 
-
-
-
-
         <help-modal
           id="page-help"
           inline
@@ -326,7 +308,6 @@
           inline
           class="hidden w-full h-full page-content relative z-50"
         ></language-modal>
-
 
         <detailed-view-modal
           id="page-detailed-view"
@@ -341,11 +322,7 @@
 
       <!-- Global Modals -->
 
-
       <!-- Opened from the nav profile menu (#modal=...) -->
-
-
-
     </div>
 
     <!-- Game components -->
@@ -429,12 +406,10 @@
          which would unmount the player and break ToS-compliant playback. The
          component is position:fixed and self-manages visibility (pauses in-game). -->
 
-
     <!-- Steam shell status bar. A direct <body> child, like
          featured-stream above, so it is not inside the home container -- but
          unlike it, deliberately hidden in-game (see the component's comment).
          Renders nothing outside the desktop shell. -->
-
 
     <!-- Scripts -->
     <script>
@@ -451,13 +426,9 @@
       }, 3000);
     </script>
 
-
-
     <!-- Analytics -->
 
     <script type="module" src="/src/client/Main.ts"></script>
-    <footer>
-
-    </footer>
+    <footer></footer>
   </body>
 </html>

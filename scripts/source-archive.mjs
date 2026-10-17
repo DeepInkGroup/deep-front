@@ -16,6 +16,7 @@ try {
   // Source downloads have no Git metadata and must still be buildable.
   const excluded = new Set([
     ".git",
+    ".data",
     ".tmp",
     "node_modules",
     "static",
@@ -47,7 +48,12 @@ try {
 }
 files = files.filter(
   (p) =>
-    p && !p.startsWith(".tmp/") && !p.startsWith("static/") && p !== ".env",
+    p &&
+    !p.startsWith(".tmp/") &&
+    !p.startsWith(".data/") &&
+    !p.startsWith("static/") &&
+    !/(^|\/)community\.sqlite(?:-wal|-shm|-journal)?$/.test(p) &&
+    p !== ".env",
 );
 const output = createWriteStream("static/source.zip");
 const finished = once(output, "finish");

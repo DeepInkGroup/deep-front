@@ -1,6 +1,6 @@
 # Deep Front — OpenFront standalone edition
 
-Black interface with a world map background, minimal header icons, and solo and multiplayer. Includes the original engine and maps. Accounts, clans, rankings, purchases, ads, and streams are absent from the menu. No upstream account API or CAPTCHA is needed.
+Black interface with a world map background, minimal header icons, and solo and multiplayer. Includes the original engine and maps, server-local creator accounts, a community Map Studio and admin review. Clans, rankings, purchases, ads and streams are absent from the menu. No upstream account API or CAPTCHA is needed.
 
 ## Install
 
@@ -29,7 +29,7 @@ The built game runs at **http://localhost:9000**, listening on all network inter
 
 On Windows, you can also double-click **Start Deep Front.cmd** after installing dependencies.
 
-This is an anonymous game server. Each browser keeps its own local identity; no account system is required. Multiplayer players must open the same server. Choose **Host a game**, share its invite link, then start when everyone is ready. Solo simulations run in the browser.
+Each browser keeps its own local gameplay identity. Creators and administrators sign into accounts on this server to create and manage maps. Multiplayer players must open the same server. Choose **Host a game**, share its invite link, then start when everyone is ready. Solo simulations run in the browser.
 
 Development exposes the Vite source server and should be used for local development. For an internet-facing instance use the built `npm start` command. See [public multiplayer hosting](docs/Hosting.md) for the included Render deployment configuration.
 
@@ -60,6 +60,12 @@ Select **DeepPlace** in the map picker's **Fictional** or **New** category, or s
 To regenerate its source terrain, run `node scripts/create-deepplace.mjs`. With Go 1.24.4 or newer installed, run `go run -tags nodynamic . --maps=deepplace` from `map-generator` to regenerate the playable assets and map registry. Hosting builds use the committed map files and do not require Go.
 
 ## Verification
+
+The header's map icon opens account sign-in, the community Map Studio and the
+Admin review panel. New servers start with **Admin / Admin123**; this account
+only manages maps and users. Approved maps become playable in solo and
+multiplayer without a rebuild. See [community maps and persistent Render storage](docs/Community.md)
+for the complete workflow and deployment steps.
 
 `npm run typecheck` checks all workspace packages. With a server running and Chrome installed, `npm run test:browser` verifies a solo simulation, a two-player multiplayer match, mobile layouts, settings/help, health, and the source download. Screenshots are saved under `artifacts/`.
 

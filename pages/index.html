@@ -22,6 +22,22 @@
         ></a
       >
       <nav aria-label="Main navigation">
+        <a
+          id="map-studio-link"
+          class="map-studio-link"
+          href="#setup"
+          aria-label="Create map"
+          title="Create map"
+          ><svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            aria-hidden="true"
+          >
+            <path d="m3 6 6-3 6 3 6-3v10M3 6v15l6-3 5 2M9 3v15M15 6v5" />
+            <path d="M18 14v8m-4-4h8" /></svg
+        ></a>
         <a href="#setup">Server setup</a
         ><a
           href="https://github.com/DeepInkGroup/deep-front"
@@ -65,7 +81,8 @@
           </p>
           <span class="tag">Custom maps & difficulty</span>
         </article>
-        <article class="mode">
+        <article class="mode multiplayer-mode">
+          <img class="multiplayer-art" src="./multiplayer.png" alt="" />
           <span class="number">02</span
           ><span class="eyebrow">A SHARED BATTLEFIELD</span>
           <h2>Multiplayer</h2>
@@ -175,7 +192,14 @@
           <p>
             The free service sleeps after 15 minutes without traffic and can
             take about a minute to wake. Restarting or deploying ends active
-            matches.
+            matches. Creator accounts and published maps require persistent
+            storage.
+            <a
+              href="https://github.com/DeepInkGroup/deep-front/blob/main/docs/Community.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Account and map storage setup ↗</a
+            >
             <a
               href="https://render.com/docs/free"
               target="_blank"
@@ -197,7 +221,27 @@
       <span
         >© OpenFront and Contributors <span class="separator">/</span> Deep
         Front</span
-      ><span
+      >
+      <nav class="social-links" aria-label="Deep Front community">
+        <a
+          href="https://t.me/DeepFrontGame"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Telegram"
+          ><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path
+              d="M21.6 3.3c.6-.3 1.2.2 1 1L19.3 20c-.1.7-.6 1-1.2.6l-5-3.7-2.5 2.4c-.3.2-.5.4-.9.4l.4-5.2 9.3-8.4c.4-.4-.1-.6-.6-.3L7.3 13l-5-1.6c-.7-.2-.7-.7.1-1l19.2-7.1Z"
+            /></svg
+          >Telegram</a
+        ><a
+          href="https://github.com/DeepInkGroup"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="GitHub"
+          ><img src="./github.svg" alt="" />GitHub</a
+        >
+      </nav>
+      <span
         ><a
           href="https://github.com/DeepInkGroup/deep-front"
           target="_blank"

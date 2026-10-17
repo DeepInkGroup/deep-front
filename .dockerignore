@@ -1,4 +1,9 @@
 node_modules
+.data
+.tmp
+artifacts
+**/community.sqlite
+**/community.sqlite-*
 Dockerfile*
 docker-compose*
 .dockerignore

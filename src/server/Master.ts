@@ -28,6 +28,7 @@ import { startPolling } from "./PollingLoop";
 import { renderAppShell } from "./RenderHtml";
 import { ServerEnv } from "./ServerEnv";
 import { applyStaticAssetCacheControl } from "./StaticAssetCache";
+import { createCommunityRouter, communityGameGuard } from "./community/Routes";
 
 const playlist = new MapPlaylist();
 let lobbyService: MasterLobbyService;
@@ -41,6 +42,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(express.json());
+app.set("trust proxy", 3);
+if (ServerEnv.standalone()) {
+  app.use("/api/community", createCommunityRouter());
+  app.use(communityGameGuard);
+}
 
 // Serve the shared app shell for the root document.
 app.use(async (req, res, next) => {

@@ -1,4 +1,7 @@
 import { standalone } from "./Standalone";
+import { communityUser, initializeCommunity } from "./community/Community";
+import "./community/CommunityPage";
+import "./community/community.css";
 import { GAME_ID_REGEX } from "@openfront/engine-api/Schemas";
 import {
   isRewardClaimable,
@@ -1684,6 +1687,12 @@ class Client {
   }
 
   private async handleJoinLobby(event: CustomEvent<JoinLobbyEvent>) {
+    await initializeCommunity();
+    if (communityUser()?.role === "admin") {
+      document.querySelector<GameStartingModal>("game-starting-modal")?.hide();
+      window.showPage?.("page-community");
+      return;
+    }
     const lobby = event.detail;
     if (this.usernameInput && !this.usernameInput.canPlay()) {
       // The singleplayer modal shows the starting overlay before dispatching
@@ -2217,7 +2226,14 @@ const hidePortalElements = () => {
 };
 
 // Initialize the client when the DOM is loaded
-const bootstrap = () => {
+const bootstrap = async () => {
+  const openCommunity =
+    window.location.hash === "#community" ||
+    sessionStorage.getItem("deepfront.open-community") === "1";
+  sessionStorage.removeItem("deepfront.open-community");
+  await initializeCommunity();
+  if (communityUser()?.role === "admin")
+    history.replaceState(null, "", "/#community");
   // First, so the error hooks are in place for everything below. No-op
   // without a collector URL (see Telemetry.ts); never awaited.
   void initTelemetry();
@@ -2238,6 +2254,8 @@ const bootstrap = () => {
   initLayout();
   new Client().initialize();
   initNavigation();
+  if (communityUser()?.role === "admin" || openCommunity)
+    window.showPage?.("page-community");
   prefetchGameClient();
   prefetchModals();
 

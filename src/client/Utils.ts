@@ -18,6 +18,7 @@ import { ClientEnv } from "./ClientEnv";
 import type { LangSelector } from "./LangSelector";
 import { pagePin } from "./PagePin";
 import { Platform } from "./Platform";
+import { communityMapLabel } from "./community/Community";
 
 export const TUTORIAL_VIDEO_URL = "https://www.youtube.com/embed/7J5zwb_s_Cg";
 
@@ -55,6 +56,8 @@ export function presenceMapKey(
 
 export function getMapName(mapName: string | undefined): string | null {
   if (!mapName) return null;
+  const custom = communityMapLabel(mapName);
+  if (custom) return custom;
   const translationKey =
     maps.find((m) => m.type === mapName)?.translationKey ??
     `map.${normaliseMapKey(mapName)}`;

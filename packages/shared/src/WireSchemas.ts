@@ -19,6 +19,7 @@ import {
   ClanTagSchema,
   ClientID,
   GameConfigSchema,
+  GameMapSchema,
   GameStartInfoSchema,
   ID,
   IntentSchema,
@@ -493,7 +494,7 @@ export const ServerPingMessageSchema = z.object({
 
 export const ServerPrestartMessageSchema = z.object({
   type: z.literal("prestart"),
-  gameMap: z.enum(GameMapType),
+  gameMap: GameMapSchema,
   gameMapSize: z.enum(GameMapSize),
 });
 

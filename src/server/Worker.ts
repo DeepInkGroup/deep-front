@@ -58,6 +58,8 @@ import { MAX_WEBSOCKET_PAYLOAD_BYTES } from "./telemetry/MatchTelemetryConfig";
 import { WorkerLobbyService } from "./WorkerLobbyService";
 import { initWorkerMetrics } from "./WorkerMetrics";
 import { stripWorkerPrefix } from "./WorkerPathPrefix";
+import { communityGameGuard } from "./community/Routes";
+import { mapIsAvailable } from "./community/Store";
 
 const workerId = ServerEnv.workerId() ?? 0;
 const log = logger.child({ comp: `w_${workerId}` });
@@ -132,6 +134,7 @@ export async function startWorker() {
   app.use(["/api", /^\/w\d+\/api/], gameApiCors);
 
   app.use(stripWorkerPrefix(workerId));
+  if (ServerEnv.standalone()) app.use(communityGameGuard);
 
   app.set("trust proxy", 3);
   app.use(compression());
@@ -194,6 +197,8 @@ export async function startWorker() {
       return res.status(400).json({ error: z.prettifyError(parsed.error) });
     }
     const gc = parsed.data;
+    if (gc && !mapIsAvailable(gc.gameMap))
+      return res.status(400).json({ error: "Choose a published map." });
     // Only private games are created here. Public games are scheduled by the
     // master over IPC, and singleplayer games run in the browser, never on a
     // game server. An empty body ({}) parses to undefined and gets
