@@ -1,0 +1,118 @@
+{
+  "id": "DeepPlace",
+  "name": "DeepPlace",
+  "translation_key": "map.deepplace",
+  "categories": [
+    "fictional",
+    "new"
+  ],
+  "multiplayer_frequency": 4,
+  "nations": [
+    {
+      "name": "Northreach",
+      "coordinates": [
+        470,
+        260
+      ],
+      "flag": ""
+    },
+    {
+      "name": "Veyra",
+      "coordinates": [
+        780,
+        360
+      ],
+      "flag": ""
+    },
+    {
+      "name": "Westhaven",
+      "coordinates": [
+        470,
+        600
+      ],
+      "flag": ""
+    },
+    {
+      "name": "Stonegate",
+      "coordinates": [
+        830,
+        665
+      ],
+      "flag": ""
+    },
+    {
+      "name": "Ember Coast",
+      "coordinates": [
+        330,
+        1030
+      ],
+      "flag": ""
+    },
+    {
+      "name": "Alderfall",
+      "coordinates": [
+        730,
+        1110
+      ],
+      "flag": ""
+    },
+    {
+      "name": "Dawnspire",
+      "coordinates": [
+        1410,
+        300
+      ],
+      "flag": ""
+    },
+    {
+      "name": "Eastwatch",
+      "coordinates": [
+        1720,
+        390
+      ],
+      "flag": ""
+    },
+    {
+      "name": "Copper Vale",
+      "coordinates": [
+        1370,
+        690
+      ],
+      "flag": ""
+    },
+    {
+      "name": "Tidehold",
+      "coordinates": [
+        1710,
+        760
+      ],
+      "flag": ""
+    },
+    {
+      "name": "Southdeep",
+      "coordinates": [
+        1250,
+        1130
+      ],
+      "flag": ""
+    },
+    {
+      "name": "Ashen Reach",
+      "coordinates": [
+        1610,
+        1140
+      ],
+      "flag": ""
+    }
+  ],
+  "custom_tribes": [
+    "Straitwardens",
+    "Cinder Isles",
+    "Deepwater",
+    "Mist Coast",
+    "Ironwood",
+    "Saltmarch",
+    "Highwind",
+    "Moonharbor"
+  ]
+}

@@ -44,6 +44,7 @@ export enum GameMapType {
   Conakry = "Conakry", // map-generator/assets/maps/conakry/info.json
   Crimea = "Crimea", // map-generator/assets/maps/crimea/info.json
   DanishStraits = "Danish Straits", // map-generator/assets/maps/danishstraits/info.json
+  DeepPlace = "DeepPlace", // map-generator/assets/maps/deepplace/info.json
   DeglaciatedAntarctica = "Deglaciated Antarctica", // map-generator/assets/maps/deglaciatedantarctica/info.json
   Didier = "Didier", // map-generator/assets/maps/didier/info.json
   DidierFrance = "Didier France", // map-generator/assets/maps/didierfrance/info.json
@@ -858,6 +859,27 @@ export const maps: readonly MapInfo[] = [
     specialFrequency: -1,
     defaultNationCount: 26,
     themes: ["europe"],
+  },
+  {
+    id: "DeepPlace",
+    type: GameMapType.DeepPlace,
+    translationKey: "map.deepplace",
+    categories: ["fictional", "new"],
+    multiplayerFrequency: 4,
+    ffaFrequency: -1,
+    teamFrequency: -1,
+    specialFrequency: -1,
+    defaultNationCount: 12,
+    customTribes: [
+      { name: "Straitwardens" },
+      { name: "Cinder Isles" },
+      { name: "Deepwater" },
+      { name: "Mist Coast" },
+      { name: "Ironwood" },
+      { name: "Saltmarch" },
+      { name: "Highwind" },
+      { name: "Moonharbor" },
+    ],
   },
   {
     id: "DeglaciatedAntarctica",

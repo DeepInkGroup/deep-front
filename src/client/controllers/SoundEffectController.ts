@@ -34,6 +34,8 @@ const STATION_CAPABLE_TYPES = new Set<UnitType>([
   UnitType.City,
   UnitType.Factory,
   UnitType.Port,
+  UnitType.OilFactory,
+  UnitType.CopperMine,
 ]);
 
 const NUKE_INBOUND_MESSAGES = new Set<MessageType>([

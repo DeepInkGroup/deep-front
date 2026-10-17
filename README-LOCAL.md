@@ -51,6 +51,14 @@ Each player may own two Copper Mines, each with at most two levels. Level 1 cost
 
 AI tribes and nations build and upgrade both resource buildings when they have gold and space, following the same limits and disable settings. Bombs destroy both buildings and stop their income; human-versus-human peace-time protection still applies. Captured buildings beyond the ownership limit are destroyed.
 
+Oil Factories and Copper Mines connect to nearby cities, ports, factories and resource buildings using the existing railroad network and placement preview. They also serve as train trade stops. Ordinary factories supply trains; resource buildings retain their separate ten-second income.
+
+## DeepPlace
+
+Select **DeepPlace** in the map picker's **Fictional** or **New** category, or search for its name. This original 2048 × 1440 map is available in solo and multiplayer, at normal and compact size. Four main land regions surround Deep Strait, with two cross passages, island chains, mountain ridges, sheltered gulfs and twelve fictional nations.
+
+To regenerate its source terrain, run `node scripts/create-deepplace.mjs`. With Go 1.24.4 or newer installed, run `go run -tags nodynamic . --maps=deepplace` from `map-generator` to regenerate the playable assets and map registry. Hosting builds use the committed map files and do not require Go.
+
 ## Verification
 
 `npm run typecheck` checks all workspace packages. With a server running and Chrome installed, `npm run test:browser` verifies a solo simulation, a two-player multiplayer match, mobile layouts, settings/help, health, and the source download. Screenshots are saved under `artifacts/`.

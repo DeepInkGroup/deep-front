@@ -7,6 +7,13 @@ See [Contributors](https://github.com/openfrontio/OpenFrontIO/graphs/contributor
 
 ## Map Data
 
+### DeepPlace
+
+Original fictional terrain and nation names created for Deep Front, licensed
+under AGPL-3.0 with this project. Terrain source and its deterministic generator
+are included in `map-generator/assets/maps/deepplace` and
+`scripts/create-deepplace.mjs`.
+
 ### OpenStreetMap
 
 © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright)  

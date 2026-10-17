@@ -343,7 +343,7 @@ a:focus-visible {
 }
 .multiplayer-buttons {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 10px;
 }
 .multiplayer-card .front-primary {
@@ -421,39 +421,6 @@ a:focus-visible {
 .visual-label {
   color: #9db1a5;
 }
-.server-lobbies {
-  margin-top: 29px;
-  border-top: 1px solid #2b3530;
-  padding-top: 22px;
-}
-.lobby-section-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 15px;
-}
-.lobby-section-heading h2 {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  font-size: 12px;
-  font-weight: 600;
-}
-.text-button {
-  font-size: 11px;
-  color: #b6cfc0;
-}
-.public-lobby-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-top: 18px;
-}
-.lobby-empty {
-  color: #9baca2;
-  font-size: 12px;
-  padding: 18px 0;
-}
 .front-tips {
   display: flex;
   justify-content: center;
@@ -513,7 +480,9 @@ a:focus-visible {
 input::placeholder {
   color: #879f90 !important;
 }
-input, textarea, select {
+input,
+textarea,
+select {
   color-scheme: dark;
   background-color: #111a15;
   color: #e2eae5;
@@ -587,9 +556,6 @@ game-left-sidebar img {
   .mode-body > p {
     max-width: none;
     min-height: 0;
-  }
-  .public-lobby-grid {
-    grid-template-columns: 1fr;
   }
   .front-tips {
     gap: 14px;

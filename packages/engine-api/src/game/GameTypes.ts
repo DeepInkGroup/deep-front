@@ -244,6 +244,19 @@ export const Structures = unitTypeGroup([
   UnitType.CopperMine,
 ] as const);
 
+/** Buildings that start a rail network and connect nearby economic structures. */
+export const RailHubs = unitTypeGroup([
+  UnitType.Factory,
+  UnitType.OilFactory,
+  UnitType.CopperMine,
+] as const);
+
+export const RailStructures = unitTypeGroup([
+  UnitType.City,
+  UnitType.Port,
+  ...RailHubs.types,
+] as const);
+
 export const BuildMenus = unitTypeGroup([
   ...Structures.types,
   ...BuildableAttacks.types,

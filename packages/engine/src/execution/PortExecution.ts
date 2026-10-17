@@ -1,4 +1,4 @@
-import { UnitType } from "@openfront/engine-api/game/GameTypes";
+import { RailHubs, UnitType } from "@openfront/engine-api/game/GameTypes";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
 import {
   zInt,
@@ -102,10 +102,12 @@ export class PortExecution implements Execution {
   }
 
   createStation(): void {
-    const nearbyFactory = this.mg.hasUnitNearby(
-      this.port.tile()!,
-      this.mg.config().trainStationMaxRange(),
-      UnitType.Factory,
+    const nearbyFactory = RailHubs.types.some((type) =>
+      this.mg.hasUnitNearby(
+        this.port.tile()!,
+        this.mg.config().trainStationMaxRange(),
+        type,
+      ),
     );
     if (nearbyFactory) {
       this.mg.addExecution(new TrainStationExecution(this.port));

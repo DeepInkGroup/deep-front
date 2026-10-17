@@ -1,4 +1,4 @@
-import { UnitType } from "@openfront/engine-api/game/GameTypes";
+import { RailHubs } from "@openfront/engine-api/game/GameTypes";
 import { zRef } from "@openfront/engine-lib/snapshot/SnapshotType";
 import { z } from "zod";
 import { Execution, Game, Unit } from "../game/Game";
@@ -41,12 +41,14 @@ export class CityExecution implements Execution {
   }
 
   private createStation(): void {
-    const nearbyFactory = this.mg.hasUnitNearby(
-      this.city.tile()!,
-      this.mg.config().trainStationMaxRange(),
-      UnitType.Factory,
+    const nearbyFactory = RailHubs.types.some((type) =>
+      this.mg.hasUnitNearby(
+        this.city.tile()!,
+        this.mg.config().trainStationMaxRange(),
+        type,
+      ),
     );
-    if (nearbyFactory) {
+    if (nearbyFactory && !this.city.hasTrainStation()) {
       this.mg.addExecution(new TrainStationExecution(this.city));
     }
   }

@@ -6,6 +6,7 @@ import { zInt, zRef } from "@openfront/engine-lib/snapshot/SnapshotType";
 import { z } from "zod";
 import { Execution, Game, Unit } from "../game/Game";
 import { execSnapshotType } from "../snapshot/ExecutionSnapshot";
+import { connectRailHub } from "./RailHub";
 import type {
   ExecRecord,
   SnapshotReader,
@@ -15,10 +16,12 @@ import type {
 export class OilFactoryExecution implements Execution {
   private active = true;
   private nextPayoutTick = 0;
+  private game: Game;
 
   constructor(private factory: Unit) {}
 
-  init(_game: Game, ticks: number): void {
+  init(game: Game, ticks: number): void {
+    this.game = game;
     this.nextPayoutTick = ticks + OIL_FACTORY_PAYOUT_TICKS;
   }
 
@@ -34,6 +37,7 @@ export class OilFactoryExecution implements Execution {
       this.nextPayoutTick = ticks + OIL_FACTORY_PAYOUT_TICKS;
       return;
     }
+    connectRailHub(this.game, this.factory);
     if (ticks >= this.nextPayoutTick) {
       this.factory
         .owner()
@@ -61,6 +65,7 @@ export class OilFactoryExecution implements Execution {
   }
 
   restoreSnapshot(s: OilFactoryState, r: SnapshotReader): void {
+    this.game = r.game;
     this.active = s.active;
     this.nextPayoutTick = s.nextPayoutTick;
     this.factory = r.unit(s.factory);

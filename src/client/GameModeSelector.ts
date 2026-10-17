@@ -27,7 +27,6 @@ import {
 import { gamePortal } from "./GamePortal";
 import type { HostLobbyModal } from "./HostLobbyModal";
 import { showInGameAlert } from "./InGameModal";
-import type { JoinLobbyModal } from "./JoinLobbyModal";
 import { whenModalLoaded } from "./LazyModals";
 import { PublicLobbySocket } from "./LobbySocket";
 import { JoinLobbyEvent } from "./Main";
@@ -45,7 +44,6 @@ import { lastUserMeResponse } from "./UserMeBroadcast";
 import { UsernameInput } from "./UsernameInput";
 import {
   calculateServerTimeOffset,
-  getGameModeLabel,
   getGamesPlayed,
   getSecondsUntilServerTimestamp,
   reloadForUpdate,
@@ -649,91 +647,64 @@ export class GameModeSelector extends LitElement {
   }
 
   render() {
-    const games = Object.values(this.lobbies?.games ?? {})
-      .map((g) => g.find((lobby) => !lobby.gameConfig?.trusted))
-      .filter((g): g is PublicGameInfo => g !== undefined);
     return html` <div class="front-modes">
-        <article class="mode-card solo-card">
-          <div class="mode-art">
-            <img
-              src=${assetUrl("maps/world/thumbnail.webp")}
-              alt="World map"
-            /><span class="map-label">THE WORLD IS YOURS</span
-            ><span class="map-coordinate">38° N / 15° E</span>
-          </div>
-          <div class="mode-body">
-            <span class="eyebrow">YOU VS. THE WORLD</span>
-            <div class="mode-title">
-              <h2>Solo</h2>
-              <span class="mode-number">01</span>
-            </div>
-            <p>
-              Master the map at your own pace. Choose your battlefield and take
-              on AI opponents.
-            </p>
-            <button class="front-primary" @click=${this.openSinglePlayerModal}>
-              Play solo <span aria-hidden="true">↗</span></button
-            ><span class="mode-note"
-              ><span class="small-dot"></span> Local play · Custom maps &
-              difficulty</span
-            >
-          </div>
-        </article>
-        <article class="mode-card multiplayer-card">
-          <div class="multiplayer-visual" aria-hidden="true">
-            <span class="orbit orbit-one"></span
-            ><span class="orbit orbit-two"></span
-            ><span class="player-node node-one">A</span
-            ><span class="player-node node-two">B</span
-            ><span class="player-node node-three">C</span
-            ><span class="multiplayer-symbol">◈</span
-            ><span class="visual-label"
-              >BETTER TOGETHER. BETTER AS RIVALS.</span
-            >
-          </div>
-          <div class="mode-body">
-            <span class="eyebrow">A SHARED BATTLEFIELD</span>
-            <div class="mode-title">
-              <h2>Multiplayer</h2>
-              <span class="mode-number">02</span>
-            </div>
-            <p>
-              Bring your friends. Host a custom game or join a lobby on this
-              server.
-            </p>
-            <div class="multiplayer-buttons">
-              <button class="front-primary" @click=${this.openHostLobby}>
-                Host a game <span aria-hidden="true">+</span></button
-              ><button class="front-secondary" @click=${this.openJoinLobby}>
-                Join game <span aria-hidden="true">↗</span>
-              </button>
-            </div>
-            <span class="mode-note"
-              ><span class="small-dot"></span> Online & LAN · Share an invite
-              link</span
-            >
-          </div>
-        </article>
-      </div>
-      <section class="server-lobbies">
-        <div class="lobby-section-heading">
-          <h2><span class="status-dot"></span> On this server</h2>
-          <button class="text-button" @click=${this.openJoinLobby}>
-            Join with a code →
-          </button>
+      <article class="mode-card solo-card">
+        <div class="mode-art">
+          <img
+            src=${assetUrl("maps/world/thumbnail.webp")}
+            alt="World map"
+          /><span class="map-label">THE WORLD IS YOURS</span
+          ><span class="map-coordinate">38° N / 15° E</span>
         </div>
-        ${games.length
-          ? html`<div class="public-lobby-grid">
-              ${games.map((g) =>
-                this.renderLobbyCard(g, getGameModeLabel(g.gameConfig!)),
-              )}
-            </div>`
-          : html`<p class="lobby-empty">
-              ${this.offlineForLobbies()
-                ? "Server connection unavailable. You can still play solo."
-                : "Host a game to start a match with friends, or wait for the next public lobby."}
-            </p>`}
-      </section>`;
+        <div class="mode-body">
+          <span class="eyebrow">YOU VS. THE WORLD</span>
+          <div class="mode-title">
+            <h2>Solo</h2>
+            <span class="mode-number">01</span>
+          </div>
+          <p>
+            Master the map at your own pace. Choose your battlefield and take on
+            AI opponents.
+          </p>
+          <button class="front-primary" @click=${this.openSinglePlayerModal}>
+            Play solo <span aria-hidden="true">↗</span></button
+          ><span class="mode-note"
+            ><span class="small-dot"></span> Local play · Custom maps &
+            difficulty</span
+          >
+        </div>
+      </article>
+      <article class="mode-card multiplayer-card">
+        <div class="multiplayer-visual" aria-hidden="true">
+          <span class="orbit orbit-one"></span
+          ><span class="orbit orbit-two"></span
+          ><span class="player-node node-one">A</span
+          ><span class="player-node node-two">B</span
+          ><span class="player-node node-three">C</span
+          ><span class="multiplayer-symbol">◈</span
+          ><span class="visual-label">BETTER TOGETHER. BETTER AS RIVALS.</span>
+        </div>
+        <div class="mode-body">
+          <span class="eyebrow">A SHARED BATTLEFIELD</span>
+          <div class="mode-title">
+            <h2>Multiplayer</h2>
+            <span class="mode-number">02</span>
+          </div>
+          <p>
+            Bring your friends. Host a custom game and share your invite link.
+          </p>
+          <div class="multiplayer-buttons">
+            <button class="front-primary" @click=${this.openHostLobby}>
+              Host a game <span aria-hidden="true">+</span>
+            </button>
+          </div>
+          <span class="mode-note"
+            ><span class="small-dot"></span> Online & LAN · Share an invite
+            link</span
+          >
+        </div>
+      </article>
+    </div>`;
   }
 
   /**
@@ -814,14 +785,6 @@ export class GameModeSelector extends LitElement {
     if (!this.validateUsername()) return;
     whenModalLoaded("host-lobby-modal", () =>
       (document.querySelector("host-lobby-modal") as HostLobbyModal)?.open(),
-    );
-  };
-
-  private openJoinLobby = () => {
-    if (this.blockedFromApiAction()) return;
-    if (!this.validateUsername()) return;
-    whenModalLoaded("join-lobby-modal", () =>
-      (document.querySelector("join-lobby-modal") as JoinLobbyModal)?.open(),
     );
   };
 

@@ -1,5 +1,9 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
-import { UnitType } from "@openfront/engine-api/game/GameTypes";
+import {
+  RailHubs,
+  RailStructures,
+  UnitType,
+} from "@openfront/engine-api/game/GameTypes";
 import { GameUpdateType } from "@openfront/engine-api/game/GameUpdates";
 import {
   snapshotType,
@@ -261,7 +265,7 @@ export class RailNetworkImpl implements RailNetwork {
   }
 
   overlappingRailroads(unitType: UnitType, tile: TileRef): TileRef[] {
-    if (![UnitType.City, UnitType.Port, UnitType.Factory].includes(unitType)) {
+    if (!RailStructures.has(unitType)) {
       return [];
     }
     const tiles = new Set<TileRef>();
@@ -278,7 +282,7 @@ export class RailNetworkImpl implements RailNetwork {
   }
 
   computeGhostRailPaths(unitType: UnitType, tile: TileRef): TileRef[][] {
-    if (![UnitType.City, UnitType.Port, UnitType.Factory].includes(unitType)) {
+    if (!RailStructures.has(unitType)) {
       return [];
     }
 
@@ -290,23 +294,22 @@ export class RailNetworkImpl implements RailNetwork {
     const minRangeSquared = this.game.config().trainStationMinRange() ** 2;
     const maxPathSize = this.game.config().railroadMaxSize();
 
-    // A City or Port only joins the rail network when a Factory is already in
-    // range (see CityExecution/PortExecution). A Factory always becomes a
-    // station and pulls nearby City/Port/Factory into the network itself, so
-    // it needs no pre-existing factory to connect to.
-    const buildingFactory = unitType === UnitType.Factory;
+    // Economic hubs also promote nearby cities and ports to stations.
+    const buildingHub = RailHubs.has(unitType);
     if (
-      !buildingFactory &&
-      !this.game.hasUnitNearby(tile, maxRange, UnitType.Factory)
+      !buildingHub &&
+      !RailHubs.types.some((type) =>
+        this.game.hasUnitNearby(tile, maxRange, type),
+      )
     ) {
       return [];
     }
 
-    const neighbors = this.game.nearbyUnits(tile, maxRange, [
-      UnitType.City,
-      UnitType.Factory,
-      UnitType.Port,
-    ]);
+    const neighbors = this.game.nearbyUnits(
+      tile,
+      maxRange,
+      RailStructures.types,
+    );
     neighbors.sort((a, b) => a.distSquared - b.distSquared);
 
     const paths: TileRef[][] = [];
@@ -318,8 +321,8 @@ export class RailNetworkImpl implements RailNetwork {
 
       const neighborStation = this._stationManager.findStation(neighbor.unit);
 
-      // Building a factory connects to nearby structures even if they aren't
-      // stations yet — they get promoted to stations when the factory is
+      // Building a hub connects to nearby structures even if they aren't
+      // stations yet — they get promoted to stations when the hub is
       // built. For a city/port, only existing stations are relevant.
       let targetTile: TileRef;
       if (neighborStation) {
@@ -333,15 +336,15 @@ export class RailNetworkImpl implements RailNetwork {
         );
         if (alreadyReachable) continue;
         targetTile = neighborStation.tile();
-      } else if (buildingFactory) {
+      } else if (buildingHub) {
         targetTile = neighbor.unit.tile();
       } else {
         continue;
       }
 
       // A completed city has already made its one-time station check, so the
-      // factory promotes it after creating its own station. The city then
-      // initiates the real connection back to the factory.
+      // hub promotes it after creating its own station. The city then
+      // initiates the real connection back to the hub.
       const path =
         !neighborStation && neighbor.unit.type() === UnitType.City
           ? this.pathService.findTilePath(targetTile, tile)
@@ -361,7 +364,7 @@ export class RailNetworkImpl implements RailNetwork {
     const neighbors = this.game.nearbyUnits(
       station.tile(),
       this.game.config().trainStationMaxRange(),
-      [UnitType.City, UnitType.Factory, UnitType.Port],
+      RailStructures.types,
     );
 
     const editedClusters = new Set<Cluster>();

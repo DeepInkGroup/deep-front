@@ -71,8 +71,13 @@ describe("TrainStation", () => {
     } as any;
   });
 
-  it("handles City stop", () => {
-    unit.type.mockReturnValue(UnitType.City);
+  it.each([
+    UnitType.City,
+    UnitType.Port,
+    UnitType.OilFactory,
+    UnitType.CopperMine,
+  ])("handles %s trade stop", (type) => {
+    unit.type.mockReturnValue(type);
     const station = new TrainStation(game, unit);
 
     station.onTrainStop(trainExecution);

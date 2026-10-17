@@ -1,4 +1,3 @@
-import { UnitType } from "@openfront/engine-api/game/GameTypes";
 import { zRef } from "@openfront/engine-lib/snapshot/SnapshotType";
 import { z } from "zod";
 import { Execution, Game, Unit } from "../game/Game";
@@ -8,7 +7,7 @@ import type {
   SnapshotReader,
   SnapshotWriter,
 } from "../snapshot/SnapshotContext";
-import { TrainStationExecution } from "./TrainStationExecution";
+import { connectRailHub } from "./RailHub";
 
 export class FactoryExecution implements Execution {
   private active: boolean = true;
@@ -41,18 +40,7 @@ export class FactoryExecution implements Execution {
   }
 
   private createStation(): void {
-    const structures = this.game.nearbyUnits(
-      this.factory.tile()!,
-      this.game.config().trainStationMaxRange(),
-      [UnitType.City, UnitType.Port, UnitType.Factory],
-    );
-
-    this.game.addExecution(new TrainStationExecution(this.factory, true));
-    for (const { unit } of structures) {
-      if (!unit.hasTrainStation()) {
-        this.game.addExecution(new TrainStationExecution(unit));
-      }
-    }
+    connectRailHub(this.game, this.factory, true);
   }
 
   snapshot(w: SnapshotWriter): ExecRecord {

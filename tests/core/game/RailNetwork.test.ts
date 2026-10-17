@@ -1,6 +1,9 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { PlayerType, UnitType } from "@openfront/engine-api/game/GameTypes";
 import { FactoryExecution } from "@openfront/engine/execution/FactoryExecution";
+import { OilFactoryExecution } from "@openfront/engine/execution/OilFactoryExecution";
+import { CopperMineExecution } from "@openfront/engine/execution/CopperMineExecution";
+import { CityExecution } from "@openfront/engine/execution/CityExecution";
 import { PortExecution } from "@openfront/engine/execution/PortExecution";
 import { Unit } from "@openfront/engine/game/Game";
 import {
@@ -455,7 +458,11 @@ function expectSameRailGeometry(
   expect(sameGeometry).toBe(true);
 }
 
-describe("factory rail preview path consistency", () => {
+describe.each([
+  [UnitType.Factory, FactoryExecution],
+  [UnitType.OilFactory, OilFactoryExecution],
+  [UnitType.CopperMine, CopperMineExecution],
+] as const)("%s rail preview path consistency", (hubType, HubExecution) => {
   test("matches the railway created for a promoted non-station city", async () => {
     const game = await setup("plains", {}, [
       playerInfo("player", PlayerType.Human),
@@ -469,11 +476,11 @@ describe("factory rail preview path consistency", () => {
     expect(city.hasTrainStation()).toBe(false);
     const previewPath = game
       .railNetwork()
-      .computeGhostRailPaths(UnitType.Factory, factoryTile)[0];
+      .computeGhostRailPaths(hubType, factoryTile)[0];
     expect(previewPath).toBeDefined();
 
-    const factory = player.buildUnit(UnitType.Factory, factoryTile, {});
-    game.addExecution(new FactoryExecution(factory));
+    const factory = player.buildUnit(hubType, factoryTile, {});
+    game.addExecution(new HubExecution(factory));
     for (let i = 0; i < 5; i++) {
       game.executeNextTick();
     }
@@ -505,11 +512,11 @@ describe("factory rail preview path consistency", () => {
     expect(port.hasTrainStation()).toBe(false);
     const previewPath = game
       .railNetwork()
-      .computeGhostRailPaths(UnitType.Factory, factoryTile)[0];
+      .computeGhostRailPaths(hubType, factoryTile)[0];
     expect(previewPath).toBeDefined();
 
-    const factory = player.buildUnit(UnitType.Factory, factoryTile, {});
-    game.addExecution(new FactoryExecution(factory));
+    const factory = player.buildUnit(hubType, factoryTile, {});
+    game.addExecution(new HubExecution(factory));
     for (let i = 0; i < 5; i++) {
       game.executeNextTick();
     }
@@ -524,4 +531,57 @@ describe("factory rail preview path consistency", () => {
     expect(railroad).not.toBeNull();
     expectSameRailGeometry(previewPath, railroad!.tiles);
   });
+
+  test("connects a later city and removes its rails when the hub is destroyed", async () => {
+    const game = await setup("plains", {}, [
+      playerInfo("player", PlayerType.Human),
+    ]);
+    const player = game.player("player")!;
+    const hub = player.buildUnit(hubType, game.ref(5, 5), {});
+    game.addExecution(new HubExecution(hub));
+    for (let i = 0; i < 5; i++) game.executeNextTick();
+    const cityTile = game.ref(25, 25);
+    const preview = game
+      .railNetwork()
+      .computeGhostRailPaths(UnitType.City, cityTile)[0];
+    const city = player.buildUnit(UnitType.City, cityTile, {});
+    game.addExecution(new CityExecution(city));
+    for (let i = 0; i < 5; i++) game.executeNextTick();
+    const manager = game.railNetwork().stationManager();
+    const hubStation = manager.findStation(hub)!;
+    const cityStation = manager.findStation(city)!;
+    expectSameRailGeometry(
+      preview,
+      cityStation.getRailroadTo(hubStation)!.tiles,
+    );
+    hub.delete(false);
+    for (let i = 0; i < 5; i++) game.executeNextTick();
+    expect(manager.findStation(hub)).toBeNull();
+    expect(cityStation.getRailroads().size).toBe(0);
+  });
+});
+
+test("Oil Factory and Copper Mine connect to each other without a regular factory", async () => {
+  const game = await setup("plains", {}, [
+    playerInfo("player", PlayerType.Human),
+  ]);
+  const player = game.player("player")!;
+  const oil = player.buildUnit(UnitType.OilFactory, game.ref(5, 5), {});
+  game.addExecution(new OilFactoryExecution(oil));
+  for (let i = 0; i < 5; i++) game.executeNextTick();
+  const mineTile = game.ref(25, 25);
+  const preview = game
+    .railNetwork()
+    .computeGhostRailPaths(UnitType.CopperMine, mineTile)[0];
+  const mine = player.buildUnit(UnitType.CopperMine, mineTile, {});
+  game.addExecution(new CopperMineExecution(mine));
+  for (let i = 0; i < 5; i++) game.executeNextTick();
+  const manager = game.railNetwork().stationManager();
+  const oilStation = manager.findStation(oil)!;
+  const mineStation = manager.findStation(mine)!;
+  expectSameRailGeometry(preview, mineStation.getRailroadTo(oilStation)!.tiles);
+  expect(oilStation.getCluster()!.availableForTrade(player)).toEqual(
+    new Set([oilStation, mineStation]),
+  );
+  expect(game.units(UnitType.Train)).toHaveLength(0);
 });
