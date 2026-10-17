@@ -5,7 +5,7 @@ import { readFile, writeFile } from "node:fs/promises";
 const original = await readFile(
   new URL("../resources/atlases/icon-atlas.png", import.meta.url),
 );
-const icons = ["OilFactory", "CopperMine"];
+const icons = ["OilFactory", "CopperMine", "LogisticsCenter"];
 let appended = "";
 for (const [index, name] of icons.entries()) {
   const icon = await readFile(

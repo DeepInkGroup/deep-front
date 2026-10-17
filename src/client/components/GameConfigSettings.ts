@@ -121,6 +121,10 @@ const unitOptions: { type: UnitType; translationKey: string }[] = [
   { type: UnitType.Factory, translationKey: "unit_type.factory" },
   { type: UnitType.OilFactory, translationKey: "unit_type.oil_factory" },
   { type: UnitType.CopperMine, translationKey: "unit_type.copper_mine" },
+  {
+    type: UnitType.LogisticsCenter,
+    translationKey: "unit_type.logistics_center",
+  },
 ];
 
 const MAP_ICON = svg`<path

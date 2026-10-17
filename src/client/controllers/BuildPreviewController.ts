@@ -464,6 +464,7 @@ export class BuildPreviewController implements Controller {
       case UnitType.Factory:
       case UnitType.OilFactory:
       case UnitType.CopperMine:
+      case UnitType.LogisticsCenter:
         rangeRadius = this.game.config().trainStationMaxRange();
         break;
       case UnitType.DefensePost:

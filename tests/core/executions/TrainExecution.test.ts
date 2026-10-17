@@ -72,10 +72,21 @@ async function currentSegmentFixture(
     stationB.addRailroad(second);
   };
 
-  return { exec, insertedStation, player, splitRail };
+  return { game, exec, insertedStation, player, splitRail };
 }
 
 describe("TrainExecution", () => {
+  it("pays 15% more when a real moving train visits a station and its owner has completed logistics", async () => {
+    const { game, exec, player, splitRail } = await currentSegmentFixture(4);
+    const tile = game.ref(15, 15);
+    player.conquer(tile);
+    player.addGold(1_000_000n);
+    player.buildUnit(UnitType.LogisticsCenter, tile, {});
+    exec.tick(1);
+    splitRail();
+    exec.tick(2);
+    expect(player.trainGold()).toBe(11_500n);
+  });
   it("visits and pays a station inserted ahead of the engine", async () => {
     const { exec, insertedStation, player, splitRail } =
       await currentSegmentFixture(4);

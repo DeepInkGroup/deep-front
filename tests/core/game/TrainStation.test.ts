@@ -48,6 +48,7 @@ describe("TrainStation", () => {
     player = {
       addGold: vi.fn(),
       addTrainGold: vi.fn(),
+      units: vi.fn().mockReturnValue([]),
       id: 1,
       canTrade: vi.fn().mockReturnValue(true),
       isAlliedWith: vi.fn().mockReturnValue(false),
@@ -76,6 +77,7 @@ describe("TrainStation", () => {
     UnitType.Port,
     UnitType.OilFactory,
     UnitType.CopperMine,
+    UnitType.LogisticsCenter,
   ])("handles %s trade stop", (type) => {
     unit.type.mockReturnValue(type);
     const station = new TrainStation(game, unit);
@@ -103,6 +105,7 @@ describe("TrainStation", () => {
     const stationOwner = {
       addGold: vi.fn(),
       addTrainGold: vi.fn(),
+      units: vi.fn().mockReturnValue([]),
       id: 1,
       canTrade: vi.fn().mockReturnValue(true),
       isAlliedWith: vi.fn().mockReturnValue(false),
@@ -111,6 +114,7 @@ describe("TrainStation", () => {
     const trainOwner = {
       addGold: vi.fn(),
       addTrainGold: vi.fn(),
+      units: vi.fn().mockReturnValue([]),
       id: 2,
       canTrade: vi.fn().mockReturnValue(true),
       isAlliedWith: vi.fn().mockReturnValue(false),

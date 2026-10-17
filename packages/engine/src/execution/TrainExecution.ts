@@ -387,7 +387,8 @@ export class TrainExecution implements Execution {
       stationType === UnitType.City ||
       stationType === UnitType.Port ||
       stationType === UnitType.OilFactory ||
-      stationType === UnitType.CopperMine
+      stationType === UnitType.CopperMine ||
+      stationType === UnitType.LogisticsCenter
     ) {
       this._tradeStopsVisited++;
     }

@@ -2,14 +2,27 @@ import { chromium, expect } from "@playwright/test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 
-// Keep the original command; --copper runs the same integration checks for mines.
+// Resource and logistics construction share the same real UI and lobby checks.
 const copper = process.argv.includes("--copper");
-const RESOURCE = copper ? "Copper Mine" : "Oil Factory";
-const ICON = copper ? "copper_mine" : "oil_factory";
-const MAX_LEVEL = copper ? 2 : 3;
+const logistics = process.argv.includes("--logistics");
+const RESOURCE = logistics
+  ? "Logistics Center"
+  : copper
+    ? "Copper Mine"
+    : "Oil Factory";
+const ICON = logistics
+  ? "logistics_center"
+  : copper
+    ? "copper_mine"
+    : "oil_factory";
+const MAX_LEVEL = logistics ? 1 : copper ? 2 : 3;
 const PAYOUT = copper ? 40_000n : 90_000n;
-const TOTAL_COST = copper ? 1_650_000n : 4_000_000n;
-const ARTIFACT = copper ? "copper-mine" : "oil-factory";
+const TOTAL_COST = logistics ? 1_000_000n : copper ? 1_650_000n : 4_000_000n;
+const ARTIFACT = logistics
+  ? "logistics-center"
+  : copper
+    ? "copper-mine"
+    : "oil-factory";
 const baseUrl = process.env.BASE_URL || "http://localhost:9000";
 fs.mkdirSync("artifacts", { recursive: true });
 const browser = await chromium.launch({ channel: "chrome", headless: true });
@@ -150,19 +163,20 @@ async function buildAndUpgrade(page, prefix) {
     BigInt(preview.gold) < 6_000_000n - TOTAL_COST + 1_000_000n,
     "The total build and upgrade cost should be charged",
   );
-  await expect
-    .poll(
-      async () =>
-        BigInt(
-          await page.evaluate(() =>
-            String(
-              document.querySelector("control-panel").game.myPlayer().gold(),
+  if (!logistics)
+    await expect
+      .poll(
+        async () =>
+          BigInt(
+            await page.evaluate(() =>
+              String(
+                document.querySelector("control-panel").game.myPlayer().gold(),
+              ),
             ),
           ),
-        ),
-      { timeout: 20000 },
-    )
-    .toBeGreaterThanOrEqual(BigInt(preview.gold) + PAYOUT);
+        { timeout: 20000 },
+      )
+      .toBeGreaterThanOrEqual(BigInt(preview.gold) + PAYOUT);
   await page.screenshot({ path: `artifacts/${ARTIFACT}-${prefix}.png` });
   await page.setViewportSize({ width: 390, height: 950 });
   // Mobile uses the build menu rather than the desktop hotbar.
@@ -174,6 +188,7 @@ async function buildAndUpgrade(page, prefix) {
     .getByRole("button", { name: new RegExp(RESOURCE) });
   await expect(mobileOil).toBeVisible();
   await expect(mobileOil).toBeDisabled(); // The selected building is at its level cap.
+  await mobileOil.scrollIntoViewIfNeeded();
   assert.equal(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -228,7 +243,9 @@ try {
   await buildAndUpgrade(solo, "solo");
   await solo.context().close();
   console.log(
-    `Solo ${RESOURCE}: icon, construction, prices, income, level cap and mobile HUD passed`,
+    logistics
+      ? "Solo Logistics Center: icon, construction, price, single-level cap and mobile HUD passed"
+      : `Solo ${RESOURCE}: icon, construction, prices, income, level cap and mobile HUD passed`,
   );
 
   const host = await newPage("OilHost");
@@ -272,27 +289,30 @@ try {
   await running(guest);
   const ownerID = await buildAndUpgrade(host, "multiplayer");
   await expect.poll(() => buildingLevel(guest, ownerID)).toBe(MAX_LEVEL);
-  await expect
-    .poll(
-      () =>
-        guest.evaluate(
-          (resource) =>
-            document
-              .querySelector("control-panel")
-              .game.units(resource)
-              .filter((unit) => unit.owner().type() !== "HUMAN").length,
-          RESOURCE,
-        ),
-      { timeout: 60000 },
-    )
-    .toBeGreaterThan(0);
+  if (!logistics)
+    await expect
+      .poll(
+        () =>
+          guest.evaluate(
+            (resource) =>
+              document
+                .querySelector("control-panel")
+                .game.units(resource)
+                .filter((unit) => unit.owner().type() !== "HUMAN").length,
+            RESOURCE,
+          ),
+        { timeout: 60000 },
+      )
+      .toBeGreaterThan(0);
   await guest.waitForTimeout(11000);
   await expect(
     guest.getByText("Connection error!", { exact: true }),
   ).toHaveCount(0);
   await expect.poll(() => buildingLevel(guest, ownerID)).toBe(MAX_LEVEL);
   console.log(
-    `Multiplayer ${RESOURCE}: disable option, construction, upgrades, income and AI building verified`,
+    logistics
+      ? "Multiplayer Logistics Center: disable option, icon, construction, one-level cap and client synchronization verified"
+      : `Multiplayer ${RESOURCE}: disable option, construction, upgrades, income and AI building verified`,
   );
   assert.deepEqual(errors, []);
 } finally {

@@ -36,6 +36,7 @@ const STATION_CAPABLE_TYPES = new Set<UnitType>([
   UnitType.Port,
   UnitType.OilFactory,
   UnitType.CopperMine,
+  UnitType.LogisticsCenter,
 ]);
 
 const NUKE_INBOUND_MESSAGES = new Set<MessageType>([
@@ -180,6 +181,7 @@ export class SoundEffectController implements Controller {
       case UnitType.Factory:
       case UnitType.OilFactory:
       case UnitType.CopperMine:
+      case UnitType.LogisticsCenter:
         if (unit.owner() === myPlayer) this.emit("build-factory");
         break;
       case UnitType.TransportShip:

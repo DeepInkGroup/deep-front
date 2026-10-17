@@ -19,6 +19,7 @@ import { DefensePostExecution } from "./DefensePostExecution";
 import { FactoryExecution } from "./FactoryExecution";
 import { OilFactoryExecution } from "./OilFactoryExecution";
 import { CopperMineExecution } from "./CopperMineExecution";
+import { connectRailHub } from "./RailHub";
 import { MirvExecution } from "./MIRVExecution";
 import { MissileSiloExecution } from "./MissileSiloExecution";
 import { NukeExecution } from "./NukeExecution";
@@ -86,7 +87,11 @@ export class ConstructionExecution implements Execution {
       const duration = info.constructionDuration ?? 0;
       if (duration > 0) {
         this.structure.setUnderConstruction(true);
-        this.ticksUntilComplete = duration;
+        // Complete logistics exactly 350 ticks after placement. Preserve the
+        // established countdown of older structures for existing replays.
+        this.ticksUntilComplete =
+          duration -
+          (this.constructionType === UnitType.LogisticsCenter ? 1 : 0);
         return;
       }
       // No construction time
@@ -172,6 +177,9 @@ export class ConstructionExecution implements Execution {
       case UnitType.CopperMine:
         this.mg.addExecution(new CopperMineExecution(this.structure!));
         break;
+      case UnitType.LogisticsCenter:
+        connectRailHub(this.mg, this.structure!);
+        break;
       default:
         console.warn(
           `unit type ${this.constructionType} cannot be constructed`,
@@ -190,6 +198,7 @@ export class ConstructionExecution implements Execution {
       case UnitType.Factory:
       case UnitType.OilFactory:
       case UnitType.CopperMine:
+      case UnitType.LogisticsCenter:
         return true;
       default:
         return false;

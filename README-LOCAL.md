@@ -53,6 +53,28 @@ AI tribes and nations build and upgrade both resource buildings when they have g
 
 Oil Factories and Copper Mines connect to nearby cities, ports, factories and resource buildings using the existing railroad network and placement preview. They also serve as train trade stops. Ordinary factories supply trains; resource buildings retain their separate ten-second income.
 
+## Logistics Center
+
+A Logistics Center costs **1,000,000 gold**, takes **35 game seconds** to build,
+and is limited to **one building at level 1** per player. Lobby Instant Build
+applies to it like other buildings. It connects to nearby rail structures and
+serves as a train stop; ordinary factories still supply trains.
+
+After completion, all of its owner's train earnings increase by **15%**,
+including revenue from other players' trains stopping at owned stations.
+Each recipient receives their own bonus; owning a center does not boost another
+player's earnings. Fractions of gold round down. This bonus does not change
+oil, copper, worker or ship income. Capture transfers the benefit to the new
+owner; destruction, including bombs, removes it. An excess captured center is
+destroyed, just as excess Oil Factories and Copper Mines are. Buildings under
+construction count toward these ownership limits.
+
+The building is available in solo and multiplayer and can be switched off in
+**Disable Units**. `node scripts/oil-factory-check.mjs --logistics` checks its
+client construction, icon, lobby synchronization, level cap and mobile menu.
+`npx vitest run tests/economy/LogisticsCenter.test.ts` covers its economy,
+construction timing, conquest limits, bombs, rail connections and snapshots.
+
 ## DeepPlace
 
 Select **DeepPlace** in the map picker's **Fictional** or **New** category, or search for its name. This original 2048 × 1440 map is available in solo and multiplayer, at normal and compact size. Four main land regions surround Deep Strait, with two cross passages, island chains, mountain ridges, sheltered gulfs and twelve fictional nations.

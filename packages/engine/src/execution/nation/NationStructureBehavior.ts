@@ -117,6 +117,7 @@ const FACTORY_COASTAL_RATIO_MULTIPLIER: Record<Difficulty, number> = {
 const SAM_PROTECTED_TYPES: readonly UnitType[] = [
   UnitType.OilFactory,
   UnitType.CopperMine,
+  UnitType.LogisticsCenter,
   UnitType.City,
   UnitType.Factory,
   UnitType.MissileSilo,
@@ -1592,6 +1593,7 @@ export class NationStructureBehavior {
         case UnitType.MissileSilo:
         case UnitType.OilFactory:
         case UnitType.CopperMine:
+        case UnitType.LogisticsCenter:
         case UnitType.Port:
           protectEntries.push({
             tile: unit.tile(),

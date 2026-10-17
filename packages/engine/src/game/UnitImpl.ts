@@ -127,6 +127,7 @@ export class UnitImpl implements Unit {
       case UnitType.Factory:
       case UnitType.OilFactory:
       case UnitType.CopperMine:
+      case UnitType.LogisticsCenter:
         this.mg.stats().unitBuild(_owner, this._type);
     }
   }
@@ -268,6 +269,7 @@ export class UnitImpl implements Unit {
       case UnitType.Factory:
       case UnitType.OilFactory:
       case UnitType.CopperMine:
+      case UnitType.LogisticsCenter:
         this.mg.stats().unitCapture(newOwner, this._type);
         this.mg.stats().unitLose(this._owner, this._type);
         break;
@@ -403,6 +405,7 @@ export class UnitImpl implements Unit {
         case UnitType.Factory:
         case UnitType.OilFactory:
         case UnitType.CopperMine:
+        case UnitType.LogisticsCenter:
           this.mg.stats().unitDestroy(destroyer, this._type);
           this.mg.stats().unitLose(this.owner(), this._type);
           break;

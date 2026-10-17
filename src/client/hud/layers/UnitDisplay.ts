@@ -22,6 +22,7 @@ import {
   factoryIcon,
   oilFactoryIcon,
   copperMineIcon,
+  logisticsCenterIcon,
   goldCoinIcon,
   hydrogenBombIcon,
   mirvIcon,
@@ -44,6 +45,7 @@ export class UnitDisplay extends LitElement implements Controller {
   private _factories = 0;
   private _oilFactories = 0;
   private _copperMines = 0;
+  private _logisticsCenters = 0;
   private _missileSilo = 0;
   private _port = 0;
   private _defensePost = 0;
@@ -129,6 +131,7 @@ export class UnitDisplay extends LitElement implements Controller {
     this._factories = player.totalUnitLevels(UnitType.Factory);
     this._oilFactories = player.units(UnitType.OilFactory).length;
     this._copperMines = player.units(UnitType.CopperMine).length;
+    this._logisticsCenters = player.units(UnitType.LogisticsCenter).length;
     this._warships = player.totalUnitLevels(UnitType.Warship);
     this.requestUpdate();
   }
@@ -176,6 +179,13 @@ export class UnitDisplay extends LitElement implements Controller {
             this._copperMines,
             UnitType.CopperMine,
             "copper_mine",
+            "",
+          )}
+          ${this.renderUnitItem(
+            logisticsCenterIcon,
+            this._logisticsCenters,
+            UnitType.LogisticsCenter,
+            "logistics_center",
             "",
           )}
           ${this.renderUnitItem(

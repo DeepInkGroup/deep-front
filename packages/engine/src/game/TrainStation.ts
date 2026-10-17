@@ -1,5 +1,6 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { UnitType } from "@openfront/engine-api/game/GameTypes";
+import { logisticsTrainIncome } from "@openfront/engine-api/game/LogisticsCenter";
 import { GameUpdateType } from "@openfront/engine-api/game/GameUpdates";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
 import {
@@ -40,13 +41,15 @@ class TradeStationStopHandler implements TrainStopHandler {
       );
     // Share revenue with the station owner if it's not the current player
     if (trainOwner !== stationOwner) {
-      stationOwner.addGold(gold, station.tile());
-      stationOwner.addTrainGold(gold);
-      mg.stats().trainExternalTrade(stationOwner, gold);
+      const stationGold = logisticsTrainIncome(stationOwner, gold);
+      stationOwner.addGold(stationGold, station.tile());
+      stationOwner.addTrainGold(stationGold);
+      mg.stats().trainExternalTrade(stationOwner, stationGold);
     }
-    trainOwner.addGold(gold, station.tile());
-    trainOwner.addTrainGold(gold);
-    mg.stats().trainSelfTrade(trainOwner, gold);
+    const trainGold = logisticsTrainIncome(trainOwner, gold);
+    trainOwner.addGold(trainGold, station.tile());
+    trainOwner.addTrainGold(trainGold);
+    mg.stats().trainSelfTrade(trainOwner, trainGold);
   }
 }
 
@@ -67,6 +70,7 @@ export function createTrainStopHandlers(
     [UnitType.Factory]: new FactoryStopHandler(),
     [UnitType.OilFactory]: new TradeStationStopHandler(),
     [UnitType.CopperMine]: new TradeStationStopHandler(),
+    [UnitType.LogisticsCenter]: new TradeStationStopHandler(),
   };
 }
 
@@ -221,7 +225,8 @@ export class Cluster {
       type === UnitType.City ||
       type === UnitType.Port ||
       type === UnitType.OilFactory ||
-      type === UnitType.CopperMine
+      type === UnitType.CopperMine ||
+      type === UnitType.LogisticsCenter
     );
   }
 
