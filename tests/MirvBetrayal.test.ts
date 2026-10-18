@@ -37,7 +37,7 @@ describe("MIRV betrayal side effects", () => {
   });
 
   test("a successful launch breaks the alliance and marks the launcher a traitor", () => {
-    player1.buildUnit(UnitType.MissileSilo, game.ref(0, 0), {});
+    player1.buildUnit(UnitType.BunkerMissileSite, game.ref(0, 0), {});
 
     game.addExecution(new MirvExecution(player1, game.ref(10, 10)));
     executeTicks(game, 2); // init + spawn

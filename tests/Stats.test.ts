@@ -250,11 +250,11 @@ describe("Stats", () => {
   });
 
   test("unitDestroy", () => {
-    stats.unitDestroy(player1, UnitType.MissileSilo);
+    stats.unitDestroy(player1, UnitType.BunkerMissileSite);
     expect(stats.stats()).toStrictEqual({
       client1: {
         units: {
-          silo: [0n, 1n],
+          bunker: [0n, 1n],
         },
       },
     });

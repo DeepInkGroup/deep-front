@@ -55,7 +55,7 @@ describe("CIWS Defense", () => {
     expect(second.level()).toBe(1);
   });
   it.each([GameType.Singleplayer, GameType.Private])(
-    "destroys every type in a simultaneous wave without detection misses in %s",
+    "destroys interceptable types in a simultaneous wave without detection misses in %s",
     async (gameType) => {
       game = await setup(
         "big_plains",
@@ -73,7 +73,6 @@ describe("CIWS Defense", () => {
       for (let wave = 0; wave < 6; wave++)
         for (const type of [
           UnitType.AtomBomb,
-          UnitType.HydrogenBomb,
           UnitType.StealthMissile,
           UnitType.HypersonicMissile,
           UnitType.MIRVWarhead,

@@ -953,7 +953,7 @@ export class AiAttackBehavior {
   }
 
   private isBorderingNukedTerritory(): boolean {
-    if (this.game.config().isUnitDisabled(UnitType.MissileSilo)) {
+    if (this.game.config().isUnitDisabled(UnitType.BunkerMissileSite)) {
       return false;
     }
 

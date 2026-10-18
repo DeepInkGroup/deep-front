@@ -23,6 +23,7 @@ import {
   FxShockwavePass,
 } from "./FxShockwavePass";
 import { FxSpritePass } from "./FxSpritePass";
+import { EMP_RADIUS } from "@openfront/engine-api/game/AdvancedDefense";
 
 export type { AttackRingInput } from "../../../types";
 export { calculateExplosionDurationMs };
@@ -64,6 +65,20 @@ export class FxPass {
     const typeName = unit.unitType;
     const x = unit.pos % this.mapW;
     const y = (unit.pos - x) / this.mapW;
+
+    if (typeName === "EMP Missile") {
+      if (unit.reachedTarget) {
+        this.shockwavePass.pushNukeShockwave(x, y, EMP_RADIUS, {
+          type: "shockwave",
+          colors: [[0.15, 0.8, 1]],
+          maxRadius: EMP_RADIUS,
+          speed: 1,
+          transitionSpeed: 0,
+          thickness: 2,
+        });
+      } else this.shockwavePass.pushSAMShockwave(x, y);
+      return;
+    }
 
     const nukeRadius = nukeExplosionRadius(this.settings.fx, typeName);
     if (nukeRadius !== undefined) {

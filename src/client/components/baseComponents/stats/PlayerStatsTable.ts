@@ -19,7 +19,7 @@ const BUILDING_ORDER = {
   port: 2,
   fact: 3,
   defp: 4,
-  silo: 5,
+
   saml: 6,
   oilf: 7,
   copp: 8,
@@ -29,7 +29,7 @@ const BUILDING_ORDER = {
   ciws: 12,
   strait: 13,
 } as const satisfies Record<
-  Exclude<(typeof otherUnits)[number], "wshp">,
+  Exclude<(typeof otherUnits)[number], "wshp" | "silo">,
   number
 >;
 
@@ -53,6 +53,7 @@ const UNIT_LABEL_KEYS = {
   bunker: "unit_type.bunker_missile_site",
   ciws: "unit_type.ciws_defense",
   strait: "unit_type.strait_control_station",
+  emp: "unit_type.emp_missile",
   stealth: "unit_type.stealth_missile",
   hyper: "unit_type.hypersonic_missile",
   port: "unit_type.port",

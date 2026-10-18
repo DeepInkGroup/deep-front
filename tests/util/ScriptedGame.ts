@@ -273,7 +273,7 @@ const STRUCTURES = [
   UnitType.Factory,
   UnitType.DefensePost,
   UnitType.SAMLauncher,
-  UnitType.MissileSilo,
+  UnitType.BunkerMissileSite,
 ] as const;
 
 function playIntent(game: Game, p: Player, rand: PseudoRandom): Intent | null {
@@ -340,7 +340,7 @@ function playIntent(game: Game, p: Player, rand: PseudoRandom): Intent | null {
       return { type: "build_unit", unit: UnitType.Warship, tile: water };
     }
     case 8: {
-      if (own([UnitType.MissileSilo]).length === 0 || other === null) {
+      if (own([UnitType.BunkerMissileSite]).length === 0 || other === null) {
         return null;
       }
       const unit = pick(rand, [

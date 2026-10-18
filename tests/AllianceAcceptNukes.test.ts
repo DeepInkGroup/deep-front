@@ -38,7 +38,7 @@ describe("Alliance acceptance immediately destroys in-flight nukes", () => {
     player2.conquer(game.ref(5, 5));
     player3.conquer(game.ref(10, 10));
 
-    player1.buildUnit(UnitType.MissileSilo, game.ref(0, 0), {});
+    player1.buildUnit(UnitType.BunkerMissileSite, game.ref(0, 0), {});
   });
 
   test("accepting alliance destroys in-flight nukes between the newly allied players", () => {
@@ -73,7 +73,7 @@ describe("Alliance acceptance immediately destroys in-flight nukes", () => {
   });
 
   test("accepting alliance destroys only nukes between allied players", () => {
-    player1.buildUnit(UnitType.MissileSilo, game.ref(0, 0), {});
+    player1.buildUnit(UnitType.BunkerMissileSite, game.ref(0, 0), {});
 
     game.addExecution(
       new NukeExecution(UnitType.AtomBomb, player1, game.ref(5, 5), null),

@@ -97,7 +97,7 @@ describe("SAM", () => {
     middle_defender = game.player("middle_defender_id");
     far_defender = game.player("far_defender_id");
 
-    constructionExecution(game, attacker, 7, 7, UnitType.MissileSilo);
+    constructionExecution(game, attacker, 7, 7, UnitType.BunkerMissileSite);
   });
 
   test("one sam should take down one nuke", async () => {

@@ -203,7 +203,7 @@ describe("RailNetworkImpl", () => {
     });
 
     test.each([
-      UnitType.MissileSilo,
+      UnitType.BunkerMissileSite,
       UnitType.DefensePost,
       UnitType.SAMLauncher,
     ])(

@@ -321,7 +321,7 @@ describe("AiAttackBehavior - nuked territory early-out", () => {
         Difficulty.Impossible,
         {
           withEnemy: false,
-          disabledUnits: [UnitType.MissileSilo],
+          disabledUnits: [UnitType.BunkerMissileSite],
         },
       );
 

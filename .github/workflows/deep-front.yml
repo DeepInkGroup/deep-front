@@ -33,7 +33,7 @@ jobs:
       - name: Oil Factory and economy regression tests
         run: npx vitest run tests/economy/OilFactory.test.ts tests/economy/ConstructionCost.test.ts tests/economy/ConstructionGold.test.ts tests/core/executions/UpgradeStructureExecution.test.ts tests/FindAndUpgradeNearestBuilding.test.ts tests/AutoUpgrade.test.ts tests/core/snapshot/StructureExecutions.test.ts tests/client/PlayerStatsTable.test.ts tests/client/graphics/layers/BuildMenuCost.test.ts tests/client/controllers/BuildPreviewController.test.ts tests/ApiSchemas.test.ts tests/core/ApiSchemas.test.ts tests/core/IntentTileRefSchemas.test.ts tests/core/game/RailNetwork.test.ts
       - name: Strait toll agreements and commercial shipping
-        run: npx vitest run tests/economy/StraitControl.test.ts tests/client/StraitTollPanel.test.ts tests/core/executions/TradeShipExecution.test.ts tests/PortExecution.test.ts
+        run: npx vitest run tests/combat/EMPMissile.test.ts tests/economy/StraitControl.test.ts tests/client/StraitTollPanel.test.ts tests/core/executions/TradeShipExecution.test.ts tests/PortExecution.test.ts
       - run: npm run build
       - name: DeepPlace and railroad trade validation
         run: npx vitest run tests/DeepPlace.test.ts tests/core/game/TrainStation.test.ts tests/core/game/Cluster.test.ts tests/TradeTrainScenarios.test.ts tests/core/executions/TrainExecution.test.ts

@@ -93,8 +93,8 @@ describe("Attack", () => {
   test("Nuke reduce attacking troop counts", async () => {
     // Not building exactly spawn to it's better protected from attacks (but still
     // on defender territory)
-    constructionExecution(game, defender, 1, 1, UnitType.MissileSilo);
-    expect(defender.units(UnitType.MissileSilo)).toHaveLength(1);
+    constructionExecution(game, defender, 1, 1, UnitType.BunkerMissileSite);
+    expect(defender.units(UnitType.BunkerMissileSite)).toHaveLength(1);
     game.addExecution(new AttackExecution(100, attacker, defender.id()));
     constructionExecution(game, defender, 0, 15, UnitType.AtomBomb, 3);
     const nuke = defender.units(UnitType.AtomBomb)[0];
@@ -111,8 +111,8 @@ describe("Attack", () => {
   });
 
   test("Nuke reduce attacking boat troop count", async () => {
-    constructionExecution(game, defender, 1, 1, UnitType.MissileSilo);
-    expect(defender.units(UnitType.MissileSilo)).toHaveLength(1);
+    constructionExecution(game, defender, 1, 1, UnitType.BunkerMissileSite);
+    expect(defender.units(UnitType.BunkerMissileSite)).toHaveLength(1);
 
     sendBoat(game.ref(15, 8), 100);
 
@@ -566,8 +566,8 @@ describe("Attack immunity", () => {
   });
 
   test("Can't nuke another human during immunity phase", async () => {
-    constructionExecution(game, playerA, 7, 0, UnitType.MissileSilo);
-    expect(playerA.units(UnitType.MissileSilo)).toHaveLength(1);
+    constructionExecution(game, playerA, 7, 0, UnitType.BunkerMissileSite);
+    expect(playerA.units(UnitType.BunkerMissileSite)).toHaveLength(1);
     playerB.conquer(game.ref(0, 11));
     // Player A sends a bomb to player B
     constructionExecution(game, playerA, 0, 11, UnitType.AtomBomb, 3);

@@ -60,7 +60,7 @@ describe("AmbienceController", () => {
   });
 
   it("does not re-emit an unchanged track", () => {
-    nearby = [structure(UnitType.MissileSilo, 4)];
+    nearby = [structure(UnitType.BunkerMissileSite, 4)];
     controller.tick();
     controller.tick();
     expect(emitted).toEqual(["missile-silo"]);

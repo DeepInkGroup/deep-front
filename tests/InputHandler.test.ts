@@ -1067,7 +1067,9 @@ describe("InputHandler AutoUpgrade", () => {
       window.dispatchEvent(
         new KeyboardEvent("keyup", { code: "Numpad5", key: "5" }),
       );
-      expect(inputHandler["uiState"].ghostStructure).toBe(UnitType.MissileSilo);
+      expect(inputHandler["uiState"].ghostStructure).toBe(
+        UnitType.BunkerMissileSite,
+      );
     });
 
     test("Numpad0 sets ghost structure to MIRV when buildMIRV is Digit0", () => {

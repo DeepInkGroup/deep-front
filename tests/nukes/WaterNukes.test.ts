@@ -42,7 +42,7 @@ describe("Water Nukes", () => {
       player.conquer(game.ref(1, 1));
 
       // Build a missile silo
-      constructionExecution(game, player, 1, 1, UnitType.MissileSilo);
+      constructionExecution(game, player, 1, 1, UnitType.BunkerMissileSite);
     });
 
     test("nuke converts land tiles to water instead of fallout", () => {
@@ -120,7 +120,7 @@ describe("Water Nukes", () => {
       );
       const player2 = navGame.player(info.id);
       player2.conquer(navGame.ref(1, 1));
-      constructionExecution(navGame, player2, 1, 1, UnitType.MissileSilo);
+      constructionExecution(navGame, player2, 1, 1, UnitType.BunkerMissileSite);
 
       const versionBefore = navGame.waterGraphVersion();
 
@@ -173,7 +173,7 @@ describe("Water Nukes", () => {
       );
       const player2 = navGame.player(info.id);
       player2.conquer(navGame.ref(1, 1));
-      constructionExecution(navGame, player2, 1, 1, UnitType.MissileSilo);
+      constructionExecution(navGame, player2, 1, 1, UnitType.BunkerMissileSite);
 
       const target = navGame.ref(50, 50);
       navGame.addExecution(
@@ -224,7 +224,7 @@ describe("Water Nukes", () => {
       );
       const player2 = navGame.player(info.id);
       player2.conquer(navGame.ref(1, 1));
-      constructionExecution(navGame, player2, 1, 1, UnitType.MissileSilo);
+      constructionExecution(navGame, player2, 1, 1, UnitType.BunkerMissileSite);
 
       const miniMap = navGame.miniMap();
       const fullMap = navGame.map();
@@ -299,7 +299,7 @@ describe("Water Nukes", () => {
       player = game.player(info.id);
       player.conquer(game.ref(1, 1));
 
-      constructionExecution(game, player, 1, 1, UnitType.MissileSilo);
+      constructionExecution(game, player, 1, 1, UnitType.BunkerMissileSite);
     });
 
     test("nuke applies fallout instead of converting to water", () => {
@@ -338,7 +338,7 @@ describe("Water Nukes", () => {
       );
       player = game.player(info.id);
       player.conquer(game.ref(1, 1));
-      constructionExecution(game, player, 1, 1, UnitType.MissileSilo);
+      constructionExecution(game, player, 1, 1, UnitType.BunkerMissileSite);
 
       const target = game.ref(10, 10);
       const terrainBefore = game.terrainByte(target);

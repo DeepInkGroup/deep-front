@@ -135,7 +135,11 @@ describe("NationNukeBehavior - maybeDestroyEnemySam", () => {
       [25, 25],
       [30, 30],
     ] as const) {
-      const silo = nation.buildUnit(UnitType.MissileSilo, game.ref(x, y), {});
+      const silo = nation.buildUnit(
+        UnitType.BunkerMissileSite,
+        game.ref(x, y),
+        {},
+      );
       game.addExecution(new MissileSiloExecution(silo));
     }
 
@@ -144,7 +148,7 @@ describe("NationNukeBehavior - maybeDestroyEnemySam", () => {
     nation.addTroops(100_000);
     human.addTroops(100_000);
 
-    expect(nation.units(UnitType.MissileSilo)).toHaveLength(3);
+    expect(nation.units(UnitType.BunkerMissileSite)).toHaveLength(3);
     expect(human.units(UnitType.SAMLauncher)).toHaveLength(1);
     expect(nation.units(UnitType.AtomBomb)).toHaveLength(0);
 
@@ -213,8 +217,8 @@ describe("NationNukeBehavior - maybeDestroyEnemySam", () => {
       const other = game.player("other_id");
 
       conquerRect(game, nation, 0, 0, 15, 15);
-      nation.buildUnit(UnitType.MissileSilo, game.ref(5, 5), {});
-      nation.buildUnit(UnitType.MissileSilo, game.ref(10, 10), {});
+      nation.buildUnit(UnitType.BunkerMissileSite, game.ref(5, 5), {});
+      nation.buildUnit(UnitType.BunkerMissileSite, game.ref(10, 10), {});
       nation.addGold(10_000_000n);
       conquerRect(game, human, 130, 130, 170, 170);
       const samTile = game.ref(150, 150);

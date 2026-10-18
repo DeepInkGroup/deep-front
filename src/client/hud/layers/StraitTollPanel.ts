@@ -6,6 +6,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { SendStraitTollIntentEvent } from "../../Transport";
 import { GoToUnitEvent } from "../../TransformHandler";
 import type { GameView, UnitView } from "../../view";
+import { renderNumber } from "@openfront/engine-lib/Format";
 
 @customElement("strait-toll-panel")
 export class StraitTollPanel extends LitElement {
@@ -228,6 +229,16 @@ export class StraitTollPanel extends LitElement {
                     Locate
                   </button>
                 </div>
+                <small
+                  >Controlled crossing: ${s.gate.length} water tiles. Tolls end
+                  when either bank is lost.</small
+                >
+                ${mine
+                  ? html`<small
+                      ><strong>${renderNumber(s.collectedGold ?? 0n)}</strong>
+                      collected · ${s.passages ?? 0} paid passages</small
+                    >`
+                  : nothing}
                 ${unit.isUnderConstruction()
                   ? html`<p>Under construction · 90 seconds</p>`
                   : mine

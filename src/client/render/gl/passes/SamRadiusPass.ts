@@ -146,6 +146,7 @@ function computeUncoveredArcs(a: SAMCircle, circles: SAMCircle[]): Interval[] {
 
 export class SAMRadiusPass {
   private missileType: string | null = null;
+  private hasDisabledCIWS = false;
   private missileTargetOwner: number | null = null;
   setMissileTarget(type: string | null, owner: number | null): void {
     if (type === this.missileType && owner === this.missileTargetOwner) return;
@@ -157,6 +158,12 @@ export class SAMRadiusPass {
     return (
       u.isActive &&
       !u.underConstruction &&
+      (u.empDisabledUntil ?? 0) <= this.currentTick &&
+      !(
+        u.unitType === UT_CIWS_DEFENSE &&
+        (this.missileType === "Hydrogen Bomb" ||
+          this.missileType === "EMP Missile")
+      ) &&
       (u.unitType === UT_CIWS_DEFENSE ||
         (u.unitType === UT_SAM_LAUNCHER &&
           (this.missileType !== "Hypersonic Missile" ||
@@ -306,7 +313,7 @@ export class SAMRadiusPass {
     if (tick === this.currentTick) return;
     this.currentTick = tick;
     this.lastTickTime = performance.now();
-    if (this.hasUpgradingSAM) {
+    if (this.hasUpgradingSAM || this.hasDisabledCIWS) {
       this.rebuild();
     }
   }
@@ -373,6 +380,9 @@ export class SAMRadiusPass {
     const circles: SAMCircle[] = [];
     const w = this.mapW;
     this.dirtyGroups.clear();
+    this.hasDisabledCIWS = [...structures.values()].some(
+      (u) => (u.empDisabledUntil ?? 0) > this.currentTick,
+    );
 
     for (const u of structures.values()) {
       if (!this.eligible(u)) continue;

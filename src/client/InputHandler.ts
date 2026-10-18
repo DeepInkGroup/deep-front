@@ -1478,7 +1478,7 @@ export class InputHandler {
       { key: "buildFactory", type: UnitType.Factory },
       { key: "buildPort", type: UnitType.Port },
       { key: "buildDefensePost", type: UnitType.DefensePost },
-      { key: "buildMissileSilo", type: UnitType.MissileSilo },
+      { key: "buildMissileSilo", type: UnitType.BunkerMissileSite },
       { key: "buildSamLauncher", type: UnitType.SAMLauncher },
       { key: "buildAtomBomb", type: UnitType.AtomBomb },
       { key: "buildHydrogenBomb", type: UnitType.HydrogenBomb },

@@ -148,6 +148,34 @@ function reply(
 }
 
 describe("Strait Control Station", () => {
+  it("snaps clicks on water and inland to the closest valid bank and previews the entire gate", () => {
+    const f = fixture();
+    const bank = f.game.ref(109, 120),
+      water = f.game.ref(113, 120);
+    expect(f.owner.canBuild(S, water)).toBe(bank);
+    expect(f.owner.canBuild(S, f.game.ref(105, 120))).toBe(bank);
+    const preview = f.owner.buildableUnits(water, [S])[0];
+    expect(preview.canBuild).toBe(bank);
+    expect(preview.straitGate).toEqual([
+      bank,
+      ...Array.from({ length: 10 }, (_, i) => f.game.ref(110 + i, 120)),
+      f.game.ref(120, 120),
+    ]);
+    expect(f.owner.canBuild(S, f.game.ref(80, 120))).toBe(false);
+  });
+  it("allows bank placement eight tiles from another building and never snaps onto occupied sites", () => {
+    const f = fixture();
+    f.owner.buildUnit(UnitType.City, f.game.ref(101, 120), {});
+    expect(f.owner.canBuild(S, f.game.ref(109, 120))).toBe(
+      f.game.ref(109, 120),
+    );
+    f.owner.buildUnit(UnitType.City, f.game.ref(109, 120), {});
+    const snapped = f.owner.canBuild(S, f.game.ref(109, 120));
+    expect(snapped).not.toBe(false);
+    expect(
+      f.game.euclideanDistSquared(snapped as number, f.game.ref(109, 120)),
+    ).toBeGreaterThanOrEqual(64);
+  });
   it("recognizes one-cell canals and diagonal straits", () => {
     const narrow = fixture(GameType.Singleplayer, (x) => x === 115);
     expect(
@@ -262,6 +290,17 @@ describe("Strait Control Station", () => {
       expect(before - f.sender.gold()).toBe(10_000n);
       expect(f.owner.gold() - earned).toBe(10_000n);
       expect(voyage.cargo).toBe(100_000n);
+      expect(station.straitState()?.collectedGold).toBe(10_000n);
+      expect(station.straitState()?.passages).toBe(1);
+      const saved = snapshotGame(f.game);
+      const resumed = restoreGame(saved, {
+        ...maps(),
+        config: (gc) => new TestConfig(gc, false),
+      });
+      expect(resumed.unit(station.id())?.straitState()?.collectedGold).toBe(
+        10_000n,
+      );
+      expect(snapshotGame(resumed)).toEqual(saved);
       tradePassageNext(
         f.game,
         f.sender,
@@ -450,7 +489,7 @@ describe("Strait Control Station", () => {
       const station = f.owner.buildUnit(S, f.game.ref(109, 120), {});
       enable(f, station);
       const source = f.game.ref(109, 20);
-      f.sender.buildUnit(UnitType.MissileSilo, source, {});
+      f.sender.buildUnit(UnitType.BunkerMissileSite, source, {});
       f.config.setDefaultNukeSpeed(100);
       f.game.addExecution(
         new NukeExecution(bomb, f.sender, station.tile(), source),

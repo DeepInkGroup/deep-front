@@ -89,7 +89,7 @@ import {
   canBuildTransportShip,
 } from "./TransportShipUtils";
 import { UnitImpl } from "./UnitImpl";
-import { straitAt } from "./StraitControl";
+import { straitAt, straitPlacement } from "./StraitControl";
 import { customsPartnerAt } from "./CustomsOffice";
 
 // Rot re-stamps every second, so a little slack keeps the cue from strobing.
@@ -1417,7 +1417,7 @@ export class PlayerImpl implements Player {
 
     if (
       type === UnitType.StraitControlStation &&
-      this.canSpawnUnitType(type, spawnTile, null) === false
+      this.canSpawnUnitType(type, spawnTile, null) !== spawnTile
     )
       throw new Error(
         "Strait Control Stations require a narrow waterway with both banks controlled by you.",
@@ -1623,6 +1623,16 @@ export class PlayerImpl implements Player {
       }
 
       result[i] = {
+        ...(buildNew && u === UnitType.StraitControlStation
+          ? {
+              straitGate: (() => {
+                const geometry = straitAt(mg, this, canBuild as TileRef);
+                return geometry
+                  ? [geometry.bankA, ...geometry.gate, geometry.bankB]
+                  : [];
+              })(),
+            }
+          : {}),
         type: u,
         canBuild,
         canUpgrade,
@@ -1663,11 +1673,7 @@ export class PlayerImpl implements Player {
       return false;
     switch (unitType) {
       case UnitType.StraitControlStation:
-        return (
-          validTiles ?? this.validStructureSpawnTiles(targetTile)
-        ).includes(targetTile) && straitAt(this.mg, this, targetTile)
-          ? targetTile
-          : false;
+        return straitPlacement(this.mg, this, targetTile);
       case UnitType.CustomsOffice:
         return customsPartnerAt(this.mg, this, targetTile) &&
           (validTiles ?? this.validStructureSpawnTiles(targetTile)).includes(
@@ -1680,6 +1686,7 @@ export class PlayerImpl implements Player {
           return false;
         }
         return this.nukeSpawn(targetTile, unitType);
+      case UnitType.EMPMissile:
       case UnitType.StealthMissile:
       case UnitType.HypersonicMissile:
       case UnitType.AtomBomb:
@@ -1750,6 +1757,7 @@ export class PlayerImpl implements Player {
     if (
       config.gameConfig().gameMode === GameMode.Team &&
       nukeType !== UnitType.MIRV &&
+      nukeType !== UnitType.EMPMissile &&
       !gameOver
     ) {
       const magnitude = config.nukeMagnitudes(nukeType);
@@ -1765,12 +1773,7 @@ export class PlayerImpl implements Player {
     }
 
     // only get missilesilos that are not on cooldown and not under construction
-    const readySilos = this.units(
-      nukeType === UnitType.StealthMissile ||
-        nukeType === UnitType.HypersonicMissile
-        ? UnitType.BunkerMissileSite
-        : UnitType.MissileSilo,
-    ).filter(
+    const readySilos = this.units(UnitType.BunkerMissileSite).filter(
       (silo) =>
         silo.isActive() && !silo.isInCooldown() && !silo.isUnderConstruction(),
     );

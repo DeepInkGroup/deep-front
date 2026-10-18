@@ -6,6 +6,12 @@ stealth missiles, hypersonic missiles, MIRV carriers, and MIRV warheads.
 Simultaneous attacks do not exhaust its protection. Friendly missiles are ignored.
 Unlike ordinary SAMs, CIWS can intercept hypersonic missiles crossing its country.
 
+Hydrogen Bombs bypass CIWS and can destroy it on impact; SAM Launchers can still
+intercept Hydrogen Bombs. An undetected EMP bypasses CIWS and disables hostile
+sites within 70 tiles of its impact for exactly five seconds. A SAM detection
+cancels that EMP effect permanently and makes the EMP interceptable by CIWS.
+Shutdowns dim the affected building and remove its active-range overlay.
+
 The simulation checks the whole movement segment, so a fast missile cannot jump
 across the protected area between ticks. Unfinished sites provide no protection.
 
@@ -29,6 +35,7 @@ New default shortcuts are editable in Settings:
 | Shift+4  | Customs Office      |
 | Shift+5  | Bunker Missile Site |
 | Shift+6  | CIWS Defense        |
+| Shift+7  | EMP Missile         |
 | Shift+8  | Stealth Missile     |
 | Shift+9  | Hypersonic Missile  |
 

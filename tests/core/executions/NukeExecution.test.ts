@@ -45,7 +45,7 @@ describe("NukeExecution", () => {
     // Build a city at (1,1)
     player.buildUnit(UnitType.City, game.ref(1, 1), {});
     // Build a missile silo in range
-    player.buildUnit(UnitType.MissileSilo, game.ref(1, 10), {});
+    player.buildUnit(UnitType.BunkerMissileSite, game.ref(1, 10), {});
     // Build a SAM out of range
     const sam = player.buildUnit(UnitType.SAMLauncher, game.ref(1, 11), {});
     sam.touch = vi.fn();
@@ -68,14 +68,14 @@ describe("NukeExecution", () => {
     executeTicks(game, 10);
     // The city and silo should be destroyed
     expect(player.units(UnitType.City)).toHaveLength(0);
-    expect(player.units(UnitType.MissileSilo)).toHaveLength(0);
+    expect(player.units(UnitType.BunkerMissileSite)).toHaveLength(0);
     expect(player.units(UnitType.SAMLauncher)).toHaveLength(1);
     expect(sam.touch).toHaveBeenCalled();
     expect(defensePost.touch).not.toHaveBeenCalled();
   });
 
   test("nuke should only be targetable near src and dst", async () => {
-    player.buildUnit(UnitType.MissileSilo, game.ref(1, 1), {});
+    player.buildUnit(UnitType.BunkerMissileSite, game.ref(1, 1), {});
     const nukeExec = new NukeExecution(
       UnitType.AtomBomb,
       player,
@@ -99,7 +99,7 @@ describe("NukeExecution", () => {
   });
 
   test("incoming atom bomb warning uses a translation key", () => {
-    player.buildUnit(UnitType.MissileSilo, game.ref(1, 1), {});
+    player.buildUnit(UnitType.BunkerMissileSite, game.ref(1, 1), {});
     const target = game.ref(50, 50);
     otherPlayer.conquer(target);
     const displayIncomingSpy = vi.spyOn(game, "displayIncomingUnit");
@@ -118,7 +118,7 @@ describe("NukeExecution", () => {
   });
 
   test("incoming hydrogen bomb warning uses a translation key", () => {
-    player.buildUnit(UnitType.MissileSilo, game.ref(1, 1), {});
+    player.buildUnit(UnitType.BunkerMissileSite, game.ref(1, 1), {});
     const target = game.ref(50, 50);
     otherPlayer.conquer(target);
     const displayIncomingSpy = vi.spyOn(game, "displayIncomingUnit");
@@ -141,7 +141,7 @@ describe("NukeExecution", () => {
     req!.accept();
 
     player.conquer(game.ref(1, 1));
-    player.buildUnit(UnitType.MissileSilo, game.ref(1, 1), {});
+    player.buildUnit(UnitType.BunkerMissileSite, game.ref(1, 1), {});
 
     for (let x = 90; x < 99; x++) {
       for (let y = 90; y < 99; y++) {
@@ -162,7 +162,7 @@ describe("NukeExecution", () => {
   });
 
   test("AtomBomb detonation emits NUKE_DETONATED to each impacted player", () => {
-    player.buildUnit(UnitType.MissileSilo, game.ref(1, 1), {});
+    player.buildUnit(UnitType.BunkerMissileSite, game.ref(1, 1), {});
     // Give otherPlayer a cluster around (50,50) so the blast intersects them.
     for (let x = 48; x < 53; x++) {
       for (let y = 48; y < 53; y++) {
@@ -198,7 +198,7 @@ describe("NukeExecution", () => {
   });
 
   test("HydrogenBomb detonation emits NUKE_DETONATED with hydrogen_bomb key", () => {
-    player.buildUnit(UnitType.MissileSilo, game.ref(1, 1), {});
+    player.buildUnit(UnitType.BunkerMissileSite, game.ref(1, 1), {});
     for (let x = 48; x < 53; x++) {
       for (let y = 48; y < 53; y++) {
         otherPlayer.conquer(game.ref(x, y));
@@ -227,7 +227,7 @@ describe("NukeExecution", () => {
   });
 
   test("MIRVWarhead detonation does NOT emit NUKE_DETONATED", () => {
-    player.buildUnit(UnitType.MissileSilo, game.ref(1, 1), {});
+    player.buildUnit(UnitType.BunkerMissileSite, game.ref(1, 1), {});
     for (let x = 48; x < 53; x++) {
       for (let y = 48; y < 53; y++) {
         otherPlayer.conquer(game.ref(x, y));
@@ -261,7 +261,7 @@ describe("NukeExecution", () => {
     expect(player.isAlliedWith(otherPlayer)).toBe(true);
 
     player.conquer(game.ref(1, 1));
-    player.buildUnit(UnitType.MissileSilo, game.ref(1, 1), {});
+    player.buildUnit(UnitType.BunkerMissileSite, game.ref(1, 1), {});
 
     // Give the other player just a few tiles (below the threshold of 5)
     // and build a port on one of them
@@ -287,7 +287,7 @@ describe("NukeExecution", () => {
   });
 
   test("drainNukeImpacts returns all queued tiles after detonation and empty on subsequent drain", () => {
-    player.buildUnit(UnitType.MissileSilo, game.ref(1, 1), {});
+    player.buildUnit(UnitType.BunkerMissileSite, game.ref(1, 1), {});
 
     // No nukes yet — drain should be empty.
     expect(game.drainNukeImpacts()).toHaveLength(0);
@@ -326,7 +326,7 @@ describe("NukeExecution", () => {
   });
 
   test("drainNukeImpacts returns queued tiles for HydrogenBomb detonation", () => {
-    player.buildUnit(UnitType.MissileSilo, game.ref(1, 1), {});
+    player.buildUnit(UnitType.BunkerMissileSite, game.ref(1, 1), {});
 
     expect(game.drainNukeImpacts()).toHaveLength(0);
 
@@ -370,7 +370,7 @@ describe("NukeExecution", () => {
 
     const waterPlayer = waterGame.player("player_id");
     waterPlayer.conquer(waterGame.ref(1, 1));
-    waterPlayer.buildUnit(UnitType.MissileSilo, waterGame.ref(1, 1), {});
+    waterPlayer.buildUnit(UnitType.BunkerMissileSite, waterGame.ref(1, 1), {});
 
     expect(waterGame.drainNukeImpacts()).toHaveLength(0);
 
@@ -407,7 +407,11 @@ describe("NukeExecution", () => {
   });
 
   test("stacked atom bombs launch staggered and fly on distinct tiles", () => {
-    const silo = player.buildUnit(UnitType.MissileSilo, game.ref(1, 1), {});
+    const silo = player.buildUnit(
+      UnitType.BunkerMissileSite,
+      game.ref(1, 1),
+      {},
+    );
     // A silo holds `level` concurrent missiles; raise to 3 so the whole stack launches.
     silo.increaseLevel();
     silo.increaseLevel();
@@ -445,8 +449,16 @@ describe("NukeExecution", () => {
 
     // Away from the map corner — a parabola launched from the corner has a
     // degenerate first segment that stays on the launch tile.
-    const siloA = player.buildUnit(UnitType.MissileSilo, game.ref(50, 50), {});
-    const siloB = player.buildUnit(UnitType.MissileSilo, game.ref(50, 54), {});
+    const siloA = player.buildUnit(
+      UnitType.BunkerMissileSite,
+      game.ref(50, 50),
+      {},
+    );
+    const siloB = player.buildUnit(
+      UnitType.BunkerMissileSite,
+      game.ref(50, 54),
+      {},
+    );
     for (const silo of [siloA, siloB]) {
       silo.increaseLevel();
       silo.reloadMissile();
@@ -489,7 +501,11 @@ describe("NukeExecution", () => {
   });
 
   test("stacked bombs beyond loaded silo tubes are dropped, not queued", () => {
-    const silo = player.buildUnit(UnitType.MissileSilo, game.ref(50, 50), {});
+    const silo = player.buildUnit(
+      UnitType.BunkerMissileSite,
+      game.ref(50, 50),
+      {},
+    );
     // Reloading is driven by the silo's execution (normally added when the
     // silo is built through ConstructionExecution).
     game.addExecution(new MissileSiloExecution(silo));
@@ -524,7 +540,11 @@ describe("NukeExecution", () => {
   test("stacked atom bombs launched across successive ticks stagger continuously without overlapping", () => {
     (game.config() as TestConfig).setDefaultNukeSpeed(20);
 
-    const silo = player.buildUnit(UnitType.MissileSilo, game.ref(50, 50), {});
+    const silo = player.buildUnit(
+      UnitType.BunkerMissileSite,
+      game.ref(50, 50),
+      {},
+    );
     for (let i = 0; i < 9; i++) {
       silo.increaseLevel();
       silo.reloadMissile();
@@ -580,7 +600,7 @@ describe("NukeExecution kill credit", () => {
     }));
     const launcher = g.player("launcher_id");
     launcher.conquer(g.ref(1, 1));
-    launcher.buildUnit(UnitType.MissileSilo, g.ref(1, 1), {});
+    launcher.buildUnit(UnitType.BunkerMissileSite, g.ref(1, 1), {});
     return { g, launcher };
   }
 

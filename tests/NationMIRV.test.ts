@@ -50,7 +50,7 @@ describe("Nation MIRV Retaliation", () => {
         }
       }
     }
-    attacker.buildUnit(UnitType.MissileSilo, game.ref(10, 10), {});
+    attacker.buildUnit(UnitType.BunkerMissileSite, game.ref(10, 10), {});
 
     // Give nation territory and missile silo
     for (let x = 25; x < 75; x++) {
@@ -61,9 +61,9 @@ describe("Nation MIRV Retaliation", () => {
         }
       }
     }
-    nation.buildUnit(UnitType.MissileSilo, game.ref(50, 50), {});
+    nation.buildUnit(UnitType.BunkerMissileSite, game.ref(50, 50), {});
     // Register MissileSiloExecution so the silo can reload after firing
-    const nationSilo = nation.units(UnitType.MissileSilo)[0];
+    const nationSilo = nation.units(UnitType.BunkerMissileSite)[0];
     if (nationSilo) {
       game.addExecution(new MissileSiloExecution(nationSilo));
     }
@@ -72,8 +72,8 @@ describe("Nation MIRV Retaliation", () => {
     attacker.addGold(1_000_000_000n);
     nation.addGold(1_000_000_000n);
     // Verify preconditions
-    expect(attacker.units(UnitType.MissileSilo)).toHaveLength(1);
-    expect(nation.units(UnitType.MissileSilo)).toHaveLength(1);
+    expect(attacker.units(UnitType.BunkerMissileSite)).toHaveLength(1);
+    expect(nation.units(UnitType.BunkerMissileSite)).toHaveLength(1);
     expect(attacker.gold()).toBeGreaterThan(35_000_000n);
     expect(nation.gold()).toBeGreaterThan(35_000_000n);
 
@@ -198,9 +198,9 @@ describe("Nation MIRV Retaliation", () => {
     // Build missile silo on one of the nation's tiles
     const nationTile = Array.from(nation.tiles())[0];
     if (nationTile) {
-      nation.buildUnit(UnitType.MissileSilo, nationTile, {});
+      nation.buildUnit(UnitType.BunkerMissileSite, nationTile, {});
       // Register MissileSiloExecution so the silo can reload after firing
-      const silo = nation.units(UnitType.MissileSilo)[0];
+      const silo = nation.units(UnitType.BunkerMissileSite)[0];
       if (silo) {
         game.addExecution(new MissileSiloExecution(silo));
       }
@@ -235,8 +235,8 @@ describe("Nation MIRV Retaliation", () => {
     nation.addGold(100_000_000n);
 
     // Verify preconditions
-    expect(dominantPlayer.units(UnitType.MissileSilo)).toHaveLength(0);
-    expect(nation.units(UnitType.MissileSilo)).toHaveLength(1);
+    expect(dominantPlayer.units(UnitType.BunkerMissileSite)).toHaveLength(0);
+    expect(nation.units(UnitType.BunkerMissileSite)).toHaveLength(1);
     expect(nation.units(UnitType.MIRV)).toHaveLength(0);
     expect(dominantPlayer.units(UnitType.MIRV)).toHaveLength(0);
     expect(dominantPlayer.gold()).toBeGreaterThan(35_000_000n);
@@ -352,9 +352,9 @@ describe("Nation MIRV Retaliation", () => {
     }
     const nationTile = Array.from(nation.tiles())[0];
     if (nationTile) {
-      nation.buildUnit(UnitType.MissileSilo, nationTile, {});
+      nation.buildUnit(UnitType.BunkerMissileSite, nationTile, {});
       // Register MissileSiloExecution so the silo can reload after firing
-      const silo = nation.units(UnitType.MissileSilo)[0];
+      const silo = nation.units(UnitType.BunkerMissileSite)[0];
       if (silo) {
         game.addExecution(new MissileSiloExecution(silo));
       }
@@ -401,7 +401,7 @@ describe("Nation MIRV Retaliation", () => {
     nation.addGold(100_000_000n);
 
     // Verify preconditions
-    expect(nation.units(UnitType.MissileSilo)).toHaveLength(1);
+    expect(nation.units(UnitType.BunkerMissileSite)).toHaveLength(1);
     expect(steamroller.unitCount(UnitType.City)).toBe(minLeaderCities + 2);
     expect(secondPlayer.unitCount(UnitType.City)).toBe(5);
     expect(nation.units(UnitType.MIRV)).toHaveLength(0);
@@ -509,7 +509,7 @@ describe("Nation MIRV Retaliation", () => {
     }
     const nationTile = Array.from(nation.tiles())[0];
     if (nationTile) {
-      nation.buildUnit(UnitType.MissileSilo, nationTile, {});
+      nation.buildUnit(UnitType.BunkerMissileSite, nationTile, {});
     }
 
     // Give second player territory and cities (5 cities)
@@ -551,7 +551,7 @@ describe("Nation MIRV Retaliation", () => {
     nation.addGold(100_000_000n);
 
     // Verify preconditions
-    expect(nation.units(UnitType.MissileSilo)).toHaveLength(1);
+    expect(nation.units(UnitType.BunkerMissileSite)).toHaveLength(1);
     expect(steamroller.unitCount(UnitType.City)).toBe(minLeaderCities);
     expect(secondPlayer.unitCount(UnitType.City)).toBe(5);
     expect(nation.units(UnitType.MIRV)).toHaveLength(0);
@@ -642,9 +642,9 @@ describe("Nation MIRV Retaliation", () => {
     }
     const nationTile = Array.from(nation.tiles())[0];
     if (nationTile) {
-      nation.buildUnit(UnitType.MissileSilo, nationTile, {});
+      nation.buildUnit(UnitType.BunkerMissileSite, nationTile, {});
       // Register MissileSiloExecution so the silo can reload after firing
-      const silo = nation.units(UnitType.MissileSilo)[0];
+      const silo = nation.units(UnitType.BunkerMissileSite)[0];
       if (silo) {
         game.addExecution(new MissileSiloExecution(silo));
       }
@@ -683,7 +683,7 @@ describe("Nation MIRV Retaliation", () => {
     nation.addGold(100_000_000n);
 
     // Verify preconditions
-    expect(nation.units(UnitType.MissileSilo)).toHaveLength(1);
+    expect(nation.units(UnitType.BunkerMissileSite)).toHaveLength(1);
     expect(nation.units(UnitType.MIRV)).toHaveLength(0);
     expect(teamPlayer1.gold()).toBeGreaterThan(35_000_000n);
     expect(teamPlayer2.gold()).toBeGreaterThan(35_000_000n);

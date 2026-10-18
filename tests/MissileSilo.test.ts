@@ -52,7 +52,7 @@ describe("MissileSilo", () => {
 
     attacker = game.player("attacker_id");
 
-    constructionExecution(game, attacker, 1, 1, UnitType.MissileSilo);
+    constructionExecution(game, attacker, 1, 1, UnitType.BunkerMissileSite);
   });
 
   test("missilesilo should launch nuke", async () => {
@@ -75,7 +75,9 @@ describe("MissileSilo", () => {
   });
 
   test("missilesilo should cooldown as long as configured", async () => {
-    expect(attacker.units(UnitType.MissileSilo)[0].isInCooldown()).toBeFalsy();
+    expect(
+      attacker.units(UnitType.BunkerMissileSite)[0].isInCooldown(),
+    ).toBeFalsy();
     // send the nuke far enough away so it doesn't destroy the silo
     attackerBuildsNuke(null, game.ref(50, 50));
     expect(attacker.units(UnitType.AtomBomb)).toHaveLength(1);
@@ -83,13 +85,15 @@ describe("MissileSilo", () => {
     for (let i = 0; i < game.config().SiloCooldown() - 2; i++) {
       game.executeNextTick();
       expect(
-        attacker.units(UnitType.MissileSilo)[0].isInCooldown(),
+        attacker.units(UnitType.BunkerMissileSite)[0].isInCooldown(),
       ).toBeTruthy();
     }
 
     executeTicks(game, 2);
 
-    expect(attacker.units(UnitType.MissileSilo)[0].isInCooldown()).toBeFalsy();
+    expect(
+      attacker.units(UnitType.BunkerMissileSite)[0].isInCooldown(),
+    ).toBeFalsy();
   });
 
   test("missilesilo should cooldown after launching MIRV", async () => {
@@ -104,30 +108,34 @@ describe("MissileSilo", () => {
     const target = game.player("target_id");
     target.conquer(game.ref(50, 50));
 
-    expect(attacker.units(UnitType.MissileSilo)[0].isInCooldown()).toBeFalsy();
+    expect(
+      attacker.units(UnitType.BunkerMissileSite)[0].isInCooldown(),
+    ).toBeFalsy();
 
     game.addExecution(new MirvExecution(attacker, game.ref(50, 50)));
     game.executeNextTick();
     game.executeNextTick();
 
     expect(attacker.units(UnitType.MIRV)).toHaveLength(1);
-    expect(attacker.units(UnitType.MissileSilo)[0].isInCooldown()).toBeTruthy();
+    expect(
+      attacker.units(UnitType.BunkerMissileSite)[0].isInCooldown(),
+    ).toBeTruthy();
 
     // the silo is on cooldown, so it cannot launch another nuke
     attackerBuildsNuke(null, game.ref(7, 7));
     expect(attacker.units(UnitType.AtomBomb)).toHaveLength(0);
   });
 
-  test("missilesilo should have increased level after upgrade", async () => {
-    expect(attacker.units(UnitType.MissileSilo)[0].level()).toEqual(1);
+  test("bunker upgrades complete after five seconds", async () => {
+    expect(attacker.units(UnitType.BunkerMissileSite)[0].level()).toEqual(1);
 
     const upgradeStructureExecution = new UpgradeStructureExecution(
       attacker,
-      attacker.units(UnitType.MissileSilo)[0].id(),
+      attacker.units(UnitType.BunkerMissileSite)[0].id(),
     );
     game.addExecution(upgradeStructureExecution);
-    executeTicks(game, 2);
+    executeTicks(game, 52);
 
-    expect(attacker.units(UnitType.MissileSilo)[0].level()).toEqual(2);
+    expect(attacker.units(UnitType.BunkerMissileSite)[0].level()).toEqual(2);
   });
 });

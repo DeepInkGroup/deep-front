@@ -369,7 +369,7 @@ export class PlayerView implements PlayerLike {
   /** Missiles launchable right now: each silo holds `level` tubes, minus
    *  those still reloading. Caps how many nukes a bulk purchase can fire. */
   readyMissileCount(): number {
-    return this.units(UnitType.MissileSilo).reduce(
+    return this.units(UnitType.BunkerMissileSite).reduce(
       (acc, silo) =>
         silo.isUnderConstruction()
           ? acc

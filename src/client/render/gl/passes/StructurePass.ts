@@ -88,6 +88,9 @@ export class StructurePass {
   private settings: RenderSettings;
   private program: WebGLProgram;
   private localPlayerID = 0;
+  private currentTick = 0;
+  private hasEMPStates = false;
+  private lastStructures: Map<number, UnitState> | null = null;
 
   private uLocalPlayerID: WebGLUniformLocation;
   private uCamera: WebGLUniformLocation;
@@ -319,6 +322,8 @@ export class StructurePass {
   }
 
   updateStructures(units: Map<number, UnitState>): void {
+    this.lastStructures = units;
+    this.hasEMPStates = false;
     let count = 0;
 
     for (const unit of units.values()) {
@@ -338,7 +343,9 @@ export class StructurePass {
       this.instanceBuf.float32[off + 3] = unit.underConstruction ? 1 : 0;
       this.instanceBuf.float32[off + 4] = atlasIdx;
       this.instanceBuf.float32[off + 5] =
-        unit.markedForDeletion !== false ? 1 : 0;
+        (unit.markedForDeletion !== false ? 1 : 0) +
+        ((unit.empDisabledUntil ?? 0) > this.currentTick ? 2 : 0);
+      this.hasEMPStates ||= (unit.empDisabledUntil ?? 0) > this.currentTick;
 
       count++;
     }
@@ -360,6 +367,13 @@ export class StructurePass {
 
   updateGhostPreview(data: GhostPreviewData | null): void {
     this.ghost = data;
+  }
+
+  setTick(tick: number): void {
+    if (tick === this.currentTick) return;
+    this.currentTick = tick;
+    if (this.hasEMPStates && this.lastStructures)
+      this.updateStructures(this.lastStructures);
   }
 
   setAltView(active: boolean): void {

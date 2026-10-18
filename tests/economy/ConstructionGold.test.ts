@@ -79,7 +79,7 @@ describe("Construction economy", () => {
     player.addGold(100_000_000n);
 
     player.conquer(game.ref(1, 1));
-    player.buildUnit(UnitType.MissileSilo, game.ref(1, 1), {});
+    player.buildUnit(UnitType.BunkerMissileSite, game.ref(1, 1), {});
 
     other.conquer(game.ref(10, 10));
     game.addExecution(

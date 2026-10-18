@@ -16,6 +16,12 @@ export function interceptWithCIWS(
   to: TileRef,
 ): boolean {
   if (game.unitCount(UnitType.CIWSDefense) === 0) return false;
+  if (
+    missile.type() === UnitType.HydrogenBomb ||
+    (missile.type() === UnitType.EMPMissile &&
+      !missile.nukeState().detectedBySAM)
+  )
+    return false;
   if (!missile.isActive() || !Nukes.has(missile.type())) return false;
   if (missile.type() !== UnitType.MIRV && missile.nukeState().waitTicks > 0)
     return false;
@@ -28,6 +34,7 @@ export function interceptWithCIWS(
     if (
       !site.isActive() ||
       site.isUnderConstruction() ||
+      site.empDisabledUntil() > game.ticks() ||
       site.owner() === missile.owner()
     )
       continue;

@@ -5,3 +5,7 @@ export const STEALTH_BLAST = {
 } as const;
 export const CIWS_COSTS = [2_000_000n, 3_000_000n, 3_500_000n] as const;
 export const CIWS_MAX_LEVEL = 5;
+
+export const EMP_COST = 1_000_000;
+export const EMP_RADIUS = 70;
+export const EMP_DISABLE_TICKS = 50;

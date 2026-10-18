@@ -180,7 +180,7 @@ describe("Logistics Center", () => {
     const center = build(bob, 50, 50),
       source = game.ref(10, 10);
     alice.conquer(source);
-    alice.buildUnit(UnitType.MissileSilo, source, {});
+    alice.buildUnit(UnitType.BunkerMissileSite, source, {});
     expect(logisticsTrainIncome(bob, 10_000n)).toBe(11_500n);
     (game.config() as TestConfig).setDefaultNukeSpeed(100);
     game.addExecution(new NukeExecution(bomb, alice, center.tile(), source));

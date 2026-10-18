@@ -104,7 +104,7 @@ export function findJuiciestTarget(
         (sum, u) =>
           Structures.has(u.type()) &&
           u.type() !== UnitType.DefensePost &&
-          u.type() !== UnitType.MissileSilo
+          u.type() !== UnitType.BunkerMissileSite
             ? sum + u.level()
             : sum,
         0,

@@ -6,11 +6,70 @@ import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
   MessageType,
   PlayerType,
+  Structures,
   UnitType,
 } from "@openfront/engine-api/game/GameTypes";
 import type { Game, Player, Unit } from "./Game";
 
 export type StraitGeometry = Pick<StraitState, "bankA" | "bankB" | "gate">;
+
+export const STRAIT_SNAP_RADIUS = 12;
+/** Resolve a click on either bank or the water to the nearest eligible bank.
+ * Ownership, topology, spacing and overlap are all enforced by the simulation. */
+export function straitPlacement(
+  game: Game,
+  player: Player,
+  target: TileRef,
+): TileRef | false {
+  if (!game.isValidRef(target)) return false;
+  const candidates: TileRef[] = [];
+  const cx = game.x(target),
+    cy = game.y(target),
+    r = STRAIT_SNAP_RADIUS;
+  for (
+    let y = Math.max(0, cy - r);
+    y <= Math.min(game.height() - 1, cy + r);
+    y++
+  ) {
+    for (
+      let x = Math.max(0, cx - r);
+      x <= Math.min(game.width() - 1, cx + r);
+      x++
+    ) {
+      if ((x - cx) ** 2 + (y - cy) ** 2 > r * r) continue;
+      const t = game.ref(x, y);
+      if (
+        game.isLand(t) &&
+        !game.isImpassable(t) &&
+        game.owner(t) === player &&
+        game.neighbors(t).some((n) => game.isWater(n))
+      )
+        candidates.push(t);
+    }
+  }
+  candidates.sort(
+    (a, b) =>
+      game.euclideanDistSquared(a, target) -
+        game.euclideanDistSquared(b, target) || a - b,
+  );
+  const nearby = game.nearbyUnits(
+    target,
+    r + 8,
+    Structures.types,
+    undefined,
+    true,
+  );
+  for (const tile of candidates) {
+    if (
+      nearby.some(
+        ({ unit }) => game.euclideanDistSquared(unit.tile(), tile) < 8 ** 2,
+      )
+    )
+      continue;
+    if (straitAt(game, player, tile)) return tile;
+  }
+  return false;
+}
 
 const bankIndexes = new WeakMap<Game, Map<TileRef, Unit[]>>();
 export function invalidateStraitBanks(game: Game) {

@@ -37,6 +37,7 @@ import { assetUrl } from "@openfront/shared/AssetUrls";
 import type { RendererConfig, UnitState } from "../../types";
 import {
   SMOOTHED_NUKE_TYPES,
+  UT_EMP_MISSILE,
   UT_STEALTH_MISSILE,
   UT_HYPERSONIC_MISSILE,
   TrainType,
@@ -132,6 +133,7 @@ const TRAIN_CARRIAGE_LOADED_COL = UNIT_ORDER.indexOf("TrainCarriageLoaded");
 
 /** Nuke + warhead types — rendered with flickering hot colors */
 const FLICKER_TYPES: ReadonlySet<string> = new Set([
+  UT_EMP_MISSILE,
   UT_STEALTH_MISSILE,
   UT_HYPERSONIC_MISSILE,
   UT_ATOM_BOMB,
@@ -145,6 +147,7 @@ const FLICKER_TYPES: ReadonlySet<string> = new Set([
 /** Missile/projectile types — rendered on top of structures in the layer order.
  *  Ground/sea units (boats, trains) render below structures. */
 const MISSILE_TYPES: ReadonlySet<string> = new Set([
+  UT_EMP_MISSILE,
   UT_STEALTH_MISSILE,
   UT_HYPERSONIC_MISSILE,
   UT_ATOM_BOMB,
@@ -465,14 +468,15 @@ export class UnitPass {
       if (
         !unit.isActive ||
         unit.waitTicks > 0 ||
-        (unit.unitType === UT_STEALTH_MISSILE &&
+        ((unit.unitType === UT_STEALTH_MISSILE ||
+          unit.unitType === UT_EMP_MISSILE) &&
           !unit.targetable &&
           unit.ownerID !== this.localPlayerID)
       )
         continue;
 
       let atlasIdx =
-        unit.unitType === UT_STEALTH_MISSILE
+        unit.unitType === UT_STEALTH_MISSILE || unit.unitType === UT_EMP_MISSILE
           ? UNIT_ORDER.indexOf(UT_ATOM_BOMB)
           : unit.unitType === UT_HYPERSONIC_MISSILE
             ? UNIT_ORDER.indexOf(UT_HYDROGEN_BOMB)

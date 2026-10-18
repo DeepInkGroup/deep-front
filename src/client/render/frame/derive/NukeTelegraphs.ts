@@ -1,5 +1,9 @@
 import type { NukeTelegraphData, UnitState } from "../../types";
-import { NUKE_MAGNITUDES, UT_STEALTH_MISSILE } from "../../types";
+import {
+  NUKE_MAGNITUDES,
+  UT_EMP_MISSILE,
+  UT_STEALTH_MISSILE,
+} from "../../types";
 
 // Must match RelationMatrix.ts
 const RELATION_FRIENDLY = 1;
@@ -55,7 +59,7 @@ export function extractNukeTelegraphs(
     if (u.targetTile === null || !u.isActive || u.waitTicks > 0) continue;
 
     if (
-      u.unitType === UT_STEALTH_MISSILE &&
+      (u.unitType === UT_STEALTH_MISSILE || u.unitType === UT_EMP_MISSILE) &&
       !u.targetable &&
       u.ownerID !== localPlayerID
     )
@@ -101,7 +105,7 @@ export function extractNukeTelegraphsFromIds(
     if (!u || u.targetTile === null || !u.isActive || u.waitTicks > 0) continue;
 
     if (
-      u.unitType === UT_STEALTH_MISSILE &&
+      (u.unitType === UT_STEALTH_MISSILE || u.unitType === UT_EMP_MISSILE) &&
       !u.targetable &&
       u.ownerID !== localPlayerID
     )

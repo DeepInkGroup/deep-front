@@ -254,7 +254,7 @@ describe("Customs Office train economy", () => {
   ] as const)("is destroyed by %s and stops boosting trade", (bomb) => {
     const customs = office(),
       source = game.ref(140, 40);
-    bob.buildUnit(UnitType.MissileSilo, source, {});
+    bob.buildUnit(UnitType.BunkerMissileSite, source, {});
     (game.config() as TestConfig).setDefaultNukeSpeed(100);
     game.addExecution(new NukeExecution(bomb, bob, customs.tile(), source));
     executeTicks(game, 30);

@@ -172,9 +172,12 @@ describe("Bunker Missile Site", () => {
     expect(bunker.level()).toBe(1);
     expect(bunker.isUnderConstruction()).toBe(false);
   });
-  it("requires a completed bunker, not a normal missile silo; uses its capacity", () => {
+  it("rejects the removed silo and launches from a completed bunker's capacity", () => {
     const destination = game.ref(180, 100);
-    alice.buildUnit(UnitType.MissileSilo, game.ref(15, 100), {});
+    expect(alice.canBuild(UnitType.MissileSilo, game.ref(15, 100))).toBe(false);
+    expect(() =>
+      alice.buildUnit(UnitType.MissileSilo, game.ref(15, 100), {}),
+    ).toThrow(/disabled/);
     expect(alice.canBuild(STEALTH, destination)).toBe(false);
     const bunker = alice.buildUnit(SITE, game.ref(15, 145), {});
     expect(alice.canBuild(STEALTH, destination)).toBe(bunker.tile());

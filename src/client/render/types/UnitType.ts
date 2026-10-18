@@ -33,6 +33,7 @@ export const UT_LOGISTICS_CENTER = "Logistics Center" as const;
 export const UT_STRAIT_CONTROL_STATION = "Strait Control Station" as const;
 export const UT_CIWS_DEFENSE = "CIWS Defense" as const;
 export const UT_BUNKER_MISSILE_SITE = "Bunker Missile Site" as const;
+export const UT_EMP_MISSILE = "EMP Missile" as const;
 export const UT_STEALTH_MISSILE = "Stealth Missile" as const;
 export const UT_HYPERSONIC_MISSILE = "Hypersonic Missile" as const;
 export const UT_CUSTOMS_OFFICE = "Customs Office" as const;
@@ -62,6 +63,7 @@ export const STRUCTURE_TYPES: ReadonlySet<string> = new Set([
 
 export const NUKE_TYPES: ReadonlySet<string> = new Set([
   UT_ATOM_BOMB,
+  UT_EMP_MISSILE,
   UT_STEALTH_MISSILE,
   UT_HYPERSONIC_MISSILE,
   UT_HYDROGEN_BOMB,
@@ -73,6 +75,7 @@ export const NUKE_TYPES: ReadonlySet<string> = new Set([
  *  leads the smoothly-moving missile. */
 export const SMOOTHED_NUKE_TYPES: ReadonlySet<string> = new Set([
   UT_ATOM_BOMB,
+  UT_EMP_MISSILE,
   UT_STEALTH_MISSILE,
   UT_HYPERSONIC_MISSILE,
   UT_HYDROGEN_BOMB,
@@ -84,6 +87,7 @@ export const SMOOTHED_NUKE_TYPES: ReadonlySet<string> = new Set([
 export const TRAIL_TYPES: ReadonlySet<string> = new Set([
   UT_TRANSPORT,
   UT_ATOM_BOMB,
+  UT_EMP_MISSILE,
   UT_STEALTH_MISSILE,
   UT_HYPERSONIC_MISSILE,
   UT_HYDROGEN_BOMB,
@@ -133,4 +137,5 @@ export const ALL_UNIT_TYPES = [
   UT_HYPERSONIC_MISSILE,
   UT_CIWS_DEFENSE,
   UT_STRAIT_CONTROL_STATION,
+  UT_EMP_MISSILE,
 ] as const;

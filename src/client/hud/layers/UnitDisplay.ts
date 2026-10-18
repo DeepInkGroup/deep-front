@@ -35,7 +35,7 @@ import {
   goldCoinIcon,
   hydrogenBombIcon,
   mirvIcon,
-  missileSiloIcon,
+  empMissileIcon,
   portIcon,
   samLauncherIcon,
   warshipIcon,
@@ -56,7 +56,7 @@ export class UnitDisplay extends LitElement implements Controller {
   private _copperMines = 0;
   private _logisticsCenters = 0;
   private _customsOffices = 0;
-  private _missileSilo = 0;
+
   private _port = 0;
   private _defensePost = 0;
   private _samLauncher = 0;
@@ -84,7 +84,7 @@ export class UnitDisplay extends LitElement implements Controller {
       defense_post: UnitType.DefensePost,
       factory: UnitType.Factory,
       warship: UnitType.Warship,
-      silo: UnitType.MissileSilo,
+      silo: UnitType.BunkerMissileSite,
       atom: UnitType.AtomBomb,
       hydrogen: UnitType.HydrogenBomb,
       mirv: UnitType.MIRV,
@@ -113,6 +113,10 @@ export class UnitDisplay extends LitElement implements Controller {
     if (!hasBuildOrUpgradeCapacity(info, player?.units(item) ?? []))
       return false;
     switch (item) {
+      case UnitType.EMPMissile:
+      case UnitType.AtomBomb:
+      case UnitType.HydrogenBomb:
+      case UnitType.MIRV:
       case UnitType.StealthMissile:
       case UnitType.HypersonicMissile:
         return (
@@ -125,13 +129,7 @@ export class UnitDisplay extends LitElement implements Controller {
             ) ??
             false)
         );
-      case UnitType.AtomBomb:
-      case UnitType.HydrogenBomb:
-      case UnitType.MIRV:
-        return (
-          this.cost(item) <= (player?.gold() ?? 0n) &&
-          (player?.units(UnitType.MissileSilo).length ?? 0) > 0
-        );
+
       case UnitType.Warship:
         return (
           this.cost(item) <= (player?.gold() ?? 0n) &&
@@ -149,7 +147,7 @@ export class UnitDisplay extends LitElement implements Controller {
       this.playerBuildables = buildables;
     });
     this._cities = player.totalUnitLevels(UnitType.City);
-    this._missileSilo = player.totalUnitLevels(UnitType.MissileSilo);
+
     this._port = player.totalUnitLevels(UnitType.Port);
     this._defensePost = player.totalUnitLevels(UnitType.DefensePost);
     this._samLauncher = player.totalUnitLevels(UnitType.SAMLauncher);
@@ -246,11 +244,11 @@ export class UnitDisplay extends LitElement implements Controller {
             this.keybinds["buildDefensePost"]?.key ?? "4",
           )}
           ${this.renderUnitItem(
-            missileSiloIcon,
-            this._missileSilo,
-            UnitType.MissileSilo,
-            "missile_silo",
-            this.keybinds["buildMissileSilo"]?.key ?? "5",
+            empMissileIcon,
+            null,
+            UnitType.EMPMissile,
+            "emp_missile",
+            "",
           )}
           ${this.renderUnitItem(
             bunkerMissileSiteIcon,
@@ -419,6 +417,7 @@ export class UnitDisplay extends LitElement implements Controller {
           }}
           @mouseenter=${() => {
             switch (unitType) {
+              case UnitType.EMPMissile:
               case UnitType.StealthMissile:
               case UnitType.HypersonicMissile:
                 this.eventBus?.emit(
@@ -434,7 +433,7 @@ export class UnitDisplay extends LitElement implements Controller {
               case UnitType.MIRV:
                 this.eventBus?.emit(
                   new ToggleStructureEvent([
-                    UnitType.MissileSilo,
+                    UnitType.BunkerMissileSite,
                     UnitType.CIWSDefense,
                     UnitType.SAMLauncher,
                   ]),

@@ -357,7 +357,7 @@ describe("ReplayFrameBuilder parity with GameView", () => {
           g.addExecution(
             new ConstructionExecution(
               alice(),
-              UnitType.MissileSilo,
+              UnitType.BunkerMissileSite,
               g.ref(20, 20),
             ),
           );
@@ -437,7 +437,7 @@ describe("ReplayFrameBuilder parity with GameView", () => {
           g.addExecution(
             new ConstructionExecution(
               alice(),
-              UnitType.MissileSilo,
+              UnitType.BunkerMissileSite,
               g.ref(20, 20),
             ),
           );

@@ -471,7 +471,8 @@ export class GameView implements GameLike {
         u.isActive() &&
         TRAIL_TYPES.has(u.type()) &&
         !(
-          u.type() === UnitType.StealthMissile &&
+          (u.type() === UnitType.StealthMissile ||
+            u.type() === UnitType.EMPMissile) &&
           !u.targetable() &&
           u.owner() !== this._myPlayer
         )
@@ -875,7 +876,8 @@ export class GameView implements GameLike {
   }
   private isUnitVisible(unit: UnitView): boolean {
     return (
-      unit.type() !== UnitType.StealthMissile ||
+      (unit.type() !== UnitType.StealthMissile &&
+        unit.type() !== UnitType.EMPMissile) ||
       unit.targetable() ||
       unit.owner() === this._myPlayer
     );

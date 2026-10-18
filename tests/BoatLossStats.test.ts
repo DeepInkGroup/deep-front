@@ -70,7 +70,7 @@ describe("BoatLossStats", () => {
   });
 
   test("the owner's own nuke still costs them the transport, with no kill credit", () => {
-    constructionExecution(game, owner, 50, 50, UnitType.MissileSilo);
+    constructionExecution(game, owner, 50, 50, UnitType.BunkerMissileSite);
     const target = game.ref(52, 52);
     const transport = owner.buildUnit(UnitType.TransportShip, target, {
       troops: 100,

@@ -39,7 +39,7 @@ describe("Aftergame teammate nuking", () => {
 
     p1.conquer(game.ref(0, 0));
     p2.conquer(game.ref(5, 5));
-    p1.buildUnit(UnitType.MissileSilo, game.ref(0, 0), {});
+    p1.buildUnit(UnitType.BunkerMissileSite, game.ref(0, 0), {});
 
     return { game, p1, p2 };
   }

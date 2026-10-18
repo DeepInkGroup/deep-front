@@ -77,7 +77,7 @@ describe("Peace time", () => {
         new PlayerInfo("Bot", PlayerType.Bot, null, "bot"),
       );
       alice.conquer(game.ref(1, 1));
-      alice.buildUnit(UnitType.MissileSilo, game.ref(1, 1), {});
+      alice.buildUnit(UnitType.BunkerMissileSite, game.ref(1, 1), {});
       const target = game.ref(10, 10);
       bot.conquer(target);
       const protectedTile = game.ref(11, 10);

@@ -35,7 +35,7 @@ describe("MIRV price", () => {
     expect(game.mirvsLaunched()).toBe(0);
     expect(mirvPrice(human)).toBe(25_000_000n);
 
-    nation.buildUnit(UnitType.MissileSilo, game.ref(50, 50), {});
+    nation.buildUnit(UnitType.BunkerMissileSite, game.ref(50, 50), {});
     game.addExecution(new MirvExecution(nation, game.ref(90, 90)));
     executeTicks(game, 2);
 

@@ -1,3 +1,4 @@
+import { EMP_COST } from "@openfront/engine-api/game/AdvancedDefense";
 import { CIWS_COSTS } from "@openfront/engine-api/game/AdvancedDefense";
 import { OIL_FACTORY_COSTS } from "@openfront/engine-api/game/OilFactory";
 import { COPPER_MINE_COSTS } from "@openfront/engine-api/game/CopperMine";
@@ -355,6 +356,8 @@ export class EngineConfig extends Config {
           UnitType.Port,
           UnitType.Factory,
         );
+      case UnitType.EMPMissile:
+        return this.costWrapper(() => EMP_COST, UnitType.EMPMissile);
       case UnitType.StealthMissile:
         return this.costWrapper(() => 1_500_000, UnitType.StealthMissile);
       case UnitType.HypersonicMissile:
@@ -725,6 +728,7 @@ export class EngineConfig extends Config {
 
   nukeSpeed(unitType: UnitType): number {
     switch (unitType) {
+      case UnitType.EMPMissile:
       case UnitType.StealthMissile:
         return 10;
       case UnitType.HypersonicMissile:

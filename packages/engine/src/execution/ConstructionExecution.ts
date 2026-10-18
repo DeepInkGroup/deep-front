@@ -135,6 +135,7 @@ export class ConstructionExecution implements Execution {
           new StraitControlExecution(player, this.structure!.id()),
         );
         break;
+      case UnitType.EMPMissile:
       case UnitType.StealthMissile:
       case UnitType.HypersonicMissile:
       case UnitType.AtomBomb:

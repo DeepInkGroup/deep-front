@@ -1,3 +1,4 @@
+import { detectEMPBySAM, applyEMP } from "../game/EMPMissile";
 import { interceptWithCIWS } from "../game/CIWSDefense";
 import { isBunkerMissile } from "../game/AdvancedMissiles";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
@@ -214,11 +215,7 @@ export class NukeExecution implements Execution {
       // launch from the MIRV separation point, not a silo).
       this.src ??= spawn;
       const silo = this.player
-        .units(
-          isBunkerMissile(this.nukeType)
-            ? UnitType.BunkerMissileSite
-            : UnitType.MissileSilo,
-        )
+        .units(UnitType.BunkerMissileSite)
         .find((silo) => silo.tile() === spawn);
       // Stacked purchases launch several nukes across ticks; delay each missile
       // so launches from the same silo trail each other instead of overlapping,
@@ -242,7 +239,10 @@ export class NukeExecution implements Execution {
       });
       this.nuke.updateNukeState({ waitTicks: this.waitTicks });
       this.recordMotionPlan(ticks);
-      if (this.nuke.type() !== UnitType.MIRVWarhead) {
+      if (
+        this.nuke.type() !== UnitType.MIRVWarhead &&
+        this.nukeType !== UnitType.EMPMissile
+      ) {
         this.maybeBreakAlliances();
       }
       if (this.mg.hasOwner(this.dst)) {
@@ -313,6 +313,11 @@ export class NukeExecution implements Execution {
       // move it afterward for visual effect
       this.nuke.move(result.node);
       this.revealStealth();
+      detectEMPBySAM(this.mg, this.nuke);
+      if (interceptWithCIWS(this.mg, this.nuke, result.node, result.node)) {
+        this.active = false;
+        return;
+      }
 
       // Check for very close SAM missiles that are targeting this.
       // The SAM logic should be the main source of truth, since missiles can skip pixels
@@ -330,9 +335,17 @@ export class NukeExecution implements Execution {
         ).length >= 1;
       if (!shouldBeDestroyed) this.detonate();
     } else if (result.status === PathStatus.NEXT) {
-      if (this.nukeType === UnitType.StealthMissile) {
+      if (
+        this.nukeType === UnitType.StealthMissile ||
+        this.nukeType === UnitType.EMPMissile
+      ) {
         this.nuke.move(result.node);
         this.revealStealth();
+        detectEMPBySAM(this.mg, this.nuke);
+        if (interceptWithCIWS(this.mg, this.nuke, result.node, result.node)) {
+          this.active = false;
+          return;
+        }
       } else {
         this.updateNukeTargetable();
         this.nuke.move(result.node);
@@ -397,7 +410,10 @@ export class NukeExecution implements Execution {
     nukeTile: TileRef,
     targetRangeSquared: number,
   ): boolean {
-    if (this.nukeType === UnitType.StealthMissile)
+    if (
+      this.nukeType === UnitType.StealthMissile ||
+      this.nukeType === UnitType.EMPMissile
+    )
       return this.mg.owner(nukeTile) === this.mg.owner(targetTile);
     return (
       this.mg.euclideanDistSquared(nukeTile, targetTile) < targetRangeSquared ||
@@ -411,7 +427,10 @@ export class NukeExecution implements Execution {
     if (this.nuke === null || this.nuke.targetTile() === undefined) {
       return;
     }
-    if (this.nukeType === UnitType.StealthMissile) {
+    if (
+      this.nukeType === UnitType.StealthMissile ||
+      this.nukeType === UnitType.EMPMissile
+    ) {
       this.revealStealth();
       return;
     }
@@ -425,7 +444,8 @@ export class NukeExecution implements Execution {
 
   private revealStealth(): void {
     if (
-      this.nukeType !== UnitType.StealthMissile ||
+      (this.nukeType !== UnitType.StealthMissile &&
+        this.nukeType !== UnitType.EMPMissile) ||
       !this.nuke ||
       this.nuke.isTargetable()
     )
@@ -442,7 +462,9 @@ export class NukeExecution implements Execution {
     if (target?.isPlayer())
       this.mg.displayIncomingUnit(
         this.nuke.id(),
-        "events_display.stealth_missile_inbound",
+        this.nukeType === UnitType.EMPMissile
+          ? "events_display.emp_missile_inbound"
+          : "events_display.stealth_missile_inbound",
         MessageType.NUKE_INBOUND,
         target.id(),
       );
@@ -451,6 +473,17 @@ export class NukeExecution implements Execution {
   private detonate() {
     if (this.nuke === null) {
       throw new Error("Not initialized");
+    }
+
+    if (this.nukeType === UnitType.EMPMissile) {
+      detectEMPBySAM(this.mg, this.nuke);
+      if (!this.nuke.nukeState().detectedBySAM)
+        applyEMP(this.mg, this.nuke, this.dst);
+      this.active = false;
+      this.nuke.setReachedTarget();
+      this.nuke.delete(false);
+      this.mg.stats().bombLand(this.player, this.target(), UnitType.EMPMissile);
+      return;
     }
 
     const mg = this.mg;

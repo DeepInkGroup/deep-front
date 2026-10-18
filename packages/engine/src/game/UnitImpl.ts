@@ -47,6 +47,7 @@ import { PlayerImpl } from "./PlayerImpl";
 export class UnitImpl implements Unit {
   private _straitState: StraitState | undefined;
   private _active = true;
+  private _empDisabledUntil = 0;
   private _targetTile: TileRef | undefined;
   private _targetPlayer: Player | TerraNullius | undefined;
   private _targetUnit: Unit | undefined;
@@ -96,7 +97,8 @@ export class UnitImpl implements Unit {
         rejected: [],
       };
     }
-    if (_type === UnitType.StealthMissile) this._targetable = false;
+    if (_type === UnitType.StealthMissile || _type === UnitType.EMPMissile)
+      this._targetable = false;
     this._health = toInt(this.mg.unitInfo(_type).maxHealth ?? 1);
     this._targetTile =
       "targetTile" in params ? (params.targetTile ?? undefined) : undefined;
@@ -198,6 +200,7 @@ export class UnitImpl implements Unit {
       straitState: this._straitState
         ? copyStraitState(this._straitState)
         : undefined,
+      empDisabledUntil: this._empDisabledUntil,
       id: this._id,
       troops: this._troops,
       ownerID: this._owner.smallID(),
@@ -284,6 +287,8 @@ export class UnitImpl implements Unit {
     if (this._straitState && newOwner !== this._owner)
       this._straitState = {
         ...this._straitState,
+        collectedGold: 0n,
+        passages: 0,
         enabled: false,
         revision: this._straitState.revision + 1,
         accepted: [],
@@ -600,13 +605,15 @@ export class UnitImpl implements Unit {
     if (
       merged.targetedBySam === this._nukeState.targetedBySam &&
       merged.trajectoryIndex === this._nukeState.trajectoryIndex &&
-      merged.waitTicks === this._nukeState.waitTicks
+      merged.waitTicks === this._nukeState.waitTicks &&
+      merged.detectedBySAM === this._nukeState.detectedBySAM
     )
       return;
     this._nukeState = {
       targetedBySam: merged.targetedBySam,
       trajectoryIndex: merged.trajectoryIndex,
       waitTicks: merged.waitTicks,
+      detectedBySAM: merged.detectedBySAM,
       trajectory: this._nukeState.trajectory,
     };
     this.mg.addUpdate(this.toUpdate());
@@ -631,7 +638,13 @@ export class UnitImpl implements Unit {
           `${toll.revision}/${toll.enabled}/${toll.rate}/${toll.exemptAllies}/${toll.accepted.join(",")}/${toll.rejected.join(",")}`,
         )
       : 0;
-    return this.tile() + simpleHash(this.type()) * this._id + policyHash;
+    return (
+      this.tile() +
+      simpleHash(this.type()) * this._id +
+      policyHash +
+      this._empDisabledUntil +
+      (this._nukeState?.detectedBySAM ? 1 : 0)
+    );
   }
 
   toString(): string {
@@ -663,6 +676,15 @@ export class UnitImpl implements Unit {
     if (this._type !== UnitType.StraitControlStation) return;
     invalidateStraitBanks(this.mg);
     this._straitState = copyStraitState(state);
+    this.touch();
+  }
+
+  empDisabledUntil(): number {
+    return this._empDisabledUntil;
+  }
+  disableByEMP(until: number): void {
+    if (this._type !== UnitType.CIWSDefense) return;
+    this._empDisabledUntil = Math.max(this._empDisabledUntil, until);
     this.touch();
   }
 
@@ -946,6 +968,7 @@ export class UnitImpl implements Unit {
             trajectoryIndex: nuke.trajectoryIndex,
             targetedBySam: nuke.targetedBySam,
             waitTicks: nuke.waitTicks,
+            detectedBySAM: nuke.detectedBySAM,
           }
         : null,
       reachedTarget: this._reachedTarget,
@@ -962,6 +985,7 @@ export class UnitImpl implements Unit {
       loaded: this._loaded ?? null,
       trainType: this._trainType ?? null,
       deletionAt: this._deletionAt,
+      empDisabledUntil: this._empDisabledUntil,
       straitState: this._straitState
         ? copyStraitState(this._straitState)
         : null,
@@ -1004,6 +1028,7 @@ export class UnitImpl implements Unit {
           trajectoryIndex: nuke.trajectoryIndex,
           targetedBySam: nuke.targetedBySam,
           waitTicks: nuke.waitTicks,
+          detectedBySAM: nuke.detectedBySAM,
         }
       : undefined;
     this._reachedTarget = s.reachedTarget;
@@ -1020,6 +1045,7 @@ export class UnitImpl implements Unit {
     this._loaded = s.loaded ?? undefined;
     this._trainType = s.trainType ?? undefined;
     this._deletionAt = s.deletionAt;
+    this._empDisabledUntil = s.empDisabledUntil ?? 0;
     this._straitState = s.straitState
       ? copyStraitState(s.straitState)
       : undefined;
@@ -1031,8 +1057,11 @@ export class UnitImpl implements Unit {
 
 export const UnitSnapshot = snapshotType({
   name: "Unit",
-  version: 2,
-  migrations: { 1: (s) => ({ ...s, straitState: null }) },
+  version: 3,
+  migrations: {
+    1: (s) => ({ ...s, straitState: null }),
+    2: (s) => ({ ...s, empDisabledUntil: 0 }),
+  },
   schema: z.object({
     id: zInt(),
     type: UnitTypeSchema,
@@ -1064,6 +1093,7 @@ export const UnitSnapshot = snapshotType({
         trajectoryTargetable: zBytes(),
         trajectoryIndex: zInt(),
         targetedBySam: z.boolean(),
+        detectedBySAM: z.boolean().optional(),
         waitTicks: zInt(),
       })
       .nullable(),
@@ -1081,6 +1111,7 @@ export const UnitSnapshot = snapshotType({
     loaded: z.boolean().nullable(),
     trainType: z.enum(TrainType).nullable(),
     deletionAt: zInt().nullable(),
+    empDisabledUntil: zInt().optional(),
     straitState: StraitStateSchema.nullable().optional(),
     samLauncherState: z
       .object({

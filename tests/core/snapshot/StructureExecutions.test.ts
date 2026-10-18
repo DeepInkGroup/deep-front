@@ -63,7 +63,7 @@ describe("structure and missile execution snapshots", () => {
     executeTicks(game, 1);
     // Queued but not yet initialized.
     game.addExecution(
-      new ConstructionExecution(a, UnitType.MissileSilo, game.ref(30, 5)),
+      new ConstructionExecution(a, UnitType.BunkerMissileSite, game.ref(30, 5)),
       new ConstructionExecution(
         a,
         UnitType.AtomBomb,
@@ -79,9 +79,9 @@ describe("structure and missile execution snapshots", () => {
     const { game, a, b } = await twoPlayers(BIG, { instantBuild: true });
     conquerRect(game, a, 0, 0, 30, 30);
     conquerRect(game, b, 50, 50, 120, 120);
-    a.buildUnit(UnitType.MissileSilo, game.ref(10, 10), {});
-    a.buildUnit(UnitType.MissileSilo, game.ref(20, 20), {});
-    a.buildUnit(UnitType.MissileSilo, game.ref(25, 5), {});
+    a.buildUnit(UnitType.BunkerMissileSite, game.ref(10, 10), {});
+    a.buildUnit(UnitType.BunkerMissileSite, game.ref(20, 20), {});
+    a.buildUnit(UnitType.BunkerMissileSite, game.ref(25, 5), {});
     game.addExecution(
       new NukeExecution(UnitType.AtomBomb, a, game.ref(80, 80)),
       new NukeExecution(UnitType.HydrogenBomb, a, game.ref(100, 60)),
@@ -108,7 +108,7 @@ describe("structure and missile execution snapshots", () => {
     const { game, a, b } = await twoPlayers(BIG, { instantBuild: true });
     conquerRect(game, a, 0, 0, 15, 15);
     conquerRect(game, b, 25, 25, 200, 200);
-    a.buildUnit(UnitType.MissileSilo, game.ref(10, 10), {});
+    a.buildUnit(UnitType.BunkerMissileSite, game.ref(10, 10), {});
     const pending = new MirvExecution(a, game.ref(100, 100));
     game.addExecution(new MirvExecution(a, game.ref(150, 150)));
     executeTicks(game, 3);
@@ -129,7 +129,7 @@ describe("structure and missile execution snapshots", () => {
     const { game, a, b } = await twoPlayers(BIG, { instantBuild: true });
     conquerRect(game, a, 0, 0, 20, 20);
     conquerRect(game, b, 60, 60, 140, 140);
-    a.buildUnit(UnitType.MissileSilo, game.ref(10, 10), {});
+    a.buildUnit(UnitType.BunkerMissileSite, game.ref(10, 10), {});
     const sam = b.buildUnit(UnitType.SAMLauncher, game.ref(90, 90), {});
     game.addExecution(
       new SAMLauncherExecution(b, null, sam),

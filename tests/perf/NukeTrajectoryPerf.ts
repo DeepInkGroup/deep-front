@@ -44,11 +44,11 @@ for (let x = 0; x < giantMapGame.map().width(); x += 10) {
 
 // Build my missile silo
 const mySiloTile = giantMapGame.ref(25, 2);
-myPlayer.buildUnit(UnitType.MissileSilo, mySiloTile, {});
+myPlayer.buildUnit(UnitType.BunkerMissileSite, mySiloTile, {});
 
 // Populate mixed units (Factories, Cities, Silos, SAMs) across the map
 const unitTypes = [
-  UnitType.MissileSilo,
+  UnitType.BunkerMissileSite,
   UnitType.Factory,
   UnitType.SAMLauncher,
   UnitType.City,

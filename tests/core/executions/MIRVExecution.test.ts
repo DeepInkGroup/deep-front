@@ -36,7 +36,7 @@ describe("MIRVExecution", () => {
         }
       }
     }
-    player.buildUnit(UnitType.MissileSilo, game.ref(10, 10), {});
+    player.buildUnit(UnitType.BunkerMissileSite, game.ref(10, 10), {});
 
     // Give other player territory closer to player
     for (let x = 25; x < 75; x++) {
@@ -253,7 +253,7 @@ describe("MIRVExecution", () => {
 
   test("MIRV should not launch if player cannot build it", async () => {
     // Remove player's missile silo
-    const silos = player.units(UnitType.MissileSilo);
+    const silos = player.units(UnitType.BunkerMissileSite);
     for (const silo of silos) {
       silo.delete(false);
     }

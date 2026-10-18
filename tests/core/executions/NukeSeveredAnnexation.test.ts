@@ -817,7 +817,7 @@ describe("land a nuke severs from the main body is annexed", () => {
       outer: 26,
     });
     paint(union(mainBody, arm));
-    attacker.buildUnit(UnitType.MissileSilo, game.ref(190, 190), {});
+    attacker.buildUnit(UnitType.BunkerMissileSite, game.ref(190, 190), {});
     game.addExecution(new PlayerExecution(defender));
     game.addExecution(new PlayerExecution(attacker));
     executeTicks(game, 25);

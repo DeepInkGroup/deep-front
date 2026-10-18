@@ -209,6 +209,12 @@ export function tradePassageNext(
     sender.removeGold(toll);
     station.owner().addGold(toll, station.tile());
     station.owner().addTradeGold(toll);
+    const policy = station.straitState()!;
+    station.setStraitState({
+      ...policy,
+      collectedGold: (policy.collectedGold ?? 0n) + toll,
+      passages: (policy.passages ?? 0) + 1,
+    });
     state.paid.push(station.id());
   }
   state.index++;

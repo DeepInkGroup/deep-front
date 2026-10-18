@@ -122,6 +122,7 @@ export interface UnitState {
   constructionStartTick: number | null;
   /** Local construction/upgrade duration, in simulation ticks. */
   constructionDuration?: number;
+  empDisabledUntil?: number;
   samUpgradeStartTick: number | null;
   samUpgradeStartRange: number | null;
   samUpgradeTargetLevel: number | null;
@@ -226,6 +227,7 @@ export interface PlayerStatusData {
 
 /** Ghost structure preview data for build-mode visualization. */
 export interface GhostPreviewData {
+  straitGate?: { x: number; y: number }[];
   snapToPlacement?: boolean; // Keep displaced structure previews at the resolved build tile.
   ghostType: string; // UnitType string ("City", "Port", etc.)
   tileX: number; // Hover tile X

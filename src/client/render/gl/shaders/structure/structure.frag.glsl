@@ -242,7 +242,7 @@ void main() {
   vec3 finalRGB = mix(bgColor.rgb, glyphColor, iconAlpha);
 
   // Red X overlay for units marked for deletion
-  if (vMarkedForDeletion > 0.5) {
+  if (mod(vMarkedForDeletion, 2.0) > 0.5) {
     float lineW = max(0.025, fw * 1.5);
     float d1 = abs(vLocalPos.x - vLocalPos.y) * 0.7071; // dist to y=x diagonal
     float d2 = abs(vLocalPos.x + vLocalPos.y) * 0.7071; // dist to y=-x diagonal
@@ -275,5 +275,11 @@ void main() {
     }
   }
 
+  // Packed status bit 2 marks an EMP shutdown; recovery follows simulation ticks.
+  if (vMarkedForDeletion >= 2.0) {
+    float gray = dot(finalRGB, vec3(0.299, 0.587, 0.114));
+    finalRGB = mix(vec3(gray * 0.5), vec3(0.15, 0.6, 0.7), 0.25);
+    finalAlpha *= 0.6;
+  }
   fragColor = vec4(finalRGB, finalAlpha);
 }

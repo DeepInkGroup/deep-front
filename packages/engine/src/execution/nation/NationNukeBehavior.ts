@@ -167,11 +167,11 @@ export class NationNukeBehavior {
   }
 
   maybeSendNuke() {
-    const silos = this.player.units(UnitType.MissileSilo);
+    const silos = this.player.units(UnitType.BunkerMissileSite);
     const config = this.game.config();
     if (
       silos.length === 0 ||
-      config.isUnitDisabled(UnitType.MissileSilo) ||
+      config.isUnitDisabled(UnitType.BunkerMissileSite) ||
       (config.isUnitDisabled(UnitType.AtomBomb) &&
         config.isUnitDisabled(UnitType.HydrogenBomb))
     ) {
@@ -1157,7 +1157,7 @@ export class NationNukeBehavior {
             return 25_000 * level;
           case UnitType.DefensePost:
             return 5_000 * level;
-          case UnitType.MissileSilo:
+          case UnitType.BunkerMissileSite:
             return 50_000 * level;
           case UnitType.Port:
             return 15_000 * level;
@@ -1297,7 +1297,7 @@ export class NationNukeBehavior {
     }
 
     const ourSilos = this.player
-      .units(UnitType.MissileSilo)
+      .units(UnitType.BunkerMissileSite)
       .filter((silo) => !silo.isUnderConstruction());
     if (ourSilos.length === 0) {
       return;
@@ -1543,7 +1543,7 @@ export class NationNukeBehavior {
     coveringSamIds: Set<number>;
     totalBombs: number;
   }): void {
-    const silos = this.player.units(UnitType.MissileSilo);
+    const silos = this.player.units(UnitType.BunkerMissileSite);
     if (silos.length === 0) return;
 
     // First pass: find silos with an unblocked trajectory to the failed

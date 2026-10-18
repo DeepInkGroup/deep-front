@@ -4,7 +4,9 @@ import { Unit } from "./Game";
 
 export function isBunkerMissile(type: UnitType): boolean {
   return (
-    type === UnitType.StealthMissile || type === UnitType.HypersonicMissile
+    type === UnitType.StealthMissile ||
+    type === UnitType.HypersonicMissile ||
+    type === UnitType.EMPMissile
   );
 }
 
@@ -14,7 +16,10 @@ export function canSAMDetectAdvancedMissile(sam: Unit, missile: Unit): boolean {
   if (missile.type() === UnitType.HypersonicMissile) {
     return sam.owner() === missile.targetPlayer();
   }
-  if (missile.type() === UnitType.StealthMissile) {
+  if (
+    missile.type() === UnitType.StealthMissile ||
+    missile.type() === UnitType.EMPMissile
+  ) {
     return (
       missile.isTargetable() &&
       simpleHash(`${sam.id()}:${missile.id()}:stealth`) % 4 !== 0

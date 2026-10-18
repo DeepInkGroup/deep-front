@@ -90,7 +90,7 @@ function nukeBehavior(
   gold: bigint,
   seed = 2,
 ): NationNukeBehavior {
-  nation.buildUnit(UnitType.MissileSilo, game.ref(5, 5), {});
+  nation.buildUnit(UnitType.BunkerMissileSite, game.ref(5, 5), {});
   nation.addGold(gold);
   const emojiBehavior = new NationEmojiBehavior(
     new PseudoRandom(1),

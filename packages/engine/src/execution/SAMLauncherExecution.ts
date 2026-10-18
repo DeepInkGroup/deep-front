@@ -1,3 +1,4 @@
+import { detectEMPBySAM } from "../game/EMPMissile";
 import { interceptWithCIWS } from "../game/CIWSDefense";
 import { Nukes } from "@openfront/engine-api/game/GameTypes";
 import { canSAMDetectAdvancedMissile } from "../game/AdvancedMissiles";
@@ -263,6 +264,7 @@ class SAMTargetingSystem {
         UnitType.AtomBomb,
         UnitType.HydrogenBomb,
         UnitType.MIRVWarhead,
+        UnitType.EMPMissile,
         UnitType.StealthMissile,
         UnitType.HypersonicMissile,
       ],
@@ -271,6 +273,7 @@ class SAMTargetingSystem {
 
     const targets: Target[] = [];
     for (const nuke of nukes) {
+      detectEMPBySAM(this.mg, nuke.unit);
       const id = nuke.unit.id();
       const cached = this.precomputedNukes.get(id);
       if (cached !== undefined) {
@@ -366,6 +369,7 @@ export class SAMLauncherExecution implements Execution {
     }
 
     if (this.sam.type() === UnitType.CIWSDefense) {
+      if (this.sam.empDisabledUntil() > ticks) return;
       for (const { unit } of this.mg.nearbyUnits(
         this.sam.tile(),
         this.mg.config().dynamicSamRange(this.sam, ticks),
@@ -402,6 +406,7 @@ export class SAMLauncherExecution implements Execution {
       this.mg.unitCount(UnitType.AtomBomb) === 0 &&
       this.mg.unitCount(UnitType.HydrogenBomb) === 0 &&
       this.mg.unitCount(UnitType.MIRVWarhead) === 0 &&
+      this.mg.unitCount(UnitType.EMPMissile) === 0 &&
       this.mg.unitCount(UnitType.StealthMissile) === 0 &&
       this.mg.unitCount(UnitType.HypersonicMissile) === 0
     ) {

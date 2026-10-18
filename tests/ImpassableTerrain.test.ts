@@ -1,3 +1,5 @@
+import renderDefaults from "../src/client/render/gl/render-settings.json";
+import { hexToRgb } from "../src/client/render/gl/utils/ColorUtils";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
   Difficulty,
@@ -282,7 +284,7 @@ describe("Impassable Terrain", () => {
 
   test("nuke execution deactivates when targeting impassable tile", () => {
     player.conquer(game.ref(10, 10));
-    player.buildUnit(UnitType.MissileSilo, game.ref(10, 10), {});
+    player.buildUnit(UnitType.BunkerMissileSite, game.ref(10, 10), {});
     const nuke = new NukeExecution(
       UnitType.AtomBomb,
       player,
@@ -297,7 +299,7 @@ describe("Impassable Terrain", () => {
 
   test("nuke blast does not destroy or flood impassable tiles", () => {
     player.conquer(game.ref(10, 100));
-    player.buildUnit(UnitType.MissileSilo, game.ref(10, 100), {});
+    player.buildUnit(UnitType.BunkerMissileSite, game.ref(10, 100), {});
     // Other player owns a tile just left of the wall.
     other.conquer(game.ref(WALL_X - 1, 100));
 
@@ -322,7 +324,7 @@ describe("Impassable Terrain", () => {
 
   test("nuke flies over impassable terrain and detonates", () => {
     player.conquer(game.ref(20, 100));
-    player.buildUnit(UnitType.MissileSilo, game.ref(20, 100), {});
+    player.buildUnit(UnitType.BunkerMissileSite, game.ref(20, 100), {});
     // Target is on the right side of the wall — trajectory crosses it.
     const target = game.ref(150, 100);
     expect(game.isImpassable(target)).toBe(false);
@@ -336,7 +338,7 @@ describe("Impassable Terrain", () => {
 
   test("nuke can launch when trajectory does not cross impassable terrain", () => {
     player.conquer(game.ref(20, 100));
-    player.buildUnit(UnitType.MissileSilo, game.ref(20, 100), {});
+    player.buildUnit(UnitType.BunkerMissileSite, game.ref(20, 100), {});
     // Target is on the same (left) side — no impassable terrain in between.
     const target = game.ref(50, 100);
     expect(game.isImpassable(target)).toBe(false);
@@ -350,7 +352,7 @@ describe("Impassable Terrain", () => {
 
   test("MIRV warhead flies over impassable terrain", () => {
     player.conquer(game.ref(20, 100));
-    player.buildUnit(UnitType.MissileSilo, game.ref(20, 100), {});
+    player.buildUnit(UnitType.BunkerMissileSite, game.ref(20, 100), {});
     // Target is on the right side of the wall — trajectory must cross it.
     const target = game.ref(150, 100);
     expect(game.isImpassable(target)).toBe(false);
@@ -375,11 +377,10 @@ describe("Impassable Terrain", () => {
   test("encodeTerrainTile renders impassable as the map background colour", () => {
     const out = new Uint8Array(4);
     encodeTerrainTile(IMPASSABLE, out, 0);
-    // Must match the clear colour in Renderer.ts drawBaseLayer():
-    // gl.clearColor(60/255, 60/255, 60/255) → rgb(60, 60, 60).
-    expect(out[0]).toBe(60);
-    expect(out[1]).toBe(60);
-    expect(out[2]).toBe(60);
+    // Match the configured map clear color.
+    expect([...out.slice(0, 3)]).toEqual(
+      hexToRgb(renderDefaults.terrain.backgroundColor),
+    );
     expect(out[3]).toBe(255);
   });
 
@@ -489,7 +490,7 @@ describe("Impassable Terrain", () => {
   describe("silo selection with impassable terrain", () => {
     function buildSilo(g: Game, p: Player, x: number, y: number) {
       p.conquer(g.ref(x, y));
-      p.buildUnit(UnitType.MissileSilo, g.ref(x, y), {});
+      p.buildUnit(UnitType.BunkerMissileSite, g.ref(x, y), {});
     }
 
     test("closest silo is chosen even when the trajectory crosses impassable terrain", () => {

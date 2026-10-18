@@ -25,6 +25,7 @@ import type {
 } from "../snapshot/SnapshotContext";
 
 const INTERCEPTED_UNIT_TRANSLATION_KEYS: Partial<Record<UnitType, string>> = {
+  [UnitType.EMPMissile]: "unit_type.emp_missile",
   [UnitType.StealthMissile]: "unit_type.stealth_missile",
   [UnitType.HypersonicMissile]: "unit_type.hypersonic_missile",
   [UnitType.AtomBomb]: "unit_type.atom_bomb",
@@ -64,6 +65,7 @@ export class SAMMissileExecution implements Execution {
     }
     // The MIRV carrier itself can't be intercepted, only its warheads
     const nukesWhitelist = [
+      UnitType.EMPMissile,
       UnitType.StealthMissile,
       UnitType.HypersonicMissile,
       UnitType.AtomBomb,

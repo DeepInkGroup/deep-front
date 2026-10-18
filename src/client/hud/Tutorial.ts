@@ -199,7 +199,7 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
   {
     id: "buy_silo",
     highlight: "silo",
-    unit: UnitType.MissileSilo,
+    unit: UnitType.BunkerMissileSite,
     hotkey: "buildMissileSilo",
     applies: (c) => !c.siloDisabled,
     isDone: (c) => c.silos > 0,

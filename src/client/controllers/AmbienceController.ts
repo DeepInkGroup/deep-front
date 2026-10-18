@@ -50,7 +50,7 @@ const AMBIENCE_RANGE_TILES = 20;
 const AMBIENCE_BY_TYPE = new Map<UnitType, AmbienceTrack>([
   [UnitType.City, "city"],
   [UnitType.Factory, "factory"],
-  [UnitType.MissileSilo, "missile-silo"],
+  [UnitType.BunkerMissileSite, "missile-silo"],
   [UnitType.SAMLauncher, "sam-silo"],
 ]);
 

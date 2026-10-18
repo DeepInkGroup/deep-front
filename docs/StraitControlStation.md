@@ -17,6 +17,9 @@ stations cannot charge the same local passage twice.
 
 The placement preview and the simulation use the same authoritative rule.
 The station sits on the bank; its gate spans the water to the opposite bank.
+Aim at the water or nearby land: placement snaps to the nearest valid bank within
+12 tiles and previews the full crossing in cyan. Stations can be eight tiles from
+another building, allowing coastal placement near ports while preserving spacing.
 
 ## Setting a toll
 
@@ -24,6 +27,8 @@ Open **Strait tolls** below the building bar. Select a rate from **1% to 10%**,
 choose whether **Allies pass for free**, and press **Apply toll**. New stations
 start with tolls off. **Open free passage** disables collection and restrictions.
 Changing terms sends a fresh request and clears previous consent.
+The owner panel shows paid passage counts and total gold collected. Capturing a
+station clears its former owner's counters.
 
 Other human players receive a notification and an automatically opened panel
 with **Accept toll** and **Reject passage**. They may change their decision

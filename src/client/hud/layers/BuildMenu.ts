@@ -42,7 +42,7 @@ const straitControlStationIcon = assetUrl(
 const customsOfficeIcon = assetUrl("images/CustomsOfficeIconWhite.svg");
 const goldCoinIcon = assetUrl("images/GoldCoinIcon.svg");
 const mirvIcon = assetUrl("images/MIRVIcon.svg");
-const missileSiloIcon = assetUrl("images/MissileSiloIconWhite.svg");
+const empMissileIcon = assetUrl("images/EMPMissileIconWhite.svg");
 const hydrogenBombIcon = assetUrl("images/MushroomCloudIconWhite.svg");
 const atomBombIcon = assetUrl("images/NukeIconWhite.svg");
 const portIcon = assetUrl("images/PortIcon.svg");
@@ -123,11 +123,11 @@ export const buildTable: BuildItemDisplay[][] = [
       countable: true,
     },
     {
-      unitType: UnitType.MissileSilo,
-      icon: missileSiloIcon,
-      description: "build_menu.desc.missile_silo",
-      key: "unit_type.missile_silo",
-      countable: true,
+      unitType: UnitType.EMPMissile,
+      icon: empMissileIcon,
+      description: "build_menu.desc.emp_missile",
+      key: "unit_type.emp_missile",
+      countable: false,
     },
     {
       unitType: UnitType.SAMLauncher,
@@ -471,7 +471,10 @@ export class BuildMenu extends LitElement implements Controller {
     } else if (buildableUnit.canBuild) {
       const rocketDirectionUp =
         buildableUnit.type === UnitType.AtomBomb ||
-        buildableUnit.type === UnitType.HydrogenBomb
+        buildableUnit.type === UnitType.HydrogenBomb ||
+        buildableUnit.type === UnitType.StealthMissile ||
+        buildableUnit.type === UnitType.HypersonicMissile ||
+        buildableUnit.type === UnitType.EMPMissile
           ? this.uiState.rocketDirectionUp
           : undefined;
       this.eventBus.emit(

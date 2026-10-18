@@ -57,6 +57,11 @@ export interface UnitParamsMap {
   [UnitType.StraitControlStation]: Record<string, never>;
   [UnitType.CIWSDefense]: Record<string, never>;
   [UnitType.BunkerMissileSite]: Record<string, never>;
+  [UnitType.EMPMissile]: {
+    targetTile?: number;
+    targetPlayer?: Player | TerraNullius;
+    trajectory: TrajectoryTile[];
+  };
   [UnitType.StealthMissile]: {
     targetTile?: number;
     targetPlayer?: Player | TerraNullius;
@@ -307,6 +312,8 @@ export interface Unit extends UnitLike {
   isInCooldown(): boolean;
   missileTimerQueue(): number[];
   samLauncherState(): SamLauncherState | undefined;
+  empDisabledUntil(): number;
+  disableByEMP(until: number): void;
 
   // Trade Ships
   setSafeFromPirates(): void; // Only for trade ships

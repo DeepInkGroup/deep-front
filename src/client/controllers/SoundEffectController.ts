@@ -131,6 +131,9 @@ export class SoundEffectController implements Controller {
       case UnitType.AtomBomb:
         this.onNukeDetonation(unit, "atom-hit");
         break;
+      case UnitType.EMPMissile:
+        // Electrical pulse visuals carry the impact; EMP has no nuclear blast.
+        break;
       case UnitType.StealthMissile:
       case UnitType.MIRVWarhead:
         this.onMirvWarheadDetonation(unit);
@@ -155,6 +158,7 @@ export class SoundEffectController implements Controller {
   private onCreated(unit: UnitView): void {
     const myPlayer = this.game.myPlayer();
     switch (unit.type()) {
+      case UnitType.EMPMissile:
       case UnitType.StealthMissile:
         if (unit.owner() === myPlayer) this.emit("atom-launch");
         break;

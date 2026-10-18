@@ -185,7 +185,7 @@ describe("replay round trip", () => {
             g.addExecution(
               new ConstructionExecution(
                 alice,
-                UnitType.MissileSilo,
+                UnitType.BunkerMissileSite,
                 g.ref(20, 20),
               ),
             );

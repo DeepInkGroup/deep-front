@@ -33,7 +33,7 @@ const COST_POLL_TYPES = [
   UnitType.Port,
   UnitType.DefensePost,
   UnitType.Warship,
-  UnitType.MissileSilo,
+  UnitType.BunkerMissileSite,
   UnitType.AtomBomb,
 ] as const;
 
@@ -44,7 +44,7 @@ const UNIT_NAME_KEYS: Partial<Record<UnitType, string>> = {
   [UnitType.Port]: "port",
   [UnitType.DefensePost]: "defense_post",
   [UnitType.Warship]: "warship",
-  [UnitType.MissileSilo]: "missile_silo",
+  [UnitType.BunkerMissileSite]: "bunker_missile_site",
   [UnitType.AtomBomb]: "atom_bomb",
 };
 /** Ticks the "you're ready" message stays up before the panel closes. */
@@ -365,12 +365,14 @@ export class TutorialPanel extends LitElement implements Controller {
       factories: player.units(UnitType.Factory).length,
       warshipDisabled: this.game.config().isUnitDisabled(UnitType.Warship),
       warships: player.units(UnitType.Warship).length,
-      siloDisabled: this.game.config().isUnitDisabled(UnitType.MissileSilo),
-      silos: player.units(UnitType.MissileSilo).length,
+      siloDisabled: this.game
+        .config()
+        .isUnitDisabled(UnitType.BunkerMissileSite),
+      silos: player.units(UnitType.BunkerMissileSite).length,
       atomDisabled: this.game.config().isUnitDisabled(UnitType.AtomBomb),
       // Mirrors PlayerImpl.nukeSpawn's ready-silo filter.
       siloReady: player
-        .units(UnitType.MissileSilo)
+        .units(UnitType.BunkerMissileSite)
         .some(
           (s) => s.isActive() && !s.isInCooldown() && !s.isUnderConstruction(),
         ),

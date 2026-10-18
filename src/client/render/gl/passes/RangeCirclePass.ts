@@ -27,6 +27,7 @@ export class RangeCirclePass {
   private centerY = 0;
   private radius = 0;
   private warning = false;
+  private gate: { x: number; y: number }[] = [];
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
@@ -53,6 +54,7 @@ export class RangeCirclePass {
   }
 
   updateGhostPreview(data: GhostPreviewData | null): void {
+    this.gate = data?.canBuild ? (data.straitGate ?? []) : [];
     if (data && data.rangeRadius > 0) {
       this.centerX = data.radiusTileX;
       this.centerY = data.radiusTileY;
@@ -65,12 +67,22 @@ export class RangeCirclePass {
   }
 
   draw(cameraMatrix: Float32Array): void {
-    if (this.radius <= 0) return;
+    if (this.radius <= 0 && !this.gate.length) return;
 
     const gl = this.gl;
     gl.useProgram(this.program);
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
     gl.bindVertexArray(this.vao);
+
+    if (this.gate.length) {
+      gl.uniform3f(this.uColor, 0.2, 0.9, 1.0);
+      gl.uniform1f(this.uRadius, 0.85);
+      for (const p of this.gate) {
+        gl.uniform2f(this.uCenter, p.x + 0.5, p.y + 0.5);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+      }
+    }
+    if (this.radius <= 0) return;
 
     gl.uniform2f(this.uCenter, this.centerX, this.centerY);
     gl.uniform1f(this.uRadius, this.radius);

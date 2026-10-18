@@ -79,7 +79,7 @@ function getStructureRatios(
       ratioPerCity: SAM_RATIO_BY_DIFFICULTY[difficulty],
       perceivedCostIncreasePerOwned: 0.3,
     },
-    [UnitType.MissileSilo]: {
+    [UnitType.BunkerMissileSite]: {
       ratioPerCity: 0.2,
       perceivedCostIncreasePerOwned: 1,
     },
@@ -121,7 +121,7 @@ const SAM_PROTECTED_TYPES: readonly UnitType[] = [
   UnitType.CustomsOffice,
   UnitType.City,
   UnitType.Factory,
-  UnitType.MissileSilo,
+  UnitType.BunkerMissileSite,
   UnitType.Port,
 ];
 
@@ -597,7 +597,7 @@ export class NationStructureBehavior {
   // 15s ON / 15s OFF, alternating, to allow NationNukeBehavior to spend the gold.
   // Not while the gold covers the target twice, as bulk upgrades leave the target for nukes.
   private isInPostSaveUpBlockedPhase(): boolean {
-    if (this.game.config().isUnitDisabled(UnitType.MissileSilo)) {
+    if (this.game.config().isUnitDisabled(UnitType.BunkerMissileSite)) {
       return false;
     }
     const saveUpTarget = this.getSaveUpTarget();
@@ -625,7 +625,9 @@ export class NationStructureBehavior {
     this._sharedWaterComponents = this.game.sharedWaterComponents(this.player);
     const hasCoastalTiles = this._sharedWaterComponents !== null;
 
-    const missileSilosEnabled = !config.isUnitDisabled(UnitType.MissileSilo);
+    const missileSilosEnabled = !config.isUnitDisabled(
+      UnitType.BunkerMissileSite,
+    );
 
     // High-starting-gold Hard/Impossible nations build a SAM first so their
     // next structures get SAM coverage and aren't clustered under the same nuke target.
@@ -676,7 +678,7 @@ export class NationStructureBehavior {
       UnitType.Port,
       UnitType.Factory,
       UnitType.SAMLauncher,
-      UnitType.MissileSilo,
+      UnitType.BunkerMissileSite,
     ];
 
     const nukesEnabled =
@@ -698,7 +700,7 @@ export class NationStructureBehavior {
       // Skip missile silos and SAM launchers if all nukes are disabled
       if (
         !nukesEnabled &&
-        (structureType === UnitType.MissileSilo ||
+        (structureType === UnitType.BunkerMissileSite ||
           structureType === UnitType.SAMLauncher)
       ) {
         continue;
@@ -789,7 +791,7 @@ export class NationStructureBehavior {
 
     const owned = this.player.unitsOwned(type);
     let targetCount: number;
-    if (type === UnitType.MissileSilo) {
+    if (type === UnitType.BunkerMissileSite) {
       // First missile silo uses a higher ratio so nations can start nuking earlier
       if (owned === 0) {
         ratio = FIRST_MISSILE_SILO_RATIO;
@@ -911,7 +913,7 @@ export class NationStructureBehavior {
     const config = this.game.config();
 
     // Just save up for SAMs if missile silos are disabled
-    if (config.isUnitDisabled(UnitType.MissileSilo)) {
+    if (config.isUnitDisabled(UnitType.BunkerMissileSite)) {
       return this.cost(UnitType.SAMLauncher);
     }
 
@@ -1214,7 +1216,7 @@ export class NationStructureBehavior {
     switch (type) {
       case UnitType.City:
         return this.cityValue();
-      case UnitType.MissileSilo:
+      case UnitType.BunkerMissileSite:
         return this.missileSiloValue();
       case UnitType.Factory:
         return this.factoryValue();
@@ -1234,7 +1236,7 @@ export class NationStructureBehavior {
   private missileSiloValue(): (tile: TileRef) => number {
     const game = this.game;
     const borderTiles = this.player.borderTiles();
-    const otherUnits = this.player.units(UnitType.MissileSilo);
+    const otherUnits = this.player.units(UnitType.BunkerMissileSite);
     const { borderSpacing, structureSpacing } = this.spacingConstants();
 
     return (tile) => {
@@ -1591,7 +1593,7 @@ export class NationStructureBehavior {
       switch (unit.type()) {
         case UnitType.City:
         case UnitType.Factory:
-        case UnitType.MissileSilo:
+        case UnitType.BunkerMissileSite:
         case UnitType.OilFactory:
         case UnitType.CopperMine:
         case UnitType.LogisticsCenter:

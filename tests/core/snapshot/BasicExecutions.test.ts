@@ -215,7 +215,11 @@ describe("basic execution snapshots", () => {
     test("structure executions", async () => {
       const city = a.buildUnit(UnitType.City, game.ref(10, 10), {});
       const post = a.buildUnit(UnitType.DefensePost, game.ref(15, 10), {});
-      const silo = b.buildUnit(UnitType.MissileSilo, game.ref(50, 10), {});
+      const silo = b.buildUnit(
+        UnitType.BunkerMissileSite,
+        game.ref(50, 10),
+        {},
+      );
       const factory = c.buildUnit(UnitType.Factory, game.ref(10, 50), {});
       game.addExecution(
         new CityExecution(city),

@@ -29,11 +29,15 @@ describe("Nuke motion plan", () => {
     player = game.player(info.id);
     player.conquer(game.ref(1, 1));
     game.addExecution(
-      new ConstructionExecution(player, UnitType.MissileSilo, game.ref(1, 1)),
+      new ConstructionExecution(
+        player,
+        UnitType.BunkerMissileSite,
+        game.ref(1, 1),
+      ),
     );
     game.executeNextTick();
     game.executeNextTick();
-    expect(player.units(UnitType.MissileSilo)).toHaveLength(1);
+    expect(player.units(UnitType.BunkerMissileSite)).toHaveLength(1);
     game.drainPackedMotionPlans();
   });
 

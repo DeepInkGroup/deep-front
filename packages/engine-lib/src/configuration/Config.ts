@@ -1,3 +1,4 @@
+import { EMP_RADIUS } from "@openfront/engine-api/game/AdvancedDefense";
 import {
   STEALTH_BLAST,
   CIWS_MAX_LEVEL,
@@ -192,7 +193,10 @@ export class Config {
   }
 
   isUnitDisabled(unitType: UnitType): boolean {
-    return this._gameConfig.disabledUnits?.includes(unitType) ?? false;
+    return (
+      unitType === UnitType.MissileSilo ||
+      (this._gameConfig.disabledUnits?.includes(unitType) ?? false)
+    );
   }
   instantBuild(): boolean {
     return this._gameConfig.instantBuild;
@@ -322,6 +326,7 @@ export class Config {
         break;
       case UnitType.TransportShip:
       case UnitType.SAMMissile:
+      case UnitType.EMPMissile:
       case UnitType.StealthMissile:
       case UnitType.HypersonicMissile:
       case UnitType.AtomBomb:
@@ -478,6 +483,8 @@ export class Config {
 
   nukeMagnitudes(unitType: UnitType): NukeMagnitude {
     switch (unitType) {
+      case UnitType.EMPMissile:
+        return { inner: 0, outer: EMP_RADIUS };
       case UnitType.MIRVWarhead:
         return { inner: 12, outer: 18 };
       case UnitType.StealthMissile:

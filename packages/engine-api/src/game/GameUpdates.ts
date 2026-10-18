@@ -215,6 +215,7 @@ export interface UnitUpdate {
   trainType?: TrainType; // Only for trains
   loaded?: boolean; // Only for trains
   samUpgrade?: SamLauncherState;
+  empDisabledUntil?: number;
 }
 
 export interface AttackUpdate {

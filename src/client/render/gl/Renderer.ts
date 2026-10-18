@@ -91,6 +91,8 @@ const SAM_RADIUS_GHOST_TYPES = new Set([
   "Missile Silo",
   "SAM Launcher",
   "CIWS Defense",
+  "EMP Missile",
+  "Bunker Missile Site",
   "Stealth Missile",
   "Hypersonic Missile",
   "MIRV",
@@ -103,6 +105,8 @@ const SAM_RADIUS_GHOST_TYPES = new Set([
 const SAM_RADIUS_HIGHLIGHT_TYPES = new Set([
   "SAM Launcher",
   "CIWS Defense",
+  "EMP Missile",
+  "Bunker Missile Site",
   "Stealth Missile",
   "Hypersonic Missile",
   "MIRV",
@@ -918,6 +922,7 @@ export class GPURenderer {
     this.unitPass.setFrameTick(this.frameTick);
     this.unitPass.updateUnits(units, gameTick);
     this.samRadiusPass.setTick(gameTick);
+    this.structurePass.setTick(gameTick);
     this.barPass.updateBars(units, this.lastStructures, gameTick);
     this.pointLightPass.updateLights(units);
     this.heatManager.decayHeat();

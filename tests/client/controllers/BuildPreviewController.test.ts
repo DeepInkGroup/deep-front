@@ -30,7 +30,9 @@ describe("BuildPreviewController ghost preservation (locked nuke / Enter confirm
     test("returns false for other buildable types (Port, DefensePost, MissileSilo, SAMLauncher, Warship, MIRV)", () => {
       expect(shouldPreserveGhostAfterBuild(UnitType.Port)).toBe(false);
       expect(shouldPreserveGhostAfterBuild(UnitType.DefensePost)).toBe(false);
-      expect(shouldPreserveGhostAfterBuild(UnitType.MissileSilo)).toBe(false);
+      expect(shouldPreserveGhostAfterBuild(UnitType.BunkerMissileSite)).toBe(
+        false,
+      );
       expect(shouldPreserveGhostAfterBuild(UnitType.SAMLauncher)).toBe(false);
       expect(shouldPreserveGhostAfterBuild(UnitType.Warship)).toBe(false);
       expect(shouldPreserveGhostAfterBuild(UnitType.MIRV)).toBe(false);

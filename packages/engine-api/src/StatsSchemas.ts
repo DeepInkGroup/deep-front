@@ -9,10 +9,12 @@ export const bombUnits = [
   "mirvw",
   "stealth",
   "hyper",
+  "emp",
 ] as const;
 export const BombUnitSchema = z.enum(bombUnits);
 export type BombUnit = z.infer<typeof BombUnitSchema>;
 export type NukeType =
+  | UnitType.EMPMissile
   | UnitType.StealthMissile
   | UnitType.HypersonicMissile
   | UnitType.AtomBomb
@@ -21,6 +23,7 @@ export type NukeType =
   | UnitType.MIRVWarhead;
 
 export const unitTypeToBombUnit = {
+  [UnitType.EMPMissile]: "emp",
   [UnitType.StealthMissile]: "stealth",
   [UnitType.HypersonicMissile]: "hyper",
   [UnitType.AtomBomb]: "abomb",

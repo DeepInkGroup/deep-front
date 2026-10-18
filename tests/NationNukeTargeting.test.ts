@@ -49,7 +49,7 @@ async function setupDuel(withThirdPlayer = false) {
   const human = game.player("human_id");
 
   conquerRect(game, nation, 0, 0, 15, 15);
-  nation.buildUnit(UnitType.MissileSilo, game.ref(5, 5), {});
+  nation.buildUnit(UnitType.BunkerMissileSite, game.ref(5, 5), {});
   // More than a MIRV and a hydrogen bomb cost, so it isn't saving up for one
   nation.addGold(40_000_000n);
   conquerRect(game, human, ISLAND.min, ISLAND.min, ISLAND.max, ISLAND.max);

@@ -50,7 +50,7 @@ function setupLeader(difficulty: Difficulty, { sams }: { sams: boolean }) {
       }
     }
   }
-  nation.buildUnit(UnitType.MissileSilo, game.ref(20, 100), {});
+  nation.buildUnit(UnitType.BunkerMissileSite, game.ref(20, 100), {});
   game.endSpawnPhase();
   return { game, nation, leader };
 }

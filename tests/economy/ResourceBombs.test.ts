@@ -29,7 +29,7 @@ describe.each([UnitType.OilFactory, UnitType.CopperMine])(
           source = game.ref(10, 10);
         attacker.conquer(source);
         owner.conquer(target);
-        attacker.buildUnit(UnitType.MissileSilo, source, {});
+        attacker.buildUnit(UnitType.BunkerMissileSite, source, {});
         const building = owner.buildUnit(buildingType, target, {});
         while (owner.canUpgradeUnit(building)) owner.upgradeUnit(building);
         expect(building.level()).toBe(game.unitInfo(buildingType).maxLevel);

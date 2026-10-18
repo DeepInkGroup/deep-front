@@ -38,6 +38,7 @@ export type NukeState = {
   trajectoryIndex: number;
   targetedBySam: boolean;
   waitTicks: number;
+  detectedBySAM?: boolean;
 };
 
 export type SamLauncherState = {
@@ -218,6 +219,7 @@ export enum UnitType {
   HypersonicMissile = "Hypersonic Missile",
   CIWSDefense = "CIWS Defense",
   StraitControlStation = "Strait Control Station",
+  EMPMissile = "EMP Missile",
 }
 
 export enum TrainType {
@@ -228,6 +230,7 @@ export enum TrainType {
 
 export const Nukes = unitTypeGroup([
   UnitType.StealthMissile,
+  UnitType.EMPMissile,
   UnitType.HypersonicMissile,
   UnitType.AtomBomb,
   UnitType.HydrogenBomb,
@@ -237,6 +240,7 @@ export const Nukes = unitTypeGroup([
 
 export const BuildableAttacks = unitTypeGroup([
   UnitType.StealthMissile,
+  UnitType.EMPMissile,
   UnitType.HypersonicMissile,
   UnitType.AtomBomb,
   UnitType.HydrogenBomb,
@@ -276,7 +280,7 @@ export const RailStructures = unitTypeGroup([
 ] as const);
 
 export const BuildMenus = unitTypeGroup([
-  ...Structures.types,
+  ...Structures.types.filter((type) => type !== UnitType.MissileSilo),
   ...BuildableAttacks.types,
 ] as const);
 
@@ -285,7 +289,10 @@ export const PlayerBuildable = unitTypeGroup([
   UnitType.TransportShip,
 ] as const);
 
-export type PlayerBuildableUnitType = (typeof PlayerBuildable.types)[number];
+// Legacy silo IDs remain readable in old saves and replays; new purchases are disabled.
+export type PlayerBuildableUnitType =
+  | (typeof PlayerBuildable.types)[number]
+  | UnitType.MissileSilo;
 
 export type TrajectoryTile = {
   tile: TileRef;
@@ -386,6 +393,7 @@ export interface PlayerActions {
 }
 
 export interface BuildableUnit {
+  straitGate?: TileRef[];
   canBuild: TileRef | false;
   // unit id of the existing unit that can be upgraded, or false if it cannot be upgraded.
   canUpgrade: number | false;

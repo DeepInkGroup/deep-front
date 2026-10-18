@@ -44,6 +44,7 @@ export function isTrajectoryMissile(unitType: UnitType): boolean {
   return [
     UnitType.AtomBomb,
     UnitType.HydrogenBomb,
+    UnitType.EMPMissile,
     UnitType.StealthMissile,
     UnitType.HypersonicMissile,
   ].includes(unitType);
@@ -255,7 +256,12 @@ export class BuildPreviewController implements Controller {
     let targetingAlly = false;
     const myPlayer = this.game.myPlayer();
     const nukeType = this.ghostUnit.buildableUnit.type;
-    if (tileRef && myPlayer && isTrajectoryMissile(nukeType)) {
+    if (
+      tileRef &&
+      myPlayer &&
+      isTrajectoryMissile(nukeType) &&
+      nukeType !== UnitType.EMPMissile
+    ) {
       this.connectedAllySmallIds.clear();
       const allies = myPlayer.allies();
       for (let i = 0; i < allies.length; i++) {
@@ -365,11 +371,7 @@ export class BuildPreviewController implements Controller {
     // chosen. Keeping these in sync prevents the preview arc from
     // originating from a silo the game wouldn't use.
     const silos = myPlayer
-      .units(
-        type === UnitType.StealthMissile || type === UnitType.HypersonicMissile
-          ? UnitType.BunkerMissileSite
-          : UnitType.MissileSilo,
-      )
+      .units(UnitType.BunkerMissileSite)
       .filter(
         (u) => u.isActive() && !u.isInCooldown() && !u.isUnderConstruction(),
       );
@@ -405,7 +407,7 @@ export class BuildPreviewController implements Controller {
     const allyIds = new Set<number>();
     for (const a of myPlayer.allies()) allyIds.add(a.smallID());
     const betrayedIds: ReadonlySet<number> =
-      allyIds.size > 0
+      allyIds.size > 0 && type !== UnitType.EMPMissile
         ? listNukeBreakAlliance({
             game: this.game,
             targetTile: tileRef,
@@ -418,7 +420,13 @@ export class BuildPreviewController implements Controller {
       UnitType.SAMLauncher,
       UnitType.CIWSDefense,
     )) {
-      if (!s.isActive()) continue;
+      if (
+        !s.isActive() ||
+        s.empDisabledUntil() > this.game.ticks() ||
+        ((type === UnitType.HydrogenBomb || type === UnitType.EMPMissile) &&
+          s.type() === UnitType.CIWSDefense)
+      )
+        continue;
       const owner = s.owner();
       if (owner === myPlayer || s.isUnderConstruction()) continue;
       if (
@@ -454,7 +462,7 @@ export class BuildPreviewController implements Controller {
       directionUp,
       sams,
       targetableAt:
-        type === UnitType.StealthMissile
+        type === UnitType.StealthMissile || type === UnitType.EMPMissile
           ? (x, y) =>
               this.game.isValidCoord(x, y) &&
               this.game.ownerID(this.game.ref(x, y)) ===
@@ -499,6 +507,7 @@ export class BuildPreviewController implements Controller {
         rangeRadius = this.game.config().samRange(level);
         break;
       }
+      case UnitType.EMPMissile:
       case UnitType.StealthMissile:
       case UnitType.HypersonicMissile:
       case UnitType.AtomBomb:
@@ -544,6 +553,10 @@ export class BuildPreviewController implements Controller {
     }
     return {
       ghostType: u.type,
+      straitGate: u.straitGate?.map((t) => ({
+        x: this.game.x(t),
+        y: this.game.y(t),
+      })),
       tileX: this.game.x(placementTile),
       tileY: this.game.y(placementTile),
       snapToPlacement: placementTile !== tileRef,
