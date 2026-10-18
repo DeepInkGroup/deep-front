@@ -29,6 +29,9 @@ export const UT_FACTORY = "Factory" as const;
 export const UT_OIL_FACTORY = "Oil Factory" as const;
 export const UT_COPPER_MINE = "Copper Mine" as const;
 export const UT_LOGISTICS_CENTER = "Logistics Center" as const;
+export const UT_BUNKER_MISSILE_SITE = "Bunker Missile Site" as const;
+export const UT_STEALTH_MISSILE = "Stealth Missile" as const;
+export const UT_HYPERSONIC_MISSILE = "Hypersonic Missile" as const;
 export const UT_CUSTOMS_OFFICE = "Customs Office" as const;
 export const UT_DEFENSE_POST = "Defense Post" as const;
 export const UT_SAM_LAUNCHER = "SAM Launcher" as const;
@@ -42,6 +45,7 @@ export const STRUCTURE_TYPES: ReadonlySet<string> = new Set([
   UT_COPPER_MINE,
   UT_LOGISTICS_CENTER,
   UT_CUSTOMS_OFFICE,
+  UT_BUNKER_MISSILE_SITE,
   UT_OIL_FACTORY,
   UT_CITY,
   UT_PORT,
@@ -53,6 +57,8 @@ export const STRUCTURE_TYPES: ReadonlySet<string> = new Set([
 
 export const NUKE_TYPES: ReadonlySet<string> = new Set([
   UT_ATOM_BOMB,
+  UT_STEALTH_MISSILE,
+  UT_HYPERSONIC_MISSILE,
   UT_HYDROGEN_BOMB,
   UT_MIRV,
 ]);
@@ -62,6 +68,8 @@ export const NUKE_TYPES: ReadonlySet<string> = new Set([
  *  leads the smoothly-moving missile. */
 export const SMOOTHED_NUKE_TYPES: ReadonlySet<string> = new Set([
   UT_ATOM_BOMB,
+  UT_STEALTH_MISSILE,
+  UT_HYPERSONIC_MISSILE,
   UT_HYDROGEN_BOMB,
   UT_MIRV,
   UT_MIRV_WARHEAD,
@@ -71,6 +79,8 @@ export const SMOOTHED_NUKE_TYPES: ReadonlySet<string> = new Set([
 export const TRAIL_TYPES: ReadonlySet<string> = new Set([
   UT_TRANSPORT,
   UT_ATOM_BOMB,
+  UT_STEALTH_MISSILE,
+  UT_HYPERSONIC_MISSILE,
   UT_HYDROGEN_BOMB,
   UT_MIRV,
   UT_MIRV_WARHEAD,
@@ -80,6 +90,8 @@ export const TRAIL_TYPES: ReadonlySet<string> = new Set([
 export const NUKE_MAGNITUDES: Readonly<
   Record<string, { inner: number; outer: number }>
 > = {
+  [UT_STEALTH_MISSILE]: { inner: 12, outer: 30 },
+  [UT_HYPERSONIC_MISSILE]: { inner: 12, outer: 30 },
   [UT_ATOM_BOMB]: { inner: 12, outer: 30 },
   [UT_HYDROGEN_BOMB]: { inner: 80, outer: 100 },
   [UT_MIRV_WARHEAD]: { inner: 12, outer: 18 },
@@ -111,4 +123,7 @@ export const ALL_UNIT_TYPES = [
   UT_COPPER_MINE,
   UT_LOGISTICS_CENTER,
   UT_CUSTOMS_OFFICE,
+  UT_BUNKER_MISSILE_SITE,
+  UT_STEALTH_MISSILE,
+  UT_HYPERSONIC_MISSILE,
 ] as const;

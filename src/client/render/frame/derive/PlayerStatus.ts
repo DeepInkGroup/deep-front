@@ -1,5 +1,5 @@
 import type { PlayerState, PlayerStatusData, UnitState } from "../../types";
-import { NUKE_TYPES, UT_MIRV_WARHEAD } from "../../types";
+import { UT_STEALTH_MISSILE, NUKE_TYPES, UT_MIRV_WARHEAD } from "../../types";
 
 /** Unit types that indicate an active nuke is in flight. */
 const NUKE_ACTIVE_TYPES: ReadonlySet<string> = new Set([
@@ -87,6 +87,12 @@ export function computePlayerStatus(
   const nukeTargetsMeOwners = new Set<number>();
   for (const u of units.values()) {
     if (!u.isActive || !NUKE_ACTIVE_TYPES.has(u.unitType)) continue;
+    if (
+      u.unitType === UT_STEALTH_MISSILE &&
+      !u.targetable &&
+      u.ownerID !== localPlayerSmallID
+    )
+      continue;
     nukeActiveOwners.add(u.ownerID);
     if (
       localPlayerSmallID > 0 &&

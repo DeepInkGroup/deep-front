@@ -1,3 +1,4 @@
+import { canSAMDetectAdvancedMissile } from "../game/AdvancedMissiles";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { MessageType, UnitType } from "@openfront/engine-api/game/GameTypes";
 import { NukeType } from "@openfront/engine-api/StatsSchemas";
@@ -24,6 +25,8 @@ import type {
 } from "../snapshot/SnapshotContext";
 
 const INTERCEPTED_UNIT_TRANSLATION_KEYS: Partial<Record<UnitType, string>> = {
+  [UnitType.StealthMissile]: "unit_type.stealth_missile",
+  [UnitType.HypersonicMissile]: "unit_type.hypersonic_missile",
   [UnitType.AtomBomb]: "unit_type.atom_bomb",
   [UnitType.HydrogenBomb]: "unit_type.hydrogen_bomb",
   [UnitType.MIRVWarhead]: "unit_type.mirv",
@@ -61,6 +64,8 @@ export class SAMMissileExecution implements Execution {
     }
     // The MIRV carrier itself can't be intercepted, only its warheads
     const nukesWhitelist = [
+      UnitType.StealthMissile,
+      UnitType.HypersonicMissile,
       UnitType.AtomBomb,
       UnitType.HydrogenBomb,
       UnitType.MIRVWarhead,
@@ -69,7 +74,8 @@ export class SAMMissileExecution implements Execution {
       !this.target.isActive() ||
       !this.ownerUnit.isActive() ||
       this.target.owner() === this.SAMMissile.owner() ||
-      !nukesWhitelist.includes(this.target.type())
+      !nukesWhitelist.includes(this.target.type()) ||
+      !canSAMDetectAdvancedMissile(this.ownerUnit, this.target)
     ) {
       // Clear the flag so other SAMs can re-target this nuke
       if (this.target.isActive()) {

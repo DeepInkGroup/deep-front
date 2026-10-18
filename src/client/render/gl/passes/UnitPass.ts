@@ -37,6 +37,8 @@ import { assetUrl } from "@openfront/shared/AssetUrls";
 import type { RendererConfig, UnitState } from "../../types";
 import {
   SMOOTHED_NUKE_TYPES,
+  UT_STEALTH_MISSILE,
+  UT_HYPERSONIC_MISSILE,
   TrainType,
   UT_ATOM_BOMB,
   UT_HYDROGEN_BOMB,
@@ -130,6 +132,8 @@ const TRAIN_CARRIAGE_LOADED_COL = UNIT_ORDER.indexOf("TrainCarriageLoaded");
 
 /** Nuke + warhead types — rendered with flickering hot colors */
 const FLICKER_TYPES: ReadonlySet<string> = new Set([
+  UT_STEALTH_MISSILE,
+  UT_HYPERSONIC_MISSILE,
   UT_ATOM_BOMB,
   UT_HYDROGEN_BOMB,
   UT_MIRV,
@@ -141,6 +145,8 @@ const FLICKER_TYPES: ReadonlySet<string> = new Set([
 /** Missile/projectile types — rendered on top of structures in the layer order.
  *  Ground/sea units (boats, trains) render below structures. */
 const MISSILE_TYPES: ReadonlySet<string> = new Set([
+  UT_STEALTH_MISSILE,
+  UT_HYPERSONIC_MISSILE,
   UT_ATOM_BOMB,
   UT_HYDROGEN_BOMB,
   UT_MIRV,
@@ -456,9 +462,21 @@ export class UnitPass {
     this.smoothSegs.length = 0;
 
     for (const unit of units.values()) {
-      if (!unit.isActive || unit.waitTicks > 0) continue;
+      if (
+        !unit.isActive ||
+        unit.waitTicks > 0 ||
+        (unit.unitType === UT_STEALTH_MISSILE &&
+          !unit.targetable &&
+          unit.ownerID !== this.localPlayerID)
+      )
+        continue;
 
-      let atlasIdx = this.typeToAtlasCol.get(unit.unitType);
+      let atlasIdx =
+        unit.unitType === UT_STEALTH_MISSILE
+          ? UNIT_ORDER.indexOf(UT_ATOM_BOMB)
+          : unit.unitType === UT_HYPERSONIC_MISSILE
+            ? UNIT_ORDER.indexOf(UT_HYDROGEN_BOMB)
+            : this.typeToAtlasCol.get(unit.unitType);
 
       // Train sub-type resolution: "Train" isn't in UNIT_ORDER.
       // Resolve to engine/carriage/loaded carriage based on trainType + loaded fields.

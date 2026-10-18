@@ -1,3 +1,4 @@
+import { BunkerUpgradeExecution } from "../execution/BunkerUpgradeExecution";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
   AllianceInfo,
@@ -1530,7 +1531,12 @@ export class PlayerImpl implements Player {
       .unitInfo(unit.type())
       .cost(this.mg, this, 0, unit.level());
     this.removeGold(cost);
-    unit.increaseLevel();
+    if (unit.type() === UnitType.BunkerMissileSite) {
+      unit.setUnderConstruction(true);
+      this.mg.addExecution(new BunkerUpgradeExecution(this, unit));
+    } else {
+      unit.increaseLevel();
+    }
     this.recordUnitConstructed(unit.type());
   }
 
@@ -1594,9 +1600,11 @@ export class PlayerImpl implements Player {
       let upgradeCosts: Gold[] | undefined;
       if (canUpgrade !== false) {
         const remainingLevels =
-          info.maxLevel === undefined
-            ? MAX_UPGRADE_AMOUNT
-            : info.maxLevel - upgradeLevel;
+          u === UnitType.BunkerMissileSite
+            ? 1
+            : info.maxLevel === undefined
+              ? MAX_UPGRADE_AMOUNT
+              : info.maxLevel - upgradeLevel;
         upgradeCosts = new Array<Gold>(remainingLevels);
         let total = 0n;
         for (let n = 0; n < remainingLevels; n++) {
@@ -1657,6 +1665,8 @@ export class PlayerImpl implements Player {
           return false;
         }
         return this.nukeSpawn(targetTile, unitType);
+      case UnitType.StealthMissile:
+      case UnitType.HypersonicMissile:
       case UnitType.AtomBomb:
       case UnitType.HydrogenBomb:
         return this.nukeSpawn(targetTile, unitType);
@@ -1675,6 +1685,7 @@ export class PlayerImpl implements Player {
         return this.tradeShipSpawn(targetTile);
       case UnitType.Train:
         return this.landBasedUnitSpawn(targetTile);
+      case UnitType.BunkerMissileSite:
       case UnitType.MissileSilo:
       case UnitType.DefensePost:
       case UnitType.SAMLauncher:
@@ -1738,7 +1749,12 @@ export class PlayerImpl implements Player {
     }
 
     // only get missilesilos that are not on cooldown and not under construction
-    const readySilos = this.units(UnitType.MissileSilo).filter(
+    const readySilos = this.units(
+      nukeType === UnitType.StealthMissile ||
+        nukeType === UnitType.HypersonicMissile
+        ? UnitType.BunkerMissileSite
+        : UnitType.MissileSilo,
+    ).filter(
       (silo) =>
         silo.isActive() && !silo.isInCooldown() && !silo.isUnderConstruction(),
     );

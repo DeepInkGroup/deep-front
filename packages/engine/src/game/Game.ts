@@ -54,6 +54,17 @@ export interface OwnerComp {
 }
 
 export interface UnitParamsMap {
+  [UnitType.BunkerMissileSite]: Record<string, never>;
+  [UnitType.StealthMissile]: {
+    targetTile?: number;
+    targetPlayer?: Player | TerraNullius;
+    trajectory: TrajectoryTile[];
+  };
+  [UnitType.HypersonicMissile]: {
+    targetTile?: number;
+    targetPlayer?: Player | TerraNullius;
+    trajectory: TrajectoryTile[];
+  };
   [UnitType.TransportShip]: {
     troops?: number;
     targetTile?: TileRef;

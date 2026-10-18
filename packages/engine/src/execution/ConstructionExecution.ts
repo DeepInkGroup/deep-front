@@ -92,7 +92,8 @@ export class ConstructionExecution implements Execution {
         this.ticksUntilComplete =
           duration -
           (this.constructionType === UnitType.LogisticsCenter ||
-          this.constructionType === UnitType.CustomsOffice
+          this.constructionType === UnitType.CustomsOffice ||
+          this.constructionType === UnitType.BunkerMissileSite
             ? 1
             : 0);
         return;
@@ -127,6 +128,8 @@ export class ConstructionExecution implements Execution {
     }
     const player = this.player;
     switch (this.constructionType) {
+      case UnitType.StealthMissile:
+      case UnitType.HypersonicMissile:
       case UnitType.AtomBomb:
       case UnitType.HydrogenBomb: {
         const count = this.amount ?? 1;
@@ -157,6 +160,7 @@ export class ConstructionExecution implements Execution {
       case UnitType.Port:
         this.mg.addExecution(new PortExecution(this.structure!));
         break;
+      case UnitType.BunkerMissileSite:
       case UnitType.MissileSilo:
         this.mg.addExecution(new MissileSiloExecution(this.structure!));
         break;
@@ -195,6 +199,7 @@ export class ConstructionExecution implements Execution {
   private isStructure(type: UnitType): boolean {
     switch (type) {
       case UnitType.Port:
+      case UnitType.BunkerMissileSite:
       case UnitType.MissileSilo:
       case UnitType.DefensePost:
       case UnitType.SAMLauncher:

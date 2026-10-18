@@ -1,3 +1,4 @@
+import { BunkerAIExecution } from "./BunkerAIExecution";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
   GameType,
@@ -112,6 +113,7 @@ export class SpawnExecution implements Execution {
       this.mg.addExecution(new PlayerExecution(player));
       if (player.type() !== PlayerType.Human) {
         this.mg.addExecution(new EconomyAIExecution(player));
+        this.mg.addExecution(new BunkerAIExecution(player));
       }
       if (player.type() === PlayerType.Bot) {
         this.mg.addExecution(new TribeExecution(player));

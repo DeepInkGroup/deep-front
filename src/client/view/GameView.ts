@@ -410,8 +410,8 @@ export class GameView implements GameLike {
           (unit.state.ownerID !== update.ownerID ||
             unit.state.level !== update.level ||
             unit.state.isActive !== update.isActive ||
-            (unit.state.underConstruction &&
-              !(update.underConstruction ?? false)))
+            unit.state.underConstruction !==
+              (update.underConstruction ?? false))
         ) {
           this._structuresDirty = true;
         }
@@ -467,7 +467,15 @@ export class GameView implements GameLike {
     // Trail update: walk active trail-type units and stamp/decay.
     this._trailIdsScratch.length = 0;
     for (const u of this._units.values()) {
-      if (u.isActive() && TRAIL_TYPES.has(u.type())) {
+      if (
+        u.isActive() &&
+        TRAIL_TYPES.has(u.type()) &&
+        !(
+          u.type() === UnitType.StealthMissile &&
+          !u.targetable() &&
+          u.owner() !== this._myPlayer
+        )
+      ) {
         this._trailIdsScratch.push(u.id());
       }
     }
@@ -666,7 +674,9 @@ export class GameView implements GameLike {
       tile,
       searchRange,
       types,
-      predicate,
+      (candidate) =>
+        this.isUnitVisible(candidate.unit as UnitView) &&
+        (predicate?.(candidate) ?? true),
     ) as Array<{
       unit: UnitView;
       distSquared: number;
@@ -863,12 +873,22 @@ export class GameView implements GameLike {
   isSpectator(): boolean {
     return !this.myPlayer()?.isAlive() || this._config.isReplay();
   }
+  private isUnitVisible(unit: UnitView): boolean {
+    return (
+      unit.type() !== UnitType.StealthMissile ||
+      unit.targetable() ||
+      unit.owner() === this._myPlayer
+    );
+  }
+
   units(...types: UnitType[]): UnitView[] {
     if (types.length === 0) {
-      return Array.from(this._units.values()).filter((u) => u.isActive());
+      return Array.from(this._units.values()).filter(
+        (u) => u.isActive() && this.isUnitVisible(u),
+      );
     }
     return Array.from(this._units.values()).filter(
-      (u) => u.isActive() && types.includes(u.type()),
+      (u) => u.isActive() && this.isUnitVisible(u) && types.includes(u.type()),
     );
   }
 
@@ -881,7 +901,7 @@ export class GameView implements GameLike {
       this._unitsByOwnerStale = false;
       this._unitsByOwner.clear();
       for (const u of this._units.values()) {
-        if (!u.isActive()) continue;
+        if (!u.isActive() || !this.isUnitVisible(u)) continue;
         const sid = u.state.ownerID;
         const arr = this._unitsByOwner.get(sid);
         if (arr === undefined) {

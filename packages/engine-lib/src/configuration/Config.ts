@@ -233,6 +233,12 @@ export class Config {
           upgradable: true,
         };
         break;
+      case UnitType.BunkerMissileSite:
+        info = {
+          constructionDuration: this.instantBuild() ? 0 : 500,
+          upgradable: true,
+        };
+        break;
       case UnitType.MissileSilo:
         info = {
           constructionDuration: this.instantBuild() ? 0 : 10 * 10,
@@ -294,6 +300,8 @@ export class Config {
         break;
       case UnitType.TransportShip:
       case UnitType.SAMMissile:
+      case UnitType.StealthMissile:
+      case UnitType.HypersonicMissile:
       case UnitType.AtomBomb:
       case UnitType.HydrogenBomb:
       case UnitType.MIRV:
@@ -450,6 +458,8 @@ export class Config {
     switch (unitType) {
       case UnitType.MIRVWarhead:
         return { inner: 12, outer: 18 };
+      case UnitType.StealthMissile:
+      case UnitType.HypersonicMissile:
       case UnitType.AtomBomb:
         return { inner: 12, outer: 30 };
       case UnitType.HydrogenBomb:

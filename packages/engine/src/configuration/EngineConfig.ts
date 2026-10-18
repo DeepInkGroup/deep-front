@@ -353,6 +353,10 @@ export class EngineConfig extends Config {
           UnitType.Port,
           UnitType.Factory,
         );
+      case UnitType.StealthMissile:
+        return this.costWrapper(() => 1_000_000, UnitType.StealthMissile);
+      case UnitType.HypersonicMissile:
+        return this.costWrapper(() => 950_000_000, UnitType.HypersonicMissile);
       case UnitType.AtomBomb:
         return this.costWrapper(() => 750_000, UnitType.AtomBomb);
       case UnitType.HydrogenBomb:
@@ -400,6 +404,7 @@ export class EngineConfig extends Config {
           () => Number(CUSTOMS_OFFICE_COST),
           UnitType.CustomsOffice,
         );
+      case UnitType.BunkerMissileSite:
       case UnitType.OilFactory:
       case UnitType.CopperMine:
         return (_game, player, extraLevels = 0, unitLevel = 0) => {
@@ -409,9 +414,11 @@ export class EngineConfig extends Config {
           )
             return 0n;
           const costs =
-            type === UnitType.OilFactory
-              ? OIL_FACTORY_COSTS
-              : COPPER_MINE_COSTS;
+            type === UnitType.BunkerMissileSite
+              ? [1_000_000n, 1_300_000n, 1_500_000n]
+              : type === UnitType.OilFactory
+                ? OIL_FACTORY_COSTS
+                : COPPER_MINE_COSTS;
           return costs[Math.min(unitLevel + extraLevels, costs.length - 1)];
         };
       case UnitType.TransportShip:
@@ -706,6 +713,10 @@ export class EngineConfig extends Config {
 
   nukeSpeed(unitType: UnitType): number {
     switch (unitType) {
+      case UnitType.StealthMissile:
+        return 10;
+      case UnitType.HypersonicMissile:
+        return 40;
       case UnitType.AtomBomb:
       case UnitType.HydrogenBomb:
         return 10;

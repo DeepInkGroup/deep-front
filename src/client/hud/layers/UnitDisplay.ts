@@ -17,6 +17,9 @@ import { translateText } from "../../Utils";
 import { GameView } from "../../view";
 import {
   atomBombIcon,
+  bunkerMissileSiteIcon,
+  stealthMissileIcon,
+  hypersonicMissileIcon,
   cityIcon,
   defensePostIcon,
   factoryIcon,
@@ -101,7 +104,25 @@ export class UnitDisplay extends LitElement implements Controller {
   private canBuild(item: UnitType): boolean {
     if (this.game?.config().isUnitDisabled(item)) return false;
     const player = this.game?.myPlayer();
+    const info = this.game.config().unitInfo(item);
+    if (
+      info.maxCount !== undefined &&
+      (player?.units(item).length ?? 0) >= info.maxCount
+    )
+      return false;
     switch (item) {
+      case UnitType.StealthMissile:
+      case UnitType.HypersonicMissile:
+        return (
+          this.cost(item) <= (player?.gold() ?? 0n) &&
+          (player
+            ?.units(UnitType.BunkerMissileSite)
+            .some(
+              (u) =>
+                !u.isUnderConstruction() && u.isActive() && !u.isInCooldown(),
+            ) ??
+            false)
+        );
       case UnitType.AtomBomb:
       case UnitType.HydrogenBomb:
       case UnitType.MIRV:
@@ -220,6 +241,27 @@ export class UnitDisplay extends LitElement implements Controller {
             this.keybinds["buildMissileSilo"]?.key ?? "5",
           )}
           ${this.renderUnitItem(
+            bunkerMissileSiteIcon,
+            myPlayer.totalUnitLevels(UnitType.BunkerMissileSite),
+            UnitType.BunkerMissileSite,
+            "bunker_missile_site",
+            "",
+          )}
+          ${this.renderUnitItem(
+            stealthMissileIcon,
+            null,
+            UnitType.StealthMissile,
+            "stealth_missile",
+            "",
+          )}
+          ${this.renderUnitItem(
+            hypersonicMissileIcon,
+            null,
+            UnitType.HypersonicMissile,
+            "hypersonic_missile",
+            "",
+          )}
+          ${this.renderUnitItem(
             samLauncherIcon,
             this._samLauncher,
             UnitType.SAMLauncher,
@@ -317,10 +359,13 @@ export class UnitDisplay extends LitElement implements Controller {
               </div>
             `
           : null}
-        <div
+        <button
+          type="button"
+          aria-label=${translateText("unit_type." + structureKey)}
+          ?disabled=${!this.canBuild(unitType)}
           class="${this.canBuild(unitType)
             ? ""
-            : "opacity-40"} border border-slate-500 rounded-sm px-0.5 pb-0.5 flex items-center gap-0.5 cursor-pointer
+            : "opacity-30 grayscale cursor-not-allowed"} border border-slate-500 rounded-sm px-0.5 pb-0.5 flex items-center gap-0.5 cursor-pointer
              ${selected ? "hover:bg-gray-400/10" : "hover:bg-gray-800"}
              rounded-sm text-white ${selected ? "bg-slate-400/20" : ""}
              ${this.tutorialHighlight === unitType ? "tutorial-highlight" : ""}"
@@ -334,6 +379,15 @@ export class UnitDisplay extends LitElement implements Controller {
           }}
           @mouseenter=${() => {
             switch (unitType) {
+              case UnitType.StealthMissile:
+              case UnitType.HypersonicMissile:
+                this.eventBus?.emit(
+                  new ToggleStructureEvent([
+                    UnitType.BunkerMissileSite,
+                    UnitType.SAMLauncher,
+                  ]),
+                );
+                break;
               case UnitType.AtomBomb:
               case UnitType.HydrogenBomb:
                 this.eventBus?.emit(
@@ -368,7 +422,7 @@ export class UnitDisplay extends LitElement implements Controller {
                 >`
               : null}
           </div>
-        </div>
+        </button>
       </div>
     `;
   }

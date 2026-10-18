@@ -1,3 +1,4 @@
+import { UnitType } from "@openfront/engine-api/game/GameTypes";
 import {
   zNum,
   zPlayerRef,
@@ -15,6 +16,7 @@ import type {
 export class UpgradeStructureExecution implements Execution {
   private structure: Unit | undefined;
   private cost: bigint;
+  private pendingBunkerUpgrade = false;
 
   constructor(
     private player: Player,
@@ -34,6 +36,10 @@ export class UpgradeStructureExecution implements Execution {
       return;
     }
 
+    if (this.structure.type() === UnitType.BunkerMissileSite) {
+      this.pendingBunkerUpgrade = true;
+      return;
+    }
     for (let i = 0; i < this.amount; i++) {
       if (!this.player.canUpgradeUnit(this.structure)) {
         if (i === 0) {
@@ -49,11 +55,16 @@ export class UpgradeStructureExecution implements Execution {
   }
 
   tick(ticks: number): void {
+    // Schedule the timed upgrade from tick(), where nested executions are
+    // retained, instead of the engine?s initialization queue traversal.
+    if (this.pendingBunkerUpgrade && this.structure)
+      this.player.upgradeUnit(this.structure);
+    this.pendingBunkerUpgrade = false;
     return;
   }
 
   isActive(): boolean {
-    return false;
+    return this.pendingBunkerUpgrade;
   }
 
   activeDuringSpawnPhase(): boolean {
@@ -66,6 +77,7 @@ export class UpgradeStructureExecution implements Execution {
       player: w.player(this.player),
       unitId: this.unitId,
       amount: this.amount,
+      pendingBunkerUpgrade: this.pendingBunkerUpgrade,
     });
   }
 
@@ -74,6 +86,7 @@ export class UpgradeStructureExecution implements Execution {
     this.player = r.player(s.player);
     this.unitId = s.unitId;
     this.amount = s.amount;
+    this.pendingBunkerUpgrade = s.pendingBunkerUpgrade ?? false;
   }
 }
 
@@ -83,6 +96,7 @@ const UpgradeStructureStateSchema = z.object({
   player: zPlayerRef(),
   unitId: zNum(),
   amount: zNum(),
+  pendingBunkerUpgrade: z.boolean().optional(),
 });
 type UpgradeStructureState = z.infer<typeof UpgradeStructureStateSchema>;
 

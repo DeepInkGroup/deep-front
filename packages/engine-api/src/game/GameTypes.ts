@@ -213,6 +213,9 @@ export enum UnitType {
   CopperMine = "Copper Mine",
   LogisticsCenter = "Logistics Center",
   CustomsOffice = "Customs Office",
+  BunkerMissileSite = "Bunker Missile Site",
+  StealthMissile = "Stealth Missile",
+  HypersonicMissile = "Hypersonic Missile",
 }
 
 export enum TrainType {
@@ -222,6 +225,8 @@ export enum TrainType {
 }
 
 export const Nukes = unitTypeGroup([
+  UnitType.StealthMissile,
+  UnitType.HypersonicMissile,
   UnitType.AtomBomb,
   UnitType.HydrogenBomb,
   UnitType.MIRVWarhead,
@@ -229,6 +234,8 @@ export const Nukes = unitTypeGroup([
 ] as const);
 
 export const BuildableAttacks = unitTypeGroup([
+  UnitType.StealthMissile,
+  UnitType.HypersonicMissile,
   UnitType.AtomBomb,
   UnitType.HydrogenBomb,
   UnitType.MIRV,
@@ -236,6 +243,7 @@ export const BuildableAttacks = unitTypeGroup([
 ] as const);
 
 export const Structures = unitTypeGroup([
+  UnitType.BunkerMissileSite,
   UnitType.City,
   UnitType.DefensePost,
   UnitType.SAMLauncher,

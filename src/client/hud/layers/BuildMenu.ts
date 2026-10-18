@@ -32,6 +32,9 @@ const factoryIcon = assetUrl("images/FactoryIconWhite.svg");
 const oilFactoryIcon = assetUrl("images/OilFactoryIconWhite.svg");
 const copperMineIcon = assetUrl("images/CopperMineIconWhite.svg");
 const logisticsCenterIcon = assetUrl("images/LogisticsCenterIconWhite.svg");
+const bunkerMissileSiteIcon = assetUrl("images/BunkerMissileSiteIconWhite.svg");
+const stealthMissileIcon = assetUrl("images/StealthMissileIconWhite.svg");
+const hypersonicMissileIcon = assetUrl("images/HypersonicMissileIconWhite.svg");
 const customsOfficeIcon = assetUrl("images/CustomsOfficeIconWhite.svg");
 const goldCoinIcon = assetUrl("images/GoldCoinIcon.svg");
 const mirvIcon = assetUrl("images/MIRVIcon.svg");
@@ -52,6 +55,27 @@ export interface BuildItemDisplay {
 
 export const buildTable: BuildItemDisplay[][] = [
   [
+    {
+      unitType: UnitType.BunkerMissileSite,
+      icon: bunkerMissileSiteIcon,
+      description: "build_menu.desc.bunker_missile_site",
+      key: "unit_type.bunker_missile_site",
+      countable: true,
+    },
+    {
+      unitType: UnitType.StealthMissile,
+      icon: stealthMissileIcon,
+      description: "build_menu.desc.stealth_missile",
+      key: "unit_type.stealth_missile",
+      countable: false,
+    },
+    {
+      unitType: UnitType.HypersonicMissile,
+      icon: hypersonicMissileIcon,
+      description: "build_menu.desc.hypersonic_missile",
+      key: "unit_type.hypersonic_missile",
+      countable: false,
+    },
     {
       unitType: UnitType.AtomBomb,
       icon: atomBombIcon,
@@ -257,7 +281,8 @@ export class BuildMenu extends LitElement implements Controller {
       background-color: #1a1a1a;
       border-color: #333;
       cursor: not-allowed;
-      opacity: 0.7;
+      opacity: 0.35;
+      filter: grayscale(1);
     }
     .build-button:disabled img {
       opacity: 0.5;

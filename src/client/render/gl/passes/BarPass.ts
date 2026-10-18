@@ -16,7 +16,11 @@ import { UnitType } from "@openfront/engine-api/game/GameTypes";
 import type { Config } from "@openfront/engine-lib/configuration/Config";
 import { maxHealthWithVeterancy } from "@openfront/engine-lib/game/Veterancy";
 import type { RendererConfig, UnitState } from "../../types";
-import { UT_MISSILE_SILO, UT_SAM_LAUNCHER } from "../../types";
+import {
+  UT_BUNKER_MISSILE_SITE,
+  UT_MISSILE_SILO,
+  UT_SAM_LAUNCHER,
+} from "../../types";
 import type { RenderSettings } from "../RenderSettings";
 import { createProgram } from "../utils/GlUtils";
 
@@ -309,6 +313,7 @@ export class BarPass {
     // Construction progress
     if (unit.underConstruction && unit.constructionStartTick !== null) {
       const duration =
+        unit.constructionDuration ??
         this.config.unitInfo(unit.unitType as UnitType).constructionDuration ??
         50;
       const elapsed = gameTick - unit.constructionStartTick;
@@ -317,6 +322,7 @@ export class BarPass {
 
     // Missile readiness (Silo / SAM)
     if (
+      unit.unitType === UT_BUNKER_MISSILE_SITE ||
       unit.unitType === UT_MISSILE_SILO ||
       unit.unitType === UT_SAM_LAUNCHER
     ) {

@@ -190,6 +190,17 @@ export class BuildPreviewController implements Controller {
    */
   private syncGhostState(): void {
     const target = this.uiState.ghostStructure;
+    if (target !== null) {
+      const max = this.game.config().unitInfo(target).maxCount;
+      if (
+        this.game.config().isUnitDisabled(target) ||
+        (max !== undefined &&
+          (this.game.myPlayer()?.units(target).length ?? 0) >= max)
+      ) {
+        this.removeGhostStructure();
+        return;
+      }
+    }
     if (this.ghostUnit) {
       if (target === null) {
         this.removeGhostStructure();
@@ -457,6 +468,8 @@ export class BuildPreviewController implements Controller {
         rangeRadius = this.game.config().samRange(level);
         break;
       }
+      case UnitType.StealthMissile:
+      case UnitType.HypersonicMissile:
       case UnitType.AtomBomb:
       case UnitType.HydrogenBomb:
         rangeRadius = this.game.config().nukeMagnitudes(u.type).outer;
@@ -599,7 +612,9 @@ export class BuildPreviewController implements Controller {
       duration <= 0 ||
       (unitType !== UnitType.AtomBomb &&
         unitType !== UnitType.HydrogenBomb &&
-        unitType !== UnitType.MIRV)
+        unitType !== UnitType.MIRV &&
+        unitType !== UnitType.StealthMissile &&
+        unitType !== UnitType.HypersonicMissile)
     ) {
       return false;
     }

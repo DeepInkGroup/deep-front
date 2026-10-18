@@ -126,9 +126,11 @@ export class SoundEffectController implements Controller {
       this.handleTrainStation(unit);
     }
     switch (unit.type()) {
+      case UnitType.HypersonicMissile:
       case UnitType.AtomBomb:
         this.onNukeDetonation(unit, "atom-hit");
         break;
+      case UnitType.StealthMissile:
       case UnitType.MIRVWarhead:
         this.onMirvWarheadDetonation(unit);
         break;
@@ -152,6 +154,10 @@ export class SoundEffectController implements Controller {
   private onCreated(unit: UnitView): void {
     const myPlayer = this.game.myPlayer();
     switch (unit.type()) {
+      case UnitType.StealthMissile:
+        if (unit.owner() === myPlayer) this.emit("atom-launch");
+        break;
+      case UnitType.HypersonicMissile:
       case UnitType.AtomBomb:
         this.emit("atom-launch");
         break;
@@ -176,6 +182,7 @@ export class SoundEffectController implements Controller {
       case UnitType.SAMLauncher:
         if (unit.owner() === myPlayer) this.emit("sam-built");
         break;
+      case UnitType.BunkerMissileSite:
       case UnitType.MissileSilo:
         if (unit.owner() === myPlayer) this.emit("silo-built");
         break;

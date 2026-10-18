@@ -62,6 +62,7 @@ const copperMineIcon = assetUrl("images/CopperMineIconWhite.svg");
 const logisticsCenterIcon = assetUrl("images/LogisticsCenterIconWhite.svg");
 const customsOfficeIcon = assetUrl("images/CustomsOfficeIconWhite.svg");
 const goldCoinIcon = assetUrl("images/GoldCoinIcon.svg");
+const bunkerMissileSiteIcon = assetUrl("images/BunkerMissileSiteIconWhite.svg");
 const missileSiloIcon = assetUrl("images/MissileSiloIconWhite.svg");
 const portIcon = assetUrl("images/PortIcon.svg");
 const samLauncherIcon = assetUrl("images/SamLauncherIconWhite.svg");
@@ -743,6 +744,11 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
               player,
               UnitType.CustomsOffice,
               customsOfficeIcon,
+            )}
+            ${this.displayUnitCount(
+              player,
+              UnitType.BunkerMissileSite,
+              bunkerMissileSiteIcon,
             )}
             ${this.displayUnitCount(player, UnitType.Port, portIcon)}
             ${this.displayUnitCount(

@@ -1,5 +1,5 @@
 import type { NukeTelegraphData, UnitState } from "../../types";
-import { NUKE_MAGNITUDES } from "../../types";
+import { NUKE_MAGNITUDES, UT_STEALTH_MISSILE } from "../../types";
 
 // Must match RelationMatrix.ts
 const RELATION_FRIENDLY = 1;
@@ -54,6 +54,12 @@ export function extractNukeTelegraphs(
   for (const u of units.values()) {
     if (u.targetTile === null || !u.isActive || u.waitTicks > 0) continue;
 
+    if (
+      u.unitType === UT_STEALTH_MISSILE &&
+      !u.targetable &&
+      u.ownerID !== localPlayerID
+    )
+      continue;
     const plan = motionPlans?.get(u.id);
     if (plan && plan.startTick > currentTick) continue;
 
@@ -94,6 +100,12 @@ export function extractNukeTelegraphsFromIds(
     const u = units.get(id);
     if (!u || u.targetTile === null || !u.isActive || u.waitTicks > 0) continue;
 
+    if (
+      u.unitType === UT_STEALTH_MISSILE &&
+      !u.targetable &&
+      u.ownerID !== localPlayerID
+    )
+      continue;
     const plan = motionPlans?.get(u.id);
     if (plan && plan.startTick > currentTick) continue;
 

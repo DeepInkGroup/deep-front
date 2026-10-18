@@ -123,6 +123,18 @@ const unitOptions: { type: UnitType; translationKey: string }[] = [
   { type: UnitType.CopperMine, translationKey: "unit_type.copper_mine" },
   { type: UnitType.CustomsOffice, translationKey: "unit_type.customs_office" },
   {
+    type: UnitType.BunkerMissileSite,
+    translationKey: "unit_type.bunker_missile_site",
+  },
+  {
+    type: UnitType.StealthMissile,
+    translationKey: "unit_type.stealth_missile",
+  },
+  {
+    type: UnitType.HypersonicMissile,
+    translationKey: "unit_type.hypersonic_missile",
+  },
+  {
     type: UnitType.LogisticsCenter,
     translationKey: "unit_type.logistics_center",
   },

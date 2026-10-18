@@ -128,3 +128,5 @@ Compatible security updates have been applied. Six audit findings remain in deve
 ## Source and attribution
 
 Based on https://github.com/openfrontio/OpenFrontIO at commit 8989303c1e65b0670c7f51b8724b141bcf1f5950. © OpenFront and Contributors. The original licenses and notices are retained. Modified source is available from the in-app **Source code** link after building. See `LICENSE`, `LICENSE-ASSETS`, and `LICENSING.md`.
+
+See [Bunker Missile Site](docs/BunkerMissileSite.md) for advanced missile costs, upgrades, SAM behavior and bot support. Run `npm run test:bunker` against the local production server to check the real solo and multiplayer controls.

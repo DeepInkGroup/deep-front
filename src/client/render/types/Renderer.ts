@@ -120,6 +120,8 @@ export interface UnitState {
   trainType: number | null; // 0=Engine, 1=TailEngine, 2=Carriage
   loaded: boolean | null;
   constructionStartTick: number | null;
+  /** Local construction/upgrade duration, in simulation ticks. */
+  constructionDuration?: number;
   samUpgradeStartTick: number | null;
   samUpgradeStartRange: number | null;
   samUpgradeTargetLevel: number | null;

@@ -430,7 +430,7 @@ export class ReplayFrameBuilder {
         prev.ownerID !== u.ownerID ||
         prev.level !== u.level ||
         prev.isActive !== u.isActive ||
-        (prev.underConstruction && !u.underConstruction)
+        prev.underConstruction !== u.underConstruction
       ) {
         changed = true;
       }

@@ -1,3 +1,4 @@
+import { canSAMDetectAdvancedMissile } from "../game/AdvancedMissiles";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { GameType, UnitType } from "@openfront/engine-api/game/GameTypes";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
@@ -191,7 +192,8 @@ class SAMTargetingSystem {
     if (
       !isUnit(unit) ||
       unit.targetedBySAM() ||
-      unit.owner() === this.sam.owner()
+      unit.owner() === this.sam.owner() ||
+      !canSAMDetectAdvancedMissile(this.sam, unit)
     ) {
       return false;
     }
@@ -255,7 +257,13 @@ class SAMTargetingSystem {
     const nukes = this.mg.nearbyUnits(
       samTile,
       detectionRange,
-      [UnitType.AtomBomb, UnitType.HydrogenBomb, UnitType.MIRVWarhead],
+      [
+        UnitType.AtomBomb,
+        UnitType.HydrogenBomb,
+        UnitType.MIRVWarhead,
+        UnitType.StealthMissile,
+        UnitType.HypersonicMissile,
+      ],
       this.isTargetableNearbyUnit,
     );
 
@@ -381,7 +389,9 @@ export class SAMLauncherExecution implements Execution {
     if (
       this.mg.unitCount(UnitType.AtomBomb) === 0 &&
       this.mg.unitCount(UnitType.HydrogenBomb) === 0 &&
-      this.mg.unitCount(UnitType.MIRVWarhead) === 0
+      this.mg.unitCount(UnitType.MIRVWarhead) === 0 &&
+      this.mg.unitCount(UnitType.StealthMissile) === 0 &&
+      this.mg.unitCount(UnitType.HypersonicMissile) === 0
     ) {
       return;
     }

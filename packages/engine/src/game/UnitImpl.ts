@@ -75,6 +75,7 @@ export class UnitImpl implements Unit {
     params: AllUnitParams = {},
   ) {
     this._lastTile = _tile;
+    if (_type === UnitType.StealthMissile) this._targetable = false;
     this._health = toInt(this.mg.unitInfo(_type).maxHealth ?? 1);
     this._targetTile =
       "targetTile" in params ? (params.targetTile ?? undefined) : undefined;
@@ -121,6 +122,7 @@ export class UnitImpl implements Unit {
     switch (this._type) {
       case UnitType.Warship:
       case UnitType.Port:
+      case UnitType.BunkerMissileSite:
       case UnitType.MissileSilo:
       case UnitType.DefensePost:
       case UnitType.SAMLauncher:
@@ -273,6 +275,7 @@ export class UnitImpl implements Unit {
     switch (this._type) {
       case UnitType.Warship:
       case UnitType.Port:
+      case UnitType.BunkerMissileSite:
       case UnitType.MissileSilo:
       case UnitType.DefensePost:
       case UnitType.SAMLauncher:
@@ -410,6 +413,7 @@ export class UnitImpl implements Unit {
           break;
         case UnitType.City:
         case UnitType.DefensePost:
+        case UnitType.BunkerMissileSite:
         case UnitType.MissileSilo:
         case UnitType.Port:
         case UnitType.SAMLauncher:
@@ -784,7 +788,13 @@ export class UnitImpl implements Unit {
     // unitCount()/unitsOwned() are level-weighted and memoised on these versions
     this.mg.bumpUnitsVersion();
     this._owner._myUnitsVersion++;
-    if ([UnitType.MissileSilo, UnitType.SAMLauncher].includes(this.type())) {
+    if (
+      [
+        UnitType.MissileSilo,
+        UnitType.BunkerMissileSite,
+        UnitType.SAMLauncher,
+      ].includes(this.type())
+    ) {
       this._missileTimerQueue.push(this.mg.ticks());
     }
     this.mg.addUpdate(this.toUpdate());
@@ -792,7 +802,13 @@ export class UnitImpl implements Unit {
 
   decreaseLevel(destroyer?: Player): void {
     this._level--;
-    if ([UnitType.MissileSilo, UnitType.SAMLauncher].includes(this.type())) {
+    if (
+      [
+        UnitType.MissileSilo,
+        UnitType.BunkerMissileSite,
+        UnitType.SAMLauncher,
+      ].includes(this.type())
+    ) {
       this._missileTimerQueue.pop();
     }
     if (this._type === UnitType.SAMLauncher) {

@@ -25,3 +25,13 @@ export const teamIcon = assetUrl("images/TeamIconSolidWhite.svg");
 export const upperLimitIcon = assetUrl("images/UpperLimitIcon.svg");
 export const allianceIcon = assetUrl("images/AllianceIcon.svg");
 export const traitorIcon = assetUrl("images/TraitorIcon.svg");
+
+export const bunkerMissileSiteIcon = assetUrl(
+  "images/BunkerMissileSiteIconWhite.svg",
+);
+export const stealthMissileIcon = assetUrl(
+  "images/StealthMissileIconWhite.svg",
+);
+export const hypersonicMissileIcon = assetUrl(
+  "images/HypersonicMissileIconWhite.svg",
+);

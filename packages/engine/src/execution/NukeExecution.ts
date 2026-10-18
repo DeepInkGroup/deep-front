@@ -1,3 +1,4 @@
+import { isBunkerMissile } from "../game/AdvancedMissiles";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
   MessageType,
@@ -212,7 +213,11 @@ export class NukeExecution implements Execution {
       // launch from the MIRV separation point, not a silo).
       this.src ??= spawn;
       const silo = this.player
-        .units(UnitType.MissileSilo)
+        .units(
+          isBunkerMissile(this.nukeType)
+            ? UnitType.BunkerMissileSite
+            : UnitType.MissileSilo,
+        )
         .find((silo) => silo.tile() === spawn);
       // Stacked purchases launch several nukes across ticks; delay each missile
       // so launches from the same silo trail each other instead of overlapping,
@@ -229,6 +234,9 @@ export class NukeExecution implements Execution {
       }
       this.nuke = this.player.buildUnit(this.nukeType, this.src, {
         targetTile: this.dst,
+        ...(isBunkerMissile(this.nukeType)
+          ? { targetPlayer: this.target() }
+          : {}),
         trajectory: this.getTrajectory(this.dst),
       });
       this.nuke.updateNukeState({ waitTicks: this.waitTicks });
@@ -240,6 +248,13 @@ export class NukeExecution implements Execution {
         const target = this.mg.owner(this.dst);
         if (!target.isPlayer()) {
           // Ignore terra nullius
+        } else if (this.nukeType === UnitType.HypersonicMissile) {
+          this.mg.displayIncomingUnit(
+            this.nuke.id(),
+            "events_display.hypersonic_missile_inbound",
+            MessageType.NUKE_INBOUND,
+            target.id(),
+          );
         } else if (this.nukeType === UnitType.AtomBomb) {
           this.mg.displayIncomingUnit(
             this.nuke.id(),
@@ -287,6 +302,7 @@ export class NukeExecution implements Execution {
     if (result.status === PathStatus.COMPLETE) {
       // move it afterward for visual effect
       this.nuke.move(result.node);
+      this.revealStealth();
 
       // Check for very close SAM missiles that are targeting this.
       // The SAM logic should be the main source of truth, since missiles can skip pixels
@@ -304,8 +320,13 @@ export class NukeExecution implements Execution {
         ).length >= 1;
       if (!shouldBeDestroyed) this.detonate();
     } else if (result.status === PathStatus.NEXT) {
-      this.updateNukeTargetable();
-      this.nuke.move(result.node);
+      if (this.nukeType === UnitType.StealthMissile) {
+        this.nuke.move(result.node);
+        this.revealStealth();
+      } else {
+        this.updateNukeTargetable();
+        this.nuke.move(result.node);
+      }
       // Update index so SAM can interpolate future position
       this.nuke.setTrajectoryIndex(this.pathFinder.currentIndex());
     }
@@ -366,6 +387,8 @@ export class NukeExecution implements Execution {
     nukeTile: TileRef,
     targetRangeSquared: number,
   ): boolean {
+    if (this.nukeType === UnitType.StealthMissile)
+      return this.mg.owner(nukeTile) === this.mg.owner(targetTile);
     return (
       this.mg.euclideanDistSquared(nukeTile, targetTile) < targetRangeSquared ||
       (this.src !== undefined &&
@@ -378,12 +401,41 @@ export class NukeExecution implements Execution {
     if (this.nuke === null || this.nuke.targetTile() === undefined) {
       return;
     }
+    if (this.nukeType === UnitType.StealthMissile) {
+      this.revealStealth();
+      return;
+    }
     const targetRangeSquared =
       this.mg.config().defaultNukeTargetableRange() ** 2;
     const targetTile = this.nuke.targetTile();
     this.nuke.setTargetable(
       this.isTargetable(targetTile!, this.nuke.tile(), targetRangeSquared),
     );
+  }
+
+  private revealStealth(): void {
+    if (
+      this.nukeType !== UnitType.StealthMissile ||
+      !this.nuke ||
+      this.nuke.isTargetable()
+    )
+      return;
+    const target = this.nuke.targetPlayer();
+    if (target?.isPlayer() && this.mg.owner(this.nuke.tile()) !== target)
+      return;
+    if (
+      !target?.isPlayer() &&
+      this.mg.euclideanDistSquared(this.nuke.tile(), this.dst) > 30 ** 2
+    )
+      return;
+    this.nuke.setTargetable(true);
+    if (target?.isPlayer())
+      this.mg.displayIncomingUnit(
+        this.nuke.id(),
+        "events_display.stealth_missile_inbound",
+        MessageType.NUKE_INBOUND,
+        target.id(),
+      );
   }
 
   private detonate() {
@@ -472,6 +524,7 @@ export class NukeExecution implements Execution {
       const type = unit.type();
       if (this.isProtectedPlayer(unit.owner())) continue;
       if (
+        isBunkerMissile(type) ||
         type === UnitType.AtomBomb ||
         type === UnitType.HydrogenBomb ||
         type === UnitType.MIRVWarhead ||
@@ -494,11 +547,13 @@ export class NukeExecution implements Execution {
     this.nuke.delete(false);
 
     if (
+      isBunkerMissile(this.nukeType) ||
       this.nukeType === UnitType.AtomBomb ||
       this.nukeType === UnitType.HydrogenBomb
     ) {
-      const messageKey =
-        this.nukeType === UnitType.AtomBomb
+      const messageKey = isBunkerMissile(this.nukeType)
+        ? "events_display.advanced_missile_detonated"
+        : this.nukeType === UnitType.AtomBomb
           ? "events_display.atom_bomb_detonated"
           : "events_display.hydrogen_bomb_detonated";
       for (const [impactedPlayer] of tilesPerPlayers) {

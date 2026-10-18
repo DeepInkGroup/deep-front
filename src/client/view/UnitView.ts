@@ -51,6 +51,9 @@ export class UnitView implements UnitLike {
     this._createdAt = this.gameView.ticks();
     if (this.state.underConstruction) {
       this.state.constructionStartTick = this._createdAt;
+      this.state.constructionDuration = this.gameView
+        .config()
+        .unitInfo(this.type()).constructionDuration;
     }
   }
 
@@ -84,6 +87,11 @@ export class UnitView implements UnitLike {
     // constructionStartTick: set on transition into underConstruction.
     if (this.state.underConstruction && !wasUnderConstruction) {
       this.state.constructionStartTick = this.gameView.ticks();
+      this.state.constructionDuration =
+        this.type() === UnitType.BunkerMissileSite &&
+        this._createdAt < this.gameView.ticks()
+          ? 50
+          : this.gameView.config().unitInfo(this.type()).constructionDuration;
     } else if (!this.state.underConstruction) {
       this.state.constructionStartTick = null;
     }

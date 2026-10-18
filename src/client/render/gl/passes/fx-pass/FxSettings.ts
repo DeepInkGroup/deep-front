@@ -4,6 +4,8 @@
  */
 
 import {
+  UT_STEALTH_MISSILE,
+  UT_HYPERSONIC_MISSILE,
   UT_ATOM_BOMB,
   UT_HYDROGEN_BOMB,
   UT_MIRV_WARHEAD,
@@ -19,6 +21,8 @@ export function nukeExplosionRadius(
   unitType: string,
 ): number | undefined {
   switch (unitType) {
+    case UT_STEALTH_MISSILE:
+    case UT_HYPERSONIC_MISSILE:
     case UT_ATOM_BOMB:
       return fx.nukeRadiusAtom;
     case UT_HYDROGEN_BOMB:
