@@ -176,6 +176,9 @@ export class UnitDisplay extends LitElement implements Controller {
 
     return html`
       <div class="border-t border-white/10 p-0.5 w-full">
+        <div class="text-right text-[9px] leading-none text-gray-500">
+          S = hold Shift + number
+        </div>
         <div class="flex flex-wrap justify-center gap-0.5 w-full">
           ${this.renderUnitItem(
             cityIcon,
@@ -329,10 +332,16 @@ export class UnitDisplay extends LitElement implements Controller {
           : (custom?.value ?? custom?.key)) ?? shortcut.code;
       if (hotkey === "Null") hotkey = "";
     }
-    const displayHotkey = hotkey
-      .replace("Digit", "")
-      .replace("Key", "")
+    const shiftedHotkey = /^Shift\+(?:Digit|Key)?(.+)$/i.exec(hotkey);
+    const displayHotkey = shiftedHotkey
+      ? `S${shiftedHotkey[1].toUpperCase()}`
+      : hotkey.replace("Digit", "").replace("Key", "").toUpperCase();
+    const shortcutKey = shiftedHotkey?.[1]
+      .replace(/^Digit|^Key/, "")
       .toUpperCase();
+    const shortcutInstruction = shortcutKey
+      ? `Hold Shift and press ${shortcutKey}`
+      : "";
 
     return html`
       <div
@@ -353,7 +362,7 @@ export class UnitDisplay extends LitElement implements Controller {
               >
                 <div class="font-bold text-sm mb-1">
                   ${translateText("unit_type." + structureKey)}${displayHotkey
-                    ? ` [${displayHotkey}]`
+                    ? ` [${displayHotkey}${shortcutInstruction ? ` · Shift + ${shortcutKey}` : ""}]`
                     : ""}
                 </div>
                 <div class="p-2">
@@ -377,7 +386,8 @@ export class UnitDisplay extends LitElement implements Controller {
           : null}
         <button
           type="button"
-          aria-label=${translateText("unit_type." + structureKey)}
+          aria-label=${`${translateText("unit_type." + structureKey)}${shortcutInstruction ? `, ${shortcutInstruction}` : ""}`}
+          title=${shortcutInstruction}
           ?disabled=${!this.canBuild(unitType)}
           class="${this.canBuild(unitType)
             ? ""

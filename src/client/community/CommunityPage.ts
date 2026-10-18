@@ -32,6 +32,7 @@ export class CommunityPage extends LitElement {
   @state() private templateKind = "islands";
   @state() private seed = 42;
   @state() private zoom = 1;
+  @state() private mapFullscreen = false;
   @state() private grid = false;
   @state() private fill = false;
   @state() private tool = 1;
@@ -63,10 +64,16 @@ export class CommunityPage extends LitElement {
     if ((event as CustomEvent).detail === "page-community")
       void this.loadDashboard();
   };
+  private onFullscreenChange = () => {
+    this.mapFullscreen =
+      document.fullscreenElement ===
+      this.querySelector<HTMLElement>(".terrain-panel");
+  };
   connectedCallback() {
     super.connectedCallback();
     window.addEventListener("community-session", this.onSession);
     window.addEventListener("showPage", this.onPage);
+    document.addEventListener("fullscreenchange", this.onFullscreenChange);
     this.dashboardTimer = setInterval(() => {
       if (
         this.user &&
@@ -82,6 +89,7 @@ export class CommunityPage extends LitElement {
     super.disconnectedCallback();
     window.removeEventListener("community-session", this.onSession);
     window.removeEventListener("showPage", this.onPage);
+    document.removeEventListener("fullscreenchange", this.onFullscreenChange);
     clearInterval(this.dashboardTimer);
   }
   updated() {
@@ -196,6 +204,16 @@ export class CommunityPage extends LitElement {
     });
     this.draft = { ...this.draft, ...next };
     this.saveDraft();
+  }
+  private async toggleMapFullscreen() {
+    const panel = this.querySelector<HTMLElement>(".terrain-panel");
+    if (!panel) return;
+    try {
+      if (document.fullscreenElement === panel) await document.exitFullscreen();
+      else await panel.requestFullscreen();
+    } catch {
+      this.error = "Full screen mode is unavailable in this browser.";
+    }
   }
   private draw() {
     const canvas = this.querySelector<HTMLCanvasElement>(".terrain-editor");
@@ -723,7 +741,16 @@ export class CommunityPage extends LitElement {
                   (this.grid = (e.target as HTMLInputElement).checked)}
               />
               Grid</label
+            ><button
+              type="button"
+              class="community-button small fullscreen-map-button"
+              aria-label=${this.mapFullscreen
+                ? "Exit full screen map"
+                : "Show map full screen"}
+              @click=${() => void this.toggleMapFullscreen()}
             >
+              ${this.mapFullscreen ? "Exit full screen" : "Full screen map"}
+            </button>
           </div>
           ${this.tool === 4
             ? html`<label
@@ -742,7 +769,11 @@ export class CommunityPage extends LitElement {
           >
             <canvas
               class="terrain-editor"
-              style=${`width:${this.zoom * 100}%;max-width:none`}
+              style=${this.mapFullscreen
+                ? ""
+                : this.zoom === 1
+                  ? "width:min(100%, calc(min(78vh, 900px) * 4 / 3));max-width:none"
+                  : `width:${this.zoom * 100}%;max-width:none`}
               width="768"
               height="576"
               aria-label="Map terrain editor. Drag to paint terrain."
@@ -772,67 +803,70 @@ export class CommunityPage extends LitElement {
               Redo
             </button>
           </div>
-          <div class="template-actions">
-            <span>World ideas</span>${WORLD_TEMPLATES.map(
-              (preset) =>
-                html`<button
+          <details class="world-tools">
+            <summary>World templates and generation</summary>
+            <div class="template-actions">
+              <span>World ideas</span>${WORLD_TEMPLATES.map(
+                (preset) =>
+                  html`<button
+                    type="button"
+                    class="community-button small"
+                    aria-pressed=${this.templateKind === preset.id}
+                    @click=${() => {
+                      this.templateKind = preset.id;
+                      this.newTerrain(preset.id);
+                    }}
+                  >
+                    ${preset.name}
+                  </button>`,
+              )}
+            </div>
+            <div class="world-idea">
+              <p>
+                ${WORLD_TEMPLATES.find((p) => p.id === this.templateKind)?.idea}
+              </p>
+              <div class="seed-controls">
+                <label
+                  >World seed<input
+                    aria-label="World seed"
+                    type="number"
+                    min="1"
+                    max="999999"
+                    .value=${String(this.seed)}
+                    @change=${(e: Event) =>
+                      (this.seed = Math.max(
+                        1,
+                        Math.min(
+                          999999,
+                          Math.floor(
+                            Number((e.target as HTMLInputElement).value) || 42,
+                          ),
+                        ),
+                      ))} /></label
+                ><button
                   type="button"
                   class="community-button small"
-                  aria-pressed=${this.templateKind === preset.id}
+                  @click=${() => this.newTerrain(this.templateKind)}
+                >
+                  Generate world</button
+                ><button
+                  type="button"
+                  class="community-button small"
                   @click=${() => {
-                    this.templateKind = preset.id;
-                    this.newTerrain(preset.id);
+                    this.seed = 1 + Math.floor(Math.random() * 999999);
+                    this.newTerrain(this.templateKind);
                   }}
                 >
-                  ${preset.name}
-                </button>`,
-            )}
-          </div>
-          <div class="world-idea">
-            <p>
-              ${WORLD_TEMPLATES.find((p) => p.id === this.templateKind)?.idea}
-            </p>
-            <div class="seed-controls">
-              <label
-                >World seed<input
-                  aria-label="World seed"
-                  type="number"
-                  min="1"
-                  max="999999"
-                  .value=${String(this.seed)}
-                  @change=${(e: Event) =>
-                    (this.seed = Math.max(
-                      1,
-                      Math.min(
-                        999999,
-                        Math.floor(
-                          Number((e.target as HTMLInputElement).value) || 42,
-                        ),
-                      ),
-                    ))} /></label
-              ><button
-                type="button"
-                class="community-button small"
-                @click=${() => this.newTerrain(this.templateKind)}
-              >
-                Generate world</button
-              ><button
-                type="button"
-                class="community-button small"
-                @click=${() => {
-                  this.seed = 1 + Math.floor(Math.random() * 999999);
-                  this.newTerrain(this.templateKind);
-                }}
-              >
-                Surprise me
-              </button>
+                  Surprise me
+                </button>
+              </div>
+              <p class="community-muted">
+                Generating a world replaces terrain and spawns. Undo restores
+                them. Use River / canal for narrow waterways, Smooth to soften
+                painted edges, and zoom to work on details.
+              </p>
             </div>
-            <p class="community-muted">
-              Generating a world replaces terrain and spawns. Undo restores
-              them. Use River / canal for narrow waterways, Smooth to soften
-              painted edges, and zoom to work on details.
-            </p>
-          </div>
+          </details>
           ${this.draft.nations.length
             ? html`<ul class="nation-list">
                 ${this.draft.nations.map(
@@ -1289,7 +1323,11 @@ export class CommunityPage extends LitElement {
       </section>`;
   }
   render() {
-    return html`<div class="community-shell">
+    return html`<div
+      class=${this.user?.role === "player"
+        ? "community-shell map-editor-shell"
+        : "community-shell"}
+    >
       ${this.user
         ? html`<header class="community-heading">
             <div>
