@@ -18,7 +18,13 @@ export const MapDraftSchema = z
   .object({
     name: z.string().trim().min(3).max(60),
     description: z.string().trim().max(600),
-    scale: z.union([z.literal(8), z.literal(12), z.literal(16)]),
+    scale: z.union([
+      z.literal(8),
+      z.literal(12),
+      z.literal(16),
+      z.literal(24),
+      z.literal(32),
+    ]),
     tiles: z
       .array(z.number().int().min(0).max(3))
       .length(MAP_EDITOR_WIDTH * MAP_EDITOR_HEIGHT),

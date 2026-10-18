@@ -17,7 +17,7 @@ import {
   reloadAccountHome,
   signOutCommunity,
 } from "./Community";
-import { WORLD_TEMPLATES, worldTemplate, terrainStats } from "./MapDesign";
+import { blankDraft, terrainStats } from "./MapDesign";
 import { accountDate } from "./ProfilePage";
 
 const COLORS = ["#315a70", "#a9bb7d", "#b6a477", "#d3d0c2"];
@@ -28,15 +28,14 @@ export class CommunityPage extends LitElement {
   @state() private busy = false;
   @state() private message = "";
   @state() private error = "";
-  @state() private draft: MapDraft = worldTemplate();
-  @state() private templateKind = "islands";
-  @state() private seed = 42;
+  @state() private draft: MapDraft = blankDraft();
   @state() private zoom = 1;
   @state() private mapFullscreen = false;
   @state() private grid = false;
   @state() private fill = false;
   @state() private tool = 1;
   @state() private brush = 4;
+  @state() private spawnCount = 8;
   @state() private nationName = "";
   @state() private maps: CommunityMapSummary[] = [];
   @state() private accounts: CommunityAdminUser[] = [];
@@ -171,16 +170,6 @@ export class CommunityPage extends LitElement {
     });
     if (this.undo.length > 30) this.undo.shift();
   }
-  private newTerrain(kind: string) {
-    this.remember();
-    this.draft = {
-      ...worldTemplate(kind, this.seed),
-      name: this.draft.name,
-      description: this.draft.description,
-      scale: this.draft.scale,
-    };
-    this.saveDraft();
-  }
   private undoTerrain() {
     const previous = this.undo.pop();
     if (!previous) return;
@@ -205,6 +194,17 @@ export class CommunityPage extends LitElement {
     this.draft = { ...this.draft, ...next };
     this.saveDraft();
   }
+  private clearMapToWater() {
+    this.remember();
+    this.draft = {
+      ...this.draft,
+      tiles: Array(W * H).fill(0),
+      nations: [],
+    };
+    this.error = "";
+    this.message = "Map cleared to blank water. Use Undo to restore it.";
+    this.saveDraft();
+  }
   private async toggleMapFullscreen() {
     const panel = this.querySelector<HTMLElement>(".terrain-panel");
     if (!panel) return;
@@ -214,6 +214,62 @@ export class CommunityPage extends LitElement {
     } catch {
       this.error = "Full screen mode is unavailable in this browser.";
     }
+  }
+  private randomizeNationSpawns() {
+    const candidates = this.draft.tiles.flatMap((terrain, index) =>
+      terrain === 0 ? [] : [index],
+    );
+    if (candidates.length === 0) {
+      this.error = "Paint some land first, then randomize the nation spawns.";
+      this.message = "";
+      return;
+    }
+
+    const target = Math.min(this.spawnCount, candidates.length);
+    const selected = [
+      candidates[Math.floor(Math.random() * candidates.length)],
+    ];
+    while (selected.length < target) {
+      let best = -1;
+      let bestDistance = -1;
+      let ties = 0;
+      for (const candidate of candidates) {
+        if (selected.includes(candidate)) continue;
+        const x = candidate % W;
+        const y = Math.floor(candidate / W);
+        let nearest = Number.POSITIVE_INFINITY;
+        for (const chosen of selected) {
+          const dx = x - (chosen % W);
+          const dy = y - Math.floor(chosen / W);
+          nearest = Math.min(nearest, dx * dx + dy * dy);
+        }
+        if (nearest > bestDistance) {
+          best = candidate;
+          bestDistance = nearest;
+          ties = 1;
+        } else if (nearest === bestDistance && Math.random() < 1 / ++ties) {
+          best = candidate;
+        }
+      }
+      if (best < 0) break;
+      selected.push(best);
+    }
+
+    this.remember();
+    this.draft = {
+      ...this.draft,
+      nations: selected.map((index, i) => ({
+        x: index % W,
+        y: Math.floor(index / W),
+        name: `Nation ${i + 1}`,
+      })),
+    };
+    this.error = "";
+    this.message =
+      selected.length < this.spawnCount
+        ? `Added ${selected.length} spawns; the map has fewer land cells than requested.`
+        : `Added ${selected.length} random nation spawns.`;
+    this.saveDraft();
   }
   private draw() {
     const canvas = this.querySelector<HTMLCanvasElement>(".terrain-editor");
@@ -277,7 +333,6 @@ export class CommunityPage extends LitElement {
   }
   private paint(x: number, y: number) {
     const radius = this.tool === 6 ? 0.6 : (this.brush - 1) / 2;
-    const source = this.tool === 5 ? [...this.draft.tiles] : this.draft.tiles;
     for (
       let py = Math.max(0, Math.floor(y - radius));
       py <= Math.min(H - 1, Math.ceil(y + radius));
@@ -290,17 +345,7 @@ export class CommunityPage extends LitElement {
       )
         if ((px - x) ** 2 + (py - y) ** 2 <= (radius + 0.5) ** 2) {
           const index = py * W + px;
-          if (this.tool === 5) {
-            const counts = [0, 0, 0, 0];
-            for (let dy = -1; dy <= 1; dy++)
-              for (let dx = -1; dx <= 1; dx++) {
-                const nx = px + dx,
-                  ny = py + dy;
-                if (nx >= 0 && nx < W && ny >= 0 && ny < H)
-                  counts[source[ny * W + nx]]++;
-              }
-            this.draft.tiles[index] = counts.indexOf(Math.max(...counts));
-          } else this.draft.tiles[index] = this.tool === 6 ? 0 : this.tool;
+          this.draft.tiles[index] = this.tool === 6 ? 0 : this.tool;
         }
   }
   private fillTerrain(x: number, y: number) {
@@ -514,7 +559,7 @@ export class CommunityPage extends LitElement {
           <span class="editor-symbol" aria-hidden="true">◈</span>
           <h2>Your world. Everyone’s next campaign.</h2>
           <ol>
-            <li>Draw coastlines, mountains and islands.</li>
+            <li>Shape coastlines, plains, hills and rivers.</li>
             <li>Add nations and publish for review.</li>
             <li>Approved maps join solo and multiplayer.</li>
           </ol>
@@ -621,7 +666,9 @@ export class CommunityPage extends LitElement {
                   scale: Number((e.target as HTMLSelectElement).value) as
                     | 8
                     | 12
-                    | 16,
+                    | 16
+                    | 24
+                    | 32,
                 };
                 this.saveDraft();
               }}
@@ -634,6 +681,12 @@ export class CommunityPage extends LitElement {
               </option>
               <option value="16" ?selected=${this.draft.scale === 16}>
                 Grand · 2048 × 1536
+              </option>
+              <option value="24" ?selected=${this.draft.scale === 24}>
+                Massive · 3072 × 2304
+              </option>
+              <option value="32" ?selected=${this.draft.scale === 32}>
+                Titan · 4096 × 3072
               </option>
             </select></label
           >
@@ -648,7 +701,13 @@ export class CommunityPage extends LitElement {
             >
               Save draft</button
             ><button class="community-button primary" ?disabled=${this.busy}>
-              ${this.busy ? "Submitting…" : "Publish for review"}
+              ${this.busy ? "Submitting…" : "Publish for review"}</button
+            ><button
+              type="button"
+              class="community-button"
+              @click=${() => this.clearMapToWater()}
+            >
+              Start with blank water
             </button>
           </div>
           <p class="community-muted">
@@ -671,15 +730,13 @@ export class CommunityPage extends LitElement {
           <div class="editor-toolbar">
             <div role="group" aria-label="Terrain brush">
               ${[
-                "Water",
-                "Plains",
-                "Hills",
-                "Mountains",
-                "Nation spawn",
-                "Smooth",
-                "River / canal",
+                { name: "Water", type: 0 },
+                { name: "Plains", type: 1 },
+                { name: "Hills", type: 2 },
+                { name: "Nation spawn", type: 4 },
+                { name: "River / canal", type: 6 },
               ].map(
-                (name, type) =>
+                ({ name, type }) =>
                   html`<button
                     type="button"
                     aria-pressed=${this.tool === type}
@@ -687,7 +744,7 @@ export class CommunityPage extends LitElement {
                   >
                     <span
                       class="terrain-swatch"
-                      style=${`background:${COLORS[type] || "#ffe399"}`}
+                      style=${`background:${COLORS[type === 6 ? 0 : type] || "#ffe399"}`}
                     ></span
                     >${name}
                   </button>`,
@@ -752,6 +809,37 @@ export class CommunityPage extends LitElement {
               ${this.mapFullscreen ? "Exit full screen" : "Full screen map"}
             </button>
           </div>
+          <div class="spawn-randomizer">
+            <label
+              >Nation spawns<select
+                aria-label="Number of random nation spawns"
+                .value=${String(this.spawnCount)}
+                @change=${(e: Event) =>
+                  (this.spawnCount = Number(
+                    (e.target as HTMLSelectElement).value,
+                  ))}
+              >
+                ${Array.from({ length: 12 }, (_, i) => (i + 1) * 2).map(
+                  (count) =>
+                    html`<option
+                      value=${count}
+                      ?selected=${this.spawnCount === count}
+                    >
+                      ${count} nations
+                    </option>`,
+                )}
+              </select></label
+            ><button
+              type="button"
+              class="community-button small"
+              @click=${() => this.randomizeNationSpawns()}
+            >
+              Randomize spawns
+            </button>
+            <span class="community-muted"
+              >Replaces current spawns and spreads them across land.</span
+            >
+          </div>
           ${this.tool === 4
             ? html`<label
                 >Nation name<input
@@ -770,10 +858,8 @@ export class CommunityPage extends LitElement {
             <canvas
               class="terrain-editor"
               style=${this.mapFullscreen
-                ? ""
-                : this.zoom === 1
-                  ? "width:min(100%, calc(min(78vh, 900px) * 4 / 3));max-width:none"
-                  : `width:${this.zoom * 100}%;max-width:none`}
+                ? `height:${(this.zoom * this.draft.scale * 100) / 16}%;width:auto;max-width:none`
+                : `width:${(this.zoom * this.draft.scale * 100) / 16}%;max-width:none`}
               width="768"
               height="576"
               aria-label="Map terrain editor. Drag to paint terrain."
@@ -803,70 +889,6 @@ export class CommunityPage extends LitElement {
               Redo
             </button>
           </div>
-          <details class="world-tools">
-            <summary>World templates and generation</summary>
-            <div class="template-actions">
-              <span>World ideas</span>${WORLD_TEMPLATES.map(
-                (preset) =>
-                  html`<button
-                    type="button"
-                    class="community-button small"
-                    aria-pressed=${this.templateKind === preset.id}
-                    @click=${() => {
-                      this.templateKind = preset.id;
-                      this.newTerrain(preset.id);
-                    }}
-                  >
-                    ${preset.name}
-                  </button>`,
-              )}
-            </div>
-            <div class="world-idea">
-              <p>
-                ${WORLD_TEMPLATES.find((p) => p.id === this.templateKind)?.idea}
-              </p>
-              <div class="seed-controls">
-                <label
-                  >World seed<input
-                    aria-label="World seed"
-                    type="number"
-                    min="1"
-                    max="999999"
-                    .value=${String(this.seed)}
-                    @change=${(e: Event) =>
-                      (this.seed = Math.max(
-                        1,
-                        Math.min(
-                          999999,
-                          Math.floor(
-                            Number((e.target as HTMLInputElement).value) || 42,
-                          ),
-                        ),
-                      ))} /></label
-                ><button
-                  type="button"
-                  class="community-button small"
-                  @click=${() => this.newTerrain(this.templateKind)}
-                >
-                  Generate world</button
-                ><button
-                  type="button"
-                  class="community-button small"
-                  @click=${() => {
-                    this.seed = 1 + Math.floor(Math.random() * 999999);
-                    this.newTerrain(this.templateKind);
-                  }}
-                >
-                  Surprise me
-                </button>
-              </div>
-              <p class="community-muted">
-                Generating a world replaces terrain and spawns. Undo restores
-                them. Use River / canal for narrow waterways, Smooth to soften
-                painted edges, and zoom to work on details.
-              </p>
-            </div>
-          </details>
           ${this.draft.nations.length
             ? html`<ul class="nation-list">
                 ${this.draft.nations.map(

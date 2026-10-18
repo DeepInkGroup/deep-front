@@ -37,6 +37,16 @@ export const WORLD_TEMPLATES = [
   },
 ] as const;
 
+export function blankDraft(scale: MapDraft["scale"] = 16): MapDraft {
+  return {
+    name: "",
+    description: "",
+    scale,
+    tiles: Array(W * H).fill(0),
+    nations: [],
+  };
+}
+
 function hash(x: number, y: number, seed: number) {
   let n = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ seed;
   n = Math.imul(n ^ (n >>> 13), 1274126177);

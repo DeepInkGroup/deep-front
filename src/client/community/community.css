@@ -72,14 +72,16 @@ profile-page {
   width: 100%;
   max-height: min(78vh, 900px);
   overflow: auto;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: flex-start;
   border: 1px solid #40574a;
   border-radius: 10px;
   background: #111d1b;
 }
 .terrain-viewport .terrain-editor {
   display: block;
+  flex: 0 0 auto;
+  margin: 0 auto;
   border: 0;
   border-radius: 0;
 }
@@ -560,41 +562,28 @@ profile-page {
   flex: 1 1 auto;
   min-height: 0;
   max-height: none;
-  overflow: hidden;
+  overflow: auto;
+  justify-content: flex-start;
 }
 .terrain-panel:fullscreen .terrain-editor {
   width: auto;
   height: 100%;
-  max-width: 100%;
-  max-height: 100%;
+  max-width: none;
+  max-height: none;
 }
-.terrain-panel:fullscreen .editor-bottom {
-  flex: 0 0 auto;
-  margin-top: 8px;
+.spawn-randomizer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px 14px;
+  margin: 8px 0 14px;
 }
-.terrain-panel:fullscreen .world-tools,
-.terrain-panel:fullscreen .nation-list {
-  display: none;
+.spawn-randomizer label {
+  width: 150px;
+  margin: 0;
 }
-.world-tools {
-  margin-top: 14px;
-  border-top: 1px solid #283b2e;
-  padding-top: 12px;
-}
-.world-tools > summary {
-  width: fit-content;
-  color: #b8cebf;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-}
-.world-tools .template-actions {
-  margin-top: 10px;
-  border-top: 0;
-  padding-top: 0;
-}
-.world-tools .world-idea {
-  margin-bottom: 0;
+.spawn-randomizer > span {
+  align-self: center;
 }
 .editor-bottom,
 .template-actions {
