@@ -37,6 +37,7 @@ const STATION_CAPABLE_TYPES = new Set<UnitType>([
   UnitType.OilFactory,
   UnitType.CopperMine,
   UnitType.LogisticsCenter,
+  UnitType.StraitControlStation,
   UnitType.CustomsOffice,
 ]);
 
@@ -191,6 +192,7 @@ export class SoundEffectController implements Controller {
       case UnitType.OilFactory:
       case UnitType.CopperMine:
       case UnitType.LogisticsCenter:
+      case UnitType.StraitControlStation:
       case UnitType.CustomsOffice:
         if (unit.owner() === myPlayer) this.emit("build-factory");
         break;

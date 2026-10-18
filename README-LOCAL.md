@@ -132,3 +132,6 @@ Based on https://github.com/openfrontio/OpenFrontIO at commit 8989303c1e65b0670c
 See [Bunker Missile Site](docs/BunkerMissileSite.md) for advanced missile costs, upgrades, SAM behavior and bot support. Run `npm run test:bunker` against the local production server to check the real solo and multiplayer controls.
 
 [CIWS Defense and additional shortcuts](docs/CIWSDefense.md) describes guaranteed defense coverage and the capped-building upgrade controls. Verify solo and multiplayer controls with `npm run test:defense`.
+
+[Strait Control Station](docs/StraitControlStation.md) explains valid waterways,
+commercial passage agreements, 1-10% tolls and the Shift+0 shortcut.

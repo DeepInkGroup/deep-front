@@ -122,6 +122,10 @@ const unitOptions: { type: UnitType; translationKey: string }[] = [
   { type: UnitType.Factory, translationKey: "unit_type.factory" },
   { type: UnitType.OilFactory, translationKey: "unit_type.oil_factory" },
   { type: UnitType.CopperMine, translationKey: "unit_type.copper_mine" },
+  {
+    type: UnitType.StraitControlStation,
+    translationKey: "unit_type.strait_control_station",
+  },
   { type: UnitType.CustomsOffice, translationKey: "unit_type.customs_office" },
   {
     type: UnitType.BunkerMissileSite,

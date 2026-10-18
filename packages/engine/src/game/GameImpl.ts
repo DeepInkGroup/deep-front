@@ -1,4 +1,5 @@
 import { GameMap, TileRef } from "@openfront/engine-api/game/GameMap";
+import { onStraitBankChanged } from "./StraitControl";
 import {
   Cell,
   ColoredTeams,
@@ -827,6 +828,7 @@ export class GameImpl implements Game {
     }
     this._territoryVersion++;
     this._map.setOwnerID(tile, owner.smallID());
+    if (previousOwner !== owner) onStraitBankChanged(this, tile);
     owner._tiles.add(tile);
     owner._lastTileChange = this._ticks;
     owner._tileChangeVersion++;
@@ -851,6 +853,7 @@ export class GameImpl implements Game {
 
     this._territoryVersion++;
     this._map.setOwnerID(tile, 0);
+    onStraitBankChanged(this, tile);
     this.updateBorders(tile);
     this.recordTileUpdate(tile);
   }

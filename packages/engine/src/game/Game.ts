@@ -54,6 +54,7 @@ export interface OwnerComp {
 }
 
 export interface UnitParamsMap {
+  [UnitType.StraitControlStation]: Record<string, never>;
   [UnitType.CIWSDefense]: Record<string, never>;
   [UnitType.BunkerMissileSite]: Record<string, never>;
   [UnitType.StealthMissile]: {
@@ -221,6 +222,12 @@ export interface EngineUnitInfo extends UnitInfo {
 }
 
 export interface Unit extends UnitLike {
+  straitState():
+    | import("@openfront/engine-api/game/StraitControl").StraitState
+    | undefined;
+  setStraitState(
+    state: import("@openfront/engine-api/game/StraitControl").StraitState,
+  ): void;
   isUnit(): this is Unit;
 
   // Common properties.

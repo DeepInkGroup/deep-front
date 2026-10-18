@@ -1,3 +1,4 @@
+import "./StraitTollPanel";
 import { EXTRA_BUILD_SHORTCUTS } from "../../BuildShortcuts";
 import { hasBuildOrUpgradeCapacity } from "../../utilities/BuildingLimits";
 import {
@@ -30,6 +31,7 @@ import {
   copperMineIcon,
   logisticsCenterIcon,
   customsOfficeIcon,
+  straitControlStationIcon,
   goldCoinIcon,
   hydrogenBombIcon,
   mirvIcon,
@@ -216,6 +218,13 @@ export class UnitDisplay extends LitElement implements Controller {
             "",
           )}
           ${this.renderUnitItem(
+            straitControlStationIcon,
+            myPlayer.units(UnitType.StraitControlStation).length,
+            UnitType.StraitControlStation,
+            "strait_control_station",
+            "",
+          )}
+          ${this.renderUnitItem(
             customsOfficeIcon,
             this._customsOffices,
             UnitType.CustomsOffice,
@@ -307,6 +316,11 @@ export class UnitDisplay extends LitElement implements Controller {
             this.keybinds["buildMIRV"]?.key ?? "0",
           )}
         </div>
+        <strait-toll-panel
+          .game=${this.game}
+          .eventBus=${this.eventBus}
+          .tick=${this.game.ticks()}
+        ></strait-toll-panel>
       </div>
     `;
   }

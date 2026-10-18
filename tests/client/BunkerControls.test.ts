@@ -31,6 +31,8 @@ describe("Bunker controls and concealed missiles", () => {
       config: () => config,
       myPlayer: () => player,
       inSpawnPhase: () => false,
+      ticks: () => 0,
+      units: () => [],
     } as never;
     display.uiState = { ghostStructure: null } as never;
     display.eventBus = new EventBus();
@@ -142,6 +144,8 @@ describe("Bunker controls and concealed missiles", () => {
       config: () => config,
       myPlayer: () => player,
       inSpawnPhase: () => false,
+      ticks: () => 0,
+      units: () => [],
     } as never;
     display.uiState = { ghostStructure: null } as never;
     display.eventBus = new EventBus();

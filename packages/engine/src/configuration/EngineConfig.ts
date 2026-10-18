@@ -2,6 +2,7 @@ import { CIWS_COSTS } from "@openfront/engine-api/game/AdvancedDefense";
 import { OIL_FACTORY_COSTS } from "@openfront/engine-api/game/OilFactory";
 import { COPPER_MINE_COSTS } from "@openfront/engine-api/game/CopperMine";
 import { LOGISTICS_CENTER_COST } from "@openfront/engine-api/game/LogisticsCenter";
+import { STRAIT_COSTS } from "@openfront/engine-api/game/StraitControl";
 import { CUSTOMS_OFFICE_COST } from "@openfront/engine-api/game/CustomsOffice";
 import {
   Difficulty,
@@ -400,6 +401,13 @@ export class EngineConfig extends Config {
           () => Number(LOGISTICS_CENTER_COST),
           UnitType.LogisticsCenter,
         );
+      case UnitType.StraitControlStation:
+        return (_game, player) =>
+          player.type() === PlayerType.Human && this.hasInfiniteGoldFor(player)
+            ? 0n
+            : STRAIT_COSTS[
+                Math.min(player.units(UnitType.StraitControlStation).length, 1)
+              ];
       case UnitType.CustomsOffice:
         return this.costWrapper(
           () => Number(CUSTOMS_OFFICE_COST),

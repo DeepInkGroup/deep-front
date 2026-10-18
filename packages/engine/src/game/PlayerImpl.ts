@@ -89,6 +89,7 @@ import {
   canBuildTransportShip,
 } from "./TransportShipUtils";
 import { UnitImpl } from "./UnitImpl";
+import { straitAt } from "./StraitControl";
 import { customsPartnerAt } from "./CustomsOffice";
 
 // Rot re-stamps every second, so a little slack keeps the cue from strobing.
@@ -1414,6 +1415,14 @@ export class PlayerImpl implements Player {
       throw new Error(`Maximum number of ${type} buildings reached`);
     }
 
+    if (
+      type === UnitType.StraitControlStation &&
+      this.canSpawnUnitType(type, spawnTile, null) === false
+    )
+      throw new Error(
+        "Strait Control Stations require a narrow waterway with both banks controlled by you.",
+      );
+
     if (type === UnitType.CustomsOffice) {
       const partner = customsPartnerAt(this.mg, this, spawnTile);
       if (!partner || this.canSpawnUnitType(type, spawnTile, null) === false)
@@ -1653,6 +1662,12 @@ export class PlayerImpl implements Player {
     if (maxCount !== undefined && this.units(unitType).length >= maxCount)
       return false;
     switch (unitType) {
+      case UnitType.StraitControlStation:
+        return (
+          validTiles ?? this.validStructureSpawnTiles(targetTile)
+        ).includes(targetTile) && straitAt(this.mg, this, targetTile)
+          ? targetTile
+          : false;
       case UnitType.CustomsOffice:
         return customsPartnerAt(this.mg, this, targetTile) &&
           (validTiles ?? this.validStructureSpawnTiles(targetTile)).includes(

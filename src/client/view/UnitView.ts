@@ -37,6 +37,10 @@ export class UnitView implements UnitLike {
   private _warshipState?: WarshipState;
   private _transportShipState?: TransportShipState;
   private _nukeState?: NukeState;
+  private _straitState?: import("@openfront/engine-api/game/StraitControl").StraitState;
+  straitState() {
+    return this._straitState;
+  }
   private _createdAt: Tick;
 
   constructor(
@@ -47,6 +51,7 @@ export class UnitView implements UnitLike {
     this._warshipState = data.warshipState;
     this._transportShipState = data.transportShipState;
     this._nukeState = data.nukeState;
+    this._straitState = data.straitState;
     this.lastPos.push(data.pos);
     this._createdAt = this.gameView.ticks();
     if (this.state.underConstruction) {
@@ -84,6 +89,7 @@ export class UnitView implements UnitLike {
     this._warshipState = data.warshipState;
     this._transportShipState = data.transportShipState;
     this._nukeState = data.nukeState;
+    this._straitState = data.straitState;
     // constructionStartTick: set on transition into underConstruction.
     if (this.state.underConstruction && !wasUnderConstruction) {
       this.state.constructionStartTick = this.gameView.ticks();

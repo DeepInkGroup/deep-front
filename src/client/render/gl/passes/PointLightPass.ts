@@ -19,6 +19,7 @@ import {
   UT_CUSTOMS_OFFICE,
   UT_BUNKER_MISSILE_SITE,
   UT_CIWS_DEFENSE,
+  UT_STRAIT_CONTROL_STATION,
   UT_HYDROGEN_BOMB,
   UT_MIRV,
   UT_MIRV_WARHEAD,
@@ -58,6 +59,13 @@ const LIGHT_CONFIGS: Record<string, LightConfig> = {
   [UT_COPPER_MINE]: { r: 1.0, g: 0.55, b: 0.2, radius: 18, intensity: 1.2 },
   [UT_DEFENSE_POST]: { r: 0.8, g: 0.85, b: 1.0, radius: 18, intensity: 1.2 },
   [UT_SAM_LAUNCHER]: { r: 0.8, g: 0.85, b: 1.0, radius: 18, intensity: 1.2 },
+  [UT_STRAIT_CONTROL_STATION]: {
+    r: 1,
+    g: 0.8,
+    b: 0.3,
+    radius: 18,
+    intensity: 1.2,
+  },
   [UT_CIWS_DEFENSE]: { r: 0.3, g: 1, b: 1, radius: 18, intensity: 1.2 },
   [UT_BUNKER_MISSILE_SITE]: {
     r: 0.8,

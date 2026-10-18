@@ -1,4 +1,10 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
+import {
+  StraitState,
+  StraitStateSchema,
+  copyStraitState,
+} from "@openfront/engine-api/game/StraitControl";
+import { invalidateStraitBanks, straitAt } from "./StraitControl";
 import { customsPartner, hasCustomsOffice } from "./CustomsOffice";
 import {
   MessageType,
@@ -39,6 +45,7 @@ import { GameImpl } from "./GameImpl";
 import { PlayerImpl } from "./PlayerImpl";
 
 export class UnitImpl implements Unit {
+  private _straitState: StraitState | undefined;
   private _active = true;
   private _targetTile: TileRef | undefined;
   private _targetPlayer: Player | TerraNullius | undefined;
@@ -75,6 +82,20 @@ export class UnitImpl implements Unit {
     params: AllUnitParams = {},
   ) {
     this._lastTile = _tile;
+    if (_type === UnitType.StraitControlStation) {
+      invalidateStraitBanks(mg);
+      const geometry = straitAt(mg, _owner, _tile);
+      if (!geometry) throw new Error("Invalid strait placement");
+      this._straitState = {
+        ...geometry,
+        enabled: false,
+        rate: 10,
+        exemptAllies: false,
+        revision: 0,
+        accepted: [],
+        rejected: [],
+      };
+    }
     if (_type === UnitType.StealthMissile) this._targetable = false;
     this._health = toInt(this.mg.unitInfo(_type).maxHealth ?? 1);
     this._targetTile =
@@ -135,6 +156,7 @@ export class UnitImpl implements Unit {
       case UnitType.OilFactory:
       case UnitType.CopperMine:
       case UnitType.LogisticsCenter:
+      case UnitType.StraitControlStation:
       case UnitType.CustomsOffice:
         this.mg.stats().unitBuild(_owner, this._type);
     }
@@ -173,6 +195,9 @@ export class UnitImpl implements Unit {
     const update: UnitUpdate = {
       type: GameUpdateType.Unit,
       unitType: this._type,
+      straitState: this._straitState
+        ? copyStraitState(this._straitState)
+        : undefined,
       id: this._id,
       troops: this._troops,
       ownerID: this._owner.smallID(),
@@ -256,6 +281,14 @@ export class UnitImpl implements Unit {
   }
 
   setOwner(newOwner: PlayerImpl): void {
+    if (this._straitState && newOwner !== this._owner)
+      this._straitState = {
+        ...this._straitState,
+        enabled: false,
+        revision: this._straitState.revision + 1,
+        accepted: [],
+        rejected: [],
+      };
     if (this._type === UnitType.CustomsOffice && newOwner !== this._owner) {
       const oldPartner = customsPartner(this);
       const partner = oldPartner === newOwner ? this._owner : oldPartner;
@@ -289,6 +322,7 @@ export class UnitImpl implements Unit {
       case UnitType.OilFactory:
       case UnitType.CopperMine:
       case UnitType.LogisticsCenter:
+      case UnitType.StraitControlStation:
       case UnitType.CustomsOffice:
         this.mg.stats().unitCapture(newOwner, this._type);
         this.mg.stats().unitLose(this._owner, this._type);
@@ -428,6 +462,7 @@ export class UnitImpl implements Unit {
         case UnitType.OilFactory:
         case UnitType.CopperMine:
         case UnitType.LogisticsCenter:
+        case UnitType.StraitControlStation:
         case UnitType.CustomsOffice:
           this.mg.stats().unitDestroy(destroyer, this._type);
           this.mg.stats().unitLose(this.owner(), this._type);
@@ -590,7 +625,13 @@ export class UnitImpl implements Unit {
   }
 
   hash(): number {
-    return this.tile() + simpleHash(this.type()) * this._id;
+    const toll = this._straitState;
+    const policyHash = toll
+      ? simpleHash(
+          `${toll.revision}/${toll.enabled}/${toll.rate}/${toll.exemptAllies}/${toll.accepted.join(",")}/${toll.rejected.join(",")}`,
+        )
+      : 0;
+    return this.tile() + simpleHash(this.type()) * this._id + policyHash;
   }
 
   toString(): string {
@@ -612,6 +653,17 @@ export class UnitImpl implements Unit {
 
   missileTimerQueue(): number[] {
     return this._missileTimerQueue;
+  }
+
+  straitState(): StraitState | undefined {
+    return this._straitState;
+  }
+
+  setStraitState(state: StraitState): void {
+    if (this._type !== UnitType.StraitControlStation) return;
+    invalidateStraitBanks(this.mg);
+    this._straitState = copyStraitState(state);
+    this.touch();
   }
 
   samLauncherState(): SamLauncherState | undefined {
@@ -910,6 +962,9 @@ export class UnitImpl implements Unit {
       loaded: this._loaded ?? null,
       trainType: this._trainType ?? null,
       deletionAt: this._deletionAt,
+      straitState: this._straitState
+        ? copyStraitState(this._straitState)
+        : null,
       samLauncherState: this._samLauncherState
         ? {
             upgradeStartTick: this._samLauncherState.upgradeStartTick,
@@ -965,6 +1020,9 @@ export class UnitImpl implements Unit {
     this._loaded = s.loaded ?? undefined;
     this._trainType = s.trainType ?? undefined;
     this._deletionAt = s.deletionAt;
+    this._straitState = s.straitState
+      ? copyStraitState(s.straitState)
+      : undefined;
     this._samLauncherState = s.samLauncherState
       ? { ...s.samLauncherState }
       : undefined;
@@ -973,7 +1031,8 @@ export class UnitImpl implements Unit {
 
 export const UnitSnapshot = snapshotType({
   name: "Unit",
-  version: 1,
+  version: 2,
+  migrations: { 1: (s) => ({ ...s, straitState: null }) },
   schema: z.object({
     id: zInt(),
     type: UnitTypeSchema,
@@ -1022,6 +1081,7 @@ export const UnitSnapshot = snapshotType({
     loaded: z.boolean().nullable(),
     trainType: z.enum(TrainType).nullable(),
     deletionAt: zInt().nullable(),
+    straitState: StraitStateSchema.nullable().optional(),
     samLauncherState: z
       .object({
         upgradeStartTick: zInt().optional(),

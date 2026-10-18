@@ -185,7 +185,10 @@ export interface DonateEventUpdate {
   amount: bigint;
 }
 
+import type { StraitState } from "./StraitControl";
+
 export interface UnitUpdate {
+  straitState?: StraitState;
   type: GameUpdateType.Unit;
   unitType: UnitType;
   troops: number;

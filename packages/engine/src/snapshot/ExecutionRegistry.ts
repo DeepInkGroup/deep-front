@@ -1,3 +1,4 @@
+import { StraitControlExecutionSnapshot } from "../execution/StraitControlExecution";
 import { BunkerAIExecutionSnapshot } from "../execution/BunkerAIExecution";
 import { BunkerUpgradeExecutionSnapshot } from "../execution/BunkerUpgradeExecution";
 // Every entry is `<ClassName>Snapshot`, exported next to its class.
@@ -58,6 +59,7 @@ import type { ExecutionSnapshotType } from "./ExecutionSnapshot";
  * replaced it.
  */
 export const EXECUTION_SNAPSHOT_TYPES = [
+  StraitControlExecutionSnapshot,
   AllianceExtensionExecutionSnapshot,
   AllianceRejectExecutionSnapshot,
   AllianceRequestExecutionSnapshot,

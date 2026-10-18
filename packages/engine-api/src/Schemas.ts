@@ -23,6 +23,7 @@ export type GameID = string;
 export type ClientID = string;
 
 export type Intent =
+  | StraitTollIntent
   | SpawnIntent
   | AttackIntent
   | CancelAttackIntent
@@ -556,6 +557,17 @@ export const ToggleGameStartTimerIntentSchema = z.object({
   type: z.literal("toggle_game_start_timer"),
 });
 
+export const StraitTollIntentSchema = z.object({
+  type: z.literal("strait_toll"),
+  stationId: zb.uint(),
+  revision: zb.uint(),
+  action: z.enum(["configure", "accept", "reject"]),
+  rate: zb.uint({ min: 1, max: 10 }).optional(),
+  enabled: z.boolean().optional(),
+  exemptAllies: z.boolean().optional(),
+});
+export type StraitTollIntent = z.infer<typeof StraitTollIntentSchema>;
+
 export const IntentSchema = z.discriminatedUnion("type", [
   AttackIntentSchema,
   CancelAttackIntentSchema,
@@ -582,6 +594,7 @@ export const IntentSchema = z.discriminatedUnion("type", [
   TogglePauseIntentSchema,
   UpdateGameConfigIntentSchema,
   ToggleGameStartTimerIntentSchema,
+  StraitTollIntentSchema,
 ]);
 
 // StampedIntent = Intent with server-stamped clientID (used in turns and execution)

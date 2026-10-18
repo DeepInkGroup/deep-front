@@ -2,6 +2,12 @@ import { UnitType } from "@openfront/engine-api/game/GameTypes";
 
 export const EXTRA_BUILD_SHORTCUTS = [
   {
+    key: "buildStraitControlStation",
+    type: UnitType.StraitControlStation,
+    code: "Shift+Digit0",
+    name: "strait_control_station",
+  },
+  {
     key: "buildOilFactory",
     type: UnitType.OilFactory,
     code: "Shift+Digit1",

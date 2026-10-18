@@ -205,7 +205,8 @@
       "bunker_missile_site": "Launches advanced missiles. 50s build; 5s per upgrade.",
       "stealth_missile": "Hidden until the target border. Half atom blast area. Requires a bunker.",
       "hypersonic_missile": "Very fast. Only the target country?s SAMs can intercept. Requires a bunker.",
-      "ciws_defense": "Guaranteed missile defense in range. SAM reaction speed. Max L5."
+      "ciws_defense": "Guaranteed missile defense in range. SAM reaction speed. Max L5.",
+      "strait_control_station": "Collect 1-10% passage tolls. Own both banks of a narrow waterway. 90s build. Max 2, L1."
     },
     "not_enough_money": "Not enough money",
     "upgrade_amount": "x{amount}",
@@ -913,7 +914,9 @@
     "wants_to_renew_alliance": "{name} wants to renew your alliance",
     "stealth_missile_inbound": "Stealth Missile detected at your border!",
     "hypersonic_missile_inbound": "Hypersonic Missile inbound!",
-    "advanced_missile_detonated": "Missile strike by {name}!"
+    "advanced_missile_detonated": "Missile strike by {name}!",
+    "strait_toll_request": "{name} requests a {rate}% strait toll. Open Strait tolls to accept or reject passage.",
+    "strait_toll_cancelled": "Strait toll cancelled: control or waterway conditions changed."
   },
   "featured_stream": {
     "expand": "Expand",
@@ -2531,7 +2534,8 @@
     "bunker_missile_site": "Bunker Missile Site",
     "stealth_missile": "Stealth Missile",
     "hypersonic_missile": "Hypersonic Missile",
-    "ciws_defense": "CIWS Defense"
+    "ciws_defense": "CIWS Defense",
+    "strait_control_station": "Strait Control Station"
   },
   "update_available": {
     "desktop": "A new version of OpenFront is available. It will download in the background; reload from the update bar once it is ready.",

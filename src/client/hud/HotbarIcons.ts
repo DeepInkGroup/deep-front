@@ -8,6 +8,9 @@ export const copperMineIcon = assetUrl("images/CopperMineIconWhite.svg");
 export const logisticsCenterIcon = assetUrl(
   "images/LogisticsCenterIconWhite.svg",
 );
+export const straitControlStationIcon = assetUrl(
+  "images/StraitControlStationIconWhite.svg",
+);
 export const customsOfficeIcon = assetUrl("images/CustomsOfficeIconWhite.svg");
 export const goldCoinIcon = assetUrl("images/GoldCoinIcon.svg");
 export const mirvIcon = assetUrl("images/MIRVIcon.svg");

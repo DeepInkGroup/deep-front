@@ -36,6 +36,9 @@ const ciwsDefenseIcon = assetUrl("images/CIWSDefenseIconWhite.svg");
 const bunkerMissileSiteIcon = assetUrl("images/BunkerMissileSiteIconWhite.svg");
 const stealthMissileIcon = assetUrl("images/StealthMissileIconWhite.svg");
 const hypersonicMissileIcon = assetUrl("images/HypersonicMissileIconWhite.svg");
+const straitControlStationIcon = assetUrl(
+  "images/StraitControlStationIconWhite.svg",
+);
 const customsOfficeIcon = assetUrl("images/CustomsOfficeIconWhite.svg");
 const goldCoinIcon = assetUrl("images/GoldCoinIcon.svg");
 const mirvIcon = assetUrl("images/MIRVIcon.svg");
@@ -173,6 +176,13 @@ export const buildTable: BuildItemDisplay[][] = [
       icon: logisticsCenterIcon,
       description: "build_menu.desc.logistics_center",
       key: "unit_type.logistics_center",
+      countable: true,
+    },
+    {
+      unitType: UnitType.StraitControlStation,
+      icon: straitControlStationIcon,
+      description: "build_menu.desc.strait_control_station",
+      key: "unit_type.strait_control_station",
       countable: true,
     },
     {

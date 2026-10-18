@@ -1,3 +1,5 @@
+import { activeStraits } from "../game/StraitControl";
+import { tradeRouteAvailable } from "../game/StraitTradeRoute";
 import { RailHubs, UnitType } from "@openfront/engine-api/game/GameTypes";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
 import {
@@ -68,6 +70,16 @@ export class PortExecution implements Execution {
     }
 
     const port = this.random.randElement(ports);
+    if (
+      !tradeRouteAvailable(
+        this.mg,
+        this.port.owner(),
+        this.port.tile(),
+        port.tile(),
+        activeStraits(this.mg),
+      )
+    )
+      return;
     this.mg.addExecution(
       new TradeShipExecution(this.port.owner(), this.port, port),
     );

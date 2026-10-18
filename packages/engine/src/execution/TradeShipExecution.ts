@@ -1,3 +1,9 @@
+import { activeStraits } from "../game/StraitControl";
+import {
+  newTollVoyage,
+  TollVoyageSchema,
+  tradePassageNext,
+} from "../game/StraitTradeRoute";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { MessageType, UnitType } from "@openfront/engine-api/game/GameTypes";
 import { renderNumber } from "@openfront/engine-lib/Format";
@@ -25,6 +31,7 @@ import type {
 } from "../snapshot/SnapshotContext";
 
 export class TradeShipExecution implements Execution {
+  private tollVoyage = newTollVoyage();
   private active = true;
   private mg: Game;
   private tradeShip: Unit | undefined;
@@ -78,6 +85,8 @@ export class TradeShipExecution implements Execution {
     if (this.wasCaptured !== true && this.origOwner !== tradeShipOwner) {
       // Store as variable in case ship is recaptured by previous owner
       this.wasCaptured = true;
+      this.pathFinder.invalidate();
+      this.motionPlanDst = null;
       this.mg.displayMessage(
         "events_display.trade_ship_captured",
         MessageType.UNIT_DESTROYED,
@@ -141,14 +150,34 @@ export class TradeShipExecution implements Execution {
     }
 
     const dst = this._dstPort.tile();
-    const result = this.pathFinder.next(curTile, dst);
+    const stations = activeStraits(this.mg);
+    const usingTolls = stations.length > 0 || this.tollVoyage.cargo !== null;
+    const oldSignature = this.tollVoyage.signature;
+    const result = usingTolls
+      ? tradePassageNext(
+          this.mg,
+          this.wasCaptured ? tradeShipOwner : this.origOwner,
+          this.tradeShip,
+          dst,
+          this.pathFinder,
+          stations,
+          this.tollVoyage,
+          this.tilesTraveled,
+        )
+      : this.pathFinder.next(curTile, dst);
+    if (oldSignature !== this.tollVoyage.signature) this.motionPlanDst = null;
 
     switch (result.status) {
       case PathStatus.NEXT:
         if (dst !== this.motionPlanDst) {
           this.motionPlanId++;
           const from = result.node;
-          const path = this.pathFinder.pathForTraversal(from, dst);
+          const path = usingTolls
+            ? [
+                from,
+                ...(this.tollVoyage.route?.slice(this.tollVoyage.index) ?? []),
+              ]
+            : this.pathFinder.pathForTraversal(from, dst);
 
           this.mg.recordMotionPlan({
             kind: "grid",
@@ -171,6 +200,21 @@ export class TradeShipExecution implements Execution {
         this.complete();
         return;
       case PathStatus.NOT_FOUND:
+        if (usingTolls) {
+          if (this.motionPlanDst !== curTile) {
+            this.motionPlanId++;
+            this.mg.recordMotionPlan({
+              kind: "grid",
+              unitId: this.tradeShip.id(),
+              planId: this.motionPlanId,
+              startTick: ticks + 1,
+              ticksPerStep: 1,
+              path: [curTile],
+            });
+            this.motionPlanDst = curTile;
+          }
+          return;
+        }
         console.warn("captured trade ship cannot find route");
         if (this.tradeShip.isActive()) {
           this.tradeShip.delete(false);
@@ -183,9 +227,11 @@ export class TradeShipExecution implements Execution {
   private complete() {
     this.active = false;
     this.tradeShip!.delete(false);
-    const gold = this.mg
-      .config()
-      .tradeShipGold(this.tilesTraveled, this.tradeShip!.owner());
+    const gold =
+      this.tollVoyage.cargo ??
+      this.mg
+        .config()
+        .tradeShipGold(this.tilesTraveled, this.tradeShip!.owner());
 
     if (this.wasCaptured && this.tradeShip!.owner() === this.origOwner) {
       // Retaken by its original owner: the payout stands, but nobody pirated it.
@@ -236,6 +282,7 @@ export class TradeShipExecution implements Execution {
 
   snapshot(w: SnapshotWriter): ExecRecord {
     return TradeShipExecutionSnapshot.write({
+      tollVoyage: this.tollVoyage,
       active: this.active,
       initialized: this.mg !== undefined,
       tradeShip: this.tradeShip === undefined ? null : w.unit(this.tradeShip),
@@ -254,6 +301,7 @@ export class TradeShipExecution implements Execution {
   }
 
   restoreSnapshot(s: TradeShipExecutionState, r: SnapshotReader): void {
+    this.tollVoyage = s.tollVoyage ?? newTollVoyage();
     this.active = s.active;
     if (s.initialized) this.mg = r.game;
     this.tradeShip = s.tradeShip === null ? undefined : r.unit(s.tradeShip);
@@ -271,6 +319,7 @@ export class TradeShipExecution implements Execution {
 }
 
 const TradeShipExecutionStateSchema = z.object({
+  tollVoyage: TollVoyageSchema.optional(),
   active: z.boolean(),
   initialized: z.boolean(),
   tradeShip: zRef().nullable(),
@@ -288,7 +337,8 @@ type TradeShipExecutionState = z.infer<typeof TradeShipExecutionStateSchema>;
 
 export const TradeShipExecutionSnapshot = execSnapshotType({
   name: "TradeShip",
-  version: 1,
+  version: 2,
+  migrations: { 1: (s) => ({ ...s, tollVoyage: newTollVoyage() }) },
   schema: TradeShipExecutionStateSchema,
   cls: () => TradeShipExecution,
 });

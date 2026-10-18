@@ -14,6 +14,7 @@ import type {
   SnapshotReader,
   SnapshotWriter,
 } from "../snapshot/SnapshotContext";
+import { StraitControlExecution } from "./StraitControlExecution";
 import { CityExecution } from "./CityExecution";
 import { DefensePostExecution } from "./DefensePostExecution";
 import { FactoryExecution } from "./FactoryExecution";
@@ -91,7 +92,8 @@ export class ConstructionExecution implements Execution {
         // established countdown of older structures for existing replays.
         this.ticksUntilComplete =
           duration -
-          (this.constructionType === UnitType.LogisticsCenter ||
+          (this.constructionType === UnitType.StraitControlStation ||
+          this.constructionType === UnitType.LogisticsCenter ||
           this.constructionType === UnitType.CustomsOffice ||
           this.constructionType === UnitType.BunkerMissileSite
             ? 1
@@ -128,6 +130,11 @@ export class ConstructionExecution implements Execution {
     }
     const player = this.player;
     switch (this.constructionType) {
+      case UnitType.StraitControlStation:
+        this.mg.addExecution(
+          new StraitControlExecution(player, this.structure!.id()),
+        );
+        break;
       case UnitType.StealthMissile:
       case UnitType.HypersonicMissile:
       case UnitType.AtomBomb:
@@ -199,6 +206,7 @@ export class ConstructionExecution implements Execution {
 
   private isStructure(type: UnitType): boolean {
     switch (type) {
+      case UnitType.StraitControlStation:
       case UnitType.Port:
       case UnitType.BunkerMissileSite:
       case UnitType.MissileSilo:
