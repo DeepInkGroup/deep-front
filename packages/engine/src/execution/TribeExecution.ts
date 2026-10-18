@@ -104,7 +104,8 @@ export class TribeExecution implements Execution {
       if (!Structures.has(unit.type())) continue;
       if (
         ECONOMY_BUILDINGS.includes(unit.type()) ||
-        unit.type() === UnitType.BunkerMissileSite
+        unit.type() === UnitType.BunkerMissileSite ||
+        unit.type() === UnitType.CIWSDefense
       )
         continue;
       if (unit.isMarkedForDeletion()) continue;

@@ -1,3 +1,4 @@
+import { interceptWithCIWS } from "../game/CIWSDefense";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
   MessageType,
@@ -171,6 +172,13 @@ export class MirvExecution implements Execution {
       return;
     }
 
+    const nextTile = this.fullPath[this.pathIndex] ?? this.nuke.tile();
+    if (interceptWithCIWS(this.mg, this.nuke, this.nuke.tile(), nextTile)) {
+      this.active = false;
+      for (const warhead of this.warheadExecutions) warhead.cancel();
+      this.warheadExecutions = [];
+      return;
+    }
     const remainingTicks = this.fullPath.length - this.pathIndex;
 
     // Stagger destination finding across ticks 20 down to 11 before separation

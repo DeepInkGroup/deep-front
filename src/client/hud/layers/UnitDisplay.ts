@@ -1,3 +1,5 @@
+import { EXTRA_BUILD_SHORTCUTS } from "../../BuildShortcuts";
+import { hasBuildOrUpgradeCapacity } from "../../utilities/BuildingLimits";
 import {
   BuildableUnit,
   BuildMenus,
@@ -17,6 +19,7 @@ import { translateText } from "../../Utils";
 import { GameView } from "../../view";
 import {
   atomBombIcon,
+  ciwsDefenseIcon,
   bunkerMissileSiteIcon,
   stealthMissileIcon,
   hypersonicMissileIcon,
@@ -105,10 +108,7 @@ export class UnitDisplay extends LitElement implements Controller {
     if (this.game?.config().isUnitDisabled(item)) return false;
     const player = this.game?.myPlayer();
     const info = this.game.config().unitInfo(item);
-    if (
-      info.maxCount !== undefined &&
-      (player?.units(item).length ?? 0) >= info.maxCount
-    )
+    if (!hasBuildOrUpgradeCapacity(info, player?.units(item) ?? []))
       return false;
     switch (item) {
       case UnitType.StealthMissile:
@@ -262,6 +262,13 @@ export class UnitDisplay extends LitElement implements Controller {
             "",
           )}
           ${this.renderUnitItem(
+            ciwsDefenseIcon,
+            myPlayer.totalUnitLevels(UnitType.CIWSDefense),
+            UnitType.CIWSDefense,
+            "ciws_defense",
+            "",
+          )}
+          ${this.renderUnitItem(
             samLauncherIcon,
             this._samLauncher,
             UnitType.SAMLauncher,
@@ -313,6 +320,15 @@ export class UnitDisplay extends LitElement implements Controller {
     }
     const selected = this.uiState.ghostStructure === unitType;
     const hovered = this._hoveredUnit === unitType;
+    const shortcut = EXTRA_BUILD_SHORTCUTS.find((s) => s.type === unitType);
+    if (shortcut) {
+      const custom = this.keybinds[shortcut.key];
+      hotkey =
+        (typeof custom === "string"
+          ? custom
+          : (custom?.value ?? custom?.key)) ?? shortcut.code;
+      if (hotkey === "Null") hotkey = "";
+    }
     const displayHotkey = hotkey
       .replace("Digit", "")
       .replace("Key", "")
@@ -384,15 +400,18 @@ export class UnitDisplay extends LitElement implements Controller {
                 this.eventBus?.emit(
                   new ToggleStructureEvent([
                     UnitType.BunkerMissileSite,
+                    UnitType.CIWSDefense,
                     UnitType.SAMLauncher,
                   ]),
                 );
                 break;
               case UnitType.AtomBomb:
               case UnitType.HydrogenBomb:
+              case UnitType.MIRV:
                 this.eventBus?.emit(
                   new ToggleStructureEvent([
                     UnitType.MissileSilo,
+                    UnitType.CIWSDefense,
                     UnitType.SAMLauncher,
                   ]),
                 );

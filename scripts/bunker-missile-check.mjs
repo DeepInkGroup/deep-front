@@ -34,6 +34,13 @@ async function configureEconomy(page) {
     input.value = "0";
     input.dispatchEvent(new Event("change", { bubbles: true }));
   });
+  const nations = page.locator(
+    'fluent-slider[labelkey="game_settings.nations"] input[type="range"]:visible',
+  );
+  await nations.evaluate((input) => {
+    input.value = "0";
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  });
   const starting = page
     .locator("toggle-input-card")
     .filter({ hasText: /Starting Gold \(Millions\)/i });
@@ -287,7 +294,7 @@ async function launchMissiles(page, guest) {
     );
     assert(
       BigInt(before) - BigInt(after) >=
-        (type === "Stealth Missile" ? 900_000n : 949_000_000n),
+        (type === "Stealth Missile" ? 1_400_000n : 900_000n),
     );
     if (guest) {
       await expect

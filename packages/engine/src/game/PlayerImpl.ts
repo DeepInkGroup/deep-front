@@ -1688,6 +1688,7 @@ export class PlayerImpl implements Player {
       case UnitType.BunkerMissileSite:
       case UnitType.MissileSilo:
       case UnitType.DefensePost:
+      case UnitType.CIWSDefense:
       case UnitType.SAMLauncher:
       case UnitType.City:
       case UnitType.Factory:

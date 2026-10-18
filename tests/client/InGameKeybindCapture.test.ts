@@ -115,6 +115,15 @@ describe("keybind capture over a live game", () => {
     expect(alternateViewEvents()).toEqual([]);
   });
 
+  it("supports unbound build keys while registering additional shortcuts", () => {
+    expect(() =>
+      new UserSettings().setKeybinds({
+        buildFactory: { value: "Null", key: "" },
+        buildCopperMine: { value: "Shift+Digit2", key: "Shift+2" },
+      }),
+    ).not.toThrow();
+  });
+
   it("cancels keybind listening on Escape without bubbling to window", async () => {
     const keybind = document.createElement("setting-keybind") as HTMLElement & {
       updateComplete: Promise<unknown>;

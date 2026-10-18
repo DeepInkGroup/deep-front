@@ -96,9 +96,13 @@ export class BunkerAIExecution implements Execution {
           this.game.addExecution(
             new ConstructionExecution(this.player, missile, tile),
           );
+          this.investInDefense(
+            this.game.unitInfo(missile).cost(this.game, this.player),
+          );
           return;
         }
     }
+    this.investInDefense(0n);
     const upgrade = sites.find(
       (s) => s.level() < 3 && this.player.canUpgradeUnit(s),
     );
@@ -106,6 +110,38 @@ export class BunkerAIExecution implements Execution {
       this.game.addExecution(
         new UpgradeStructureExecution(this.player, upgrade.id()),
       );
+  }
+  private investInDefense(reserved: bigint): void {
+    if (this.game.config().isUnitDisabled(UnitType.CIWSDefense)) return;
+    const owned = this.player.units(UnitType.CIWSDefense),
+      info = this.game.unitInfo(UnitType.CIWSDefense);
+    const upgrade = owned.find((u) => this.player.canUpgradeUnit(u));
+    const cost = info.cost(this.game, this.player, 0, upgrade?.level() ?? 0);
+    if (this.player.gold() < reserved + cost + 1_000_000n) return;
+    if (upgrade) {
+      this.game.addExecution(
+        new UpgradeStructureExecution(this.player, upgrade.id()),
+      );
+      return;
+    }
+    if (owned.length) return;
+    const anchor = this.player.units(UnitType.BunkerMissileSite)[0]?.tile();
+    const tiles = randTerritoryTileArray(
+      this.random,
+      this.game,
+      this.player,
+      8,
+    );
+    if (anchor !== undefined) tiles.unshift(anchor);
+    for (const tile of tiles) {
+      const spawn = this.player.canBuild(UnitType.CIWSDefense, tile);
+      if (spawn !== false) {
+        this.game.addExecution(
+          new ConstructionExecution(this.player, UnitType.CIWSDefense, spawn),
+        );
+        return;
+      }
+    }
   }
   isActive(): boolean {
     return this.active;

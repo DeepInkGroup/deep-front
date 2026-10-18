@@ -1,3 +1,4 @@
+import { EXTRA_BUILD_SHORTCUTS } from "./BuildShortcuts";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
   PlayerBuildableUnitType,
@@ -526,6 +527,7 @@ export class InputHandler {
       "buildHydrogenBomb",
       "buildWarship",
       "buildMIRV",
+      ...EXTRA_BUILD_SHORTCUTS.map((s) => s.key),
     ];
     buildKeybinds = buildKeybinds.map((i: string): string => {
       return this.keybinds[i];
@@ -555,9 +557,11 @@ export class InputHandler {
       ],
     );
     buildKeybinds.push(
-      ...buildKeybinds.map((t) => {
-        return "Shift+" + t;
-      }),
+      ...buildKeybinds
+        .filter((t) => typeof t === "string" && !t.startsWith("Shift+"))
+        .map((t) => {
+          return "Shift+" + t;
+        }),
     );
     buildKeybinds = [...new Set(buildKeybinds)].filter((v): v is string =>
       Boolean(v),
@@ -1480,6 +1484,7 @@ export class InputHandler {
       { key: "buildHydrogenBomb", type: UnitType.HydrogenBomb },
       { key: "buildWarship", type: UnitType.Warship },
       { key: "buildMIRV", type: UnitType.MIRV },
+      ...EXTRA_BUILD_SHORTCUTS,
     ];
     for (const { key, type } of buildKeybinds) {
       if (this.keybindMatchesEvent({ code, shiftKey }, this.keybinds[key]))

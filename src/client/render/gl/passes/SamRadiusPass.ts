@@ -14,7 +14,7 @@
  */
 
 import type { UnitState } from "../../types";
-import { UT_SAM_LAUNCHER } from "../../types";
+import { UT_CIWS_DEFENSE, UT_SAM_LAUNCHER } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
 import { createProgram } from "../utils/GlUtils";
@@ -145,6 +145,25 @@ function computeUncoveredArcs(a: SAMCircle, circles: SAMCircle[]): Interval[] {
 // ---------------------------------------------------------------------------
 
 export class SAMRadiusPass {
+  private missileType: string | null = null;
+  private missileTargetOwner: number | null = null;
+  setMissileTarget(type: string | null, owner: number | null): void {
+    if (type === this.missileType && owner === this.missileTargetOwner) return;
+    this.missileType = type;
+    this.missileTargetOwner = owner;
+    this.rebuild();
+  }
+  private eligible(u: UnitState): boolean {
+    return (
+      u.isActive &&
+      !u.underConstruction &&
+      (u.unitType === UT_CIWS_DEFENSE ||
+        (u.unitType === UT_SAM_LAUNCHER &&
+          (this.missileType !== "Hypersonic Missile" ||
+            this.missileTargetOwner === null ||
+            u.ownerID === this.missileTargetOwner)))
+    );
+  }
   private gl: WebGL2RenderingContext;
   private program: WebGLProgram;
   private vao: WebGLVertexArrayObject;
@@ -356,7 +375,7 @@ export class SAMRadiusPass {
     this.dirtyGroups.clear();
 
     for (const u of structures.values()) {
-      if (u.unitType !== UT_SAM_LAUNCHER || !u.isActive) continue;
+      if (!this.eligible(u)) continue;
       const isFriendly =
         u.ownerID === this.localPlayerID || this.allies.has(u.ownerID);
       const bg = this.getSAMBaseGroup(u, isFriendly);
@@ -373,7 +392,7 @@ export class SAMRadiusPass {
     this.hasUpgradingSAM = this.dirtyGroups.size > 0;
 
     for (const u of structures.values()) {
-      if (u.unitType !== UT_SAM_LAUNCHER || !u.isActive) continue;
+      if (!this.eligible(u)) continue;
       const isFriendly =
         u.ownerID === this.localPlayerID || this.allies.has(u.ownerID);
       const bg = this.getSAMBaseGroup(u, isFriendly);

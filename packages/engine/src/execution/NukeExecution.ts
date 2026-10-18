@@ -1,3 +1,4 @@
+import { interceptWithCIWS } from "../game/CIWSDefense";
 import { isBunkerMissile } from "../game/AdvancedMissiles";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
@@ -107,10 +108,10 @@ export class NukeExecution implements Execution {
       const outer = magnitude.outer;
 
       const result = new Set<TileRef>();
-      const x0 = Math.max(0, cx - outer);
-      const y0 = Math.max(0, cy - outer);
-      const x1 = Math.min(this.mg.width() - 1, cx + outer);
-      const y1 = Math.min(this.mg.height() - 1, cy + outer);
+      const x0 = Math.max(0, Math.floor(cx - outer));
+      const y0 = Math.max(0, Math.floor(cy - outer));
+      const x1 = Math.min(this.mg.width() - 1, Math.ceil(cx + outer));
+      const y1 = Math.min(this.mg.height() - 1, Math.ceil(cy + outer));
       for (let py = y0; py <= y1; py++) {
         for (let px = x0; px <= x1; px++) {
           const dx = px - cx;
@@ -298,6 +299,15 @@ export class NukeExecution implements Execution {
 
     // Move to next tile
     const result = this.pathFinder.next(this.src!, this.dst, this.speed);
+
+    if (
+      (result.status === PathStatus.NEXT ||
+        result.status === PathStatus.COMPLETE) &&
+      interceptWithCIWS(this.mg, this.nuke, this.nuke.tile(), result.node)
+    ) {
+      this.active = false;
+      return;
+    }
 
     if (result.status === PathStatus.COMPLETE) {
       // move it afterward for visual effect

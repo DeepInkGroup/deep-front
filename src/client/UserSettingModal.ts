@@ -1,3 +1,4 @@
+import { EXTRA_BUILD_SHORTCUTS } from "./BuildShortcuts";
 import type { MapLayer } from "@openfront/engine-api/game/MapFiles";
 import { html, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
@@ -1298,6 +1299,20 @@ export class UserSettingModal extends BaseModal {
         @change=${this.handleKeybindChange}
       ></setting-keybind>
 
+      ${EXTRA_BUILD_SHORTCUTS.map(
+        (s) =>
+          html`<setting-keybind
+            action=${s.key}
+            label=${translateText("unit_type." + s.name)}
+            description=${translateText(
+              "user_setting.select_building_shortcut",
+            )}
+            .defaultKey=${this.defaultKeybinds[s.key]}
+            .value=${this.getKeyValue(s.key)}
+            .display=${this.getKeyChar(s.key)}
+            @change=${this.handleKeybindChange}
+          ></setting-keybind>`,
+      )}
       <setting-keybind
         action="buildPort"
         label=${translateText("user_setting.build_port")}

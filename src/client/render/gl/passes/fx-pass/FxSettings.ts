@@ -22,6 +22,7 @@ export function nukeExplosionRadius(
 ): number | undefined {
   switch (unitType) {
     case UT_STEALTH_MISSILE:
+      return fx.nukeRadiusAtom * Math.SQRT1_2;
     case UT_HYPERSONIC_MISSILE:
     case UT_ATOM_BOMB:
       return fx.nukeRadiusAtom;

@@ -32,6 +32,7 @@ const factoryIcon = assetUrl("images/FactoryIconWhite.svg");
 const oilFactoryIcon = assetUrl("images/OilFactoryIconWhite.svg");
 const copperMineIcon = assetUrl("images/CopperMineIconWhite.svg");
 const logisticsCenterIcon = assetUrl("images/LogisticsCenterIconWhite.svg");
+const ciwsDefenseIcon = assetUrl("images/CIWSDefenseIconWhite.svg");
 const bunkerMissileSiteIcon = assetUrl("images/BunkerMissileSiteIconWhite.svg");
 const stealthMissileIcon = assetUrl("images/StealthMissileIconWhite.svg");
 const hypersonicMissileIcon = assetUrl("images/HypersonicMissileIconWhite.svg");
@@ -55,6 +56,13 @@ export interface BuildItemDisplay {
 
 export const buildTable: BuildItemDisplay[][] = [
   [
+    {
+      unitType: UnitType.CIWSDefense,
+      icon: ciwsDefenseIcon,
+      description: "build_menu.desc.ciws_defense",
+      key: "unit_type.ciws_defense",
+      countable: true,
+    },
     {
       unitType: UnitType.BunkerMissileSite,
       icon: bunkerMissileSiteIcon,

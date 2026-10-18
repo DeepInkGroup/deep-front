@@ -108,6 +108,7 @@ function renderSection(
 }
 
 const unitOptions: { type: UnitType; translationKey: string }[] = [
+  { type: UnitType.CIWSDefense, translationKey: "unit_type.ciws_defense" },
   { type: UnitType.City, translationKey: "unit_type.city" },
   { type: UnitType.DefensePost, translationKey: "unit_type.defense_post" },
   { type: UnitType.Port, translationKey: "unit_type.port" },

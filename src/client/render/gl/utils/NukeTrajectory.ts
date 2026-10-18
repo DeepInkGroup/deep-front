@@ -24,6 +24,7 @@ export function samRange(level: number): number {
 }
 
 export interface SAMInfo {
+  alwaysIntercept?: boolean;
   x: number;
   y: number;
   r: number;
@@ -154,6 +155,7 @@ export function computeTrajectoryThresholds(
   dstX: number,
   dstY: number,
   sams: readonly SAMInfo[],
+  targetableAt?: (x: number, y: number) => boolean,
 ): {
   tUntargetableStart: number;
   tUntargetableEnd: number;
@@ -184,6 +186,7 @@ export function computeTrajectoryThresholds(
   const hasUntargetable = srcDstDistSq > 4 * TARGETABLE_RANGE_SQ;
   const samLen = sams.length;
 
+  let revealed = targetableAt?.(srcX, srcY) ?? false;
   let prevX = (cp.p0x + 0.5) | 0;
   let prevY = (cp.p0y + 0.5) | 0;
 
@@ -195,7 +198,7 @@ export function computeTrajectoryThresholds(
 
     let isUntargetableZone = false;
 
-    if (hasUntargetable) {
+    if (hasUntargetable && !targetableAt) {
       if (tUntargetableStart < 0) {
         // Looking for first point outside source range
         const dxSrc = x - srcX;
@@ -250,6 +253,14 @@ export function computeTrajectoryThresholds(
       }
     }
 
+    if (targetableAt) {
+      if (!revealed && targetableAt(x, y)) {
+        revealed = true;
+        if (tUntargetableStart >= 0) tUntargetableEnd = t;
+      }
+      isUntargetableZone = !revealed;
+      if (!revealed && tUntargetableStart < 0) tUntargetableStart = 0;
+    }
     // Check exact boundary when crossing into the targetable terminal phase
     if (
       tUntargetableEnd >= 0 &&
@@ -281,7 +292,7 @@ export function computeTrajectoryThresholds(
       if (tSamIntercept < 1.0) break;
     }
 
-    if (!isUntargetableZone && samLen > 0) {
+    if (samLen > 0) {
       const segDx = x - prevX;
       const segDy = y - prevY;
       const l2 = segDx * segDx + segDy * segDy;
@@ -291,6 +302,7 @@ export function computeTrajectoryThresholds(
 
       for (let s = 0; s < samLen; s++) {
         const sam = sams[s];
+        if (isUntargetableZone && !sam.alwaysIntercept) continue;
 
         // Fast proximity rejection based on maximum reachable distance of this segment
         const dxSam = sam.x - prevX;
@@ -318,7 +330,9 @@ export function computeTrajectoryThresholds(
           (sam.r + SAM_SAFETY_MARGIN) * (sam.r + SAM_SAFETY_MARGIN);
         if (dSq <= candidateRangeSq) {
           const lo =
-            tUntargetableEnd >= 0 && tPrev < tUntargetableEnd
+            !sam.alwaysIntercept &&
+            tUntargetableEnd >= 0 &&
+            tPrev < tUntargetableEnd
               ? tUntargetableEnd
               : tPrev;
           const intercept = refineCrossing(
@@ -366,6 +380,7 @@ export function buildNukeTrajectory(
   mapH: number,
   directionUp: boolean,
   sams: readonly SAMInfo[],
+  targetableAt?: (x: number, y: number) => boolean,
 ): NukeTrajectoryData {
   const cpRender = computeNukeControlPoints(
     srcX,
@@ -386,6 +401,7 @@ export function buildNukeTrajectory(
     targetX,
     targetY,
     sams,
+    targetableAt,
   );
   return { ...cpRender, ...th };
 }

@@ -1,3 +1,4 @@
+import { hasBuildOrUpgradeCapacity } from "../utilities/BuildingLimits";
 /**
  * BuildPreviewController — build-ghost state machine + click-to-build flow.
  *
@@ -39,8 +40,16 @@ import { UserSettings } from "../UserSettings";
 import { GameView } from "../view";
 
 /** True for nuke types (AtomBomb, HydrogenBomb): ghost is preserved after placement so user can place multiple or keep selection (Enter/key confirm). */
+export function isTrajectoryMissile(unitType: UnitType): boolean {
+  return [
+    UnitType.AtomBomb,
+    UnitType.HydrogenBomb,
+    UnitType.StealthMissile,
+    UnitType.HypersonicMissile,
+  ].includes(unitType);
+}
 export function shouldPreserveGhostAfterBuild(unitType: UnitType): boolean {
-  return unitType === UnitType.AtomBomb || unitType === UnitType.HydrogenBomb;
+  return isTrajectoryMissile(unitType);
 }
 
 // tSamIntercept value used to flag an untargetable (impassable) destination:
@@ -94,6 +103,7 @@ export class BuildPreviewController implements Controller {
     srcY: number;
     directionUp: boolean;
     sams: SAMInfo[];
+    targetableAt?: (x: number, y: number) => boolean;
   } | null = null;
 
   constructor(
@@ -157,6 +167,7 @@ export class BuildPreviewController implements Controller {
             this.game.height(),
             traj.directionUp,
             traj.sams,
+            traj.targetableAt,
           );
           // Impassable terrain can't be targeted (nukeSpawn rejects it)
           // even though nukes fly over it — mark the destination with the
@@ -191,11 +202,13 @@ export class BuildPreviewController implements Controller {
   private syncGhostState(): void {
     const target = this.uiState.ghostStructure;
     if (target !== null) {
-      const max = this.game.config().unitInfo(target).maxCount;
+      const info = this.game.config().unitInfo(target);
       if (
         this.game.config().isUnitDisabled(target) ||
-        (max !== undefined &&
-          (this.game.myPlayer()?.units(target).length ?? 0) >= max)
+        !hasBuildOrUpgradeCapacity(
+          info,
+          this.game.myPlayer()?.units(target) ?? [],
+        )
       ) {
         this.removeGhostStructure();
         return;
@@ -242,11 +255,7 @@ export class BuildPreviewController implements Controller {
     let targetingAlly = false;
     const myPlayer = this.game.myPlayer();
     const nukeType = this.ghostUnit.buildableUnit.type;
-    if (
-      tileRef &&
-      myPlayer &&
-      (nukeType === UnitType.AtomBomb || nukeType === UnitType.HydrogenBomb)
-    ) {
+    if (tileRef && myPlayer && isTrajectoryMissile(nukeType)) {
       this.connectedAllySmallIds.clear();
       const allies = myPlayer.allies();
       for (let i = 0; i < allies.length; i++) {
@@ -340,7 +349,7 @@ export class BuildPreviewController implements Controller {
       return;
     }
     const type = this.ghostUnit.buildableUnit.type;
-    if (type !== UnitType.AtomBomb && type !== UnitType.HydrogenBomb) {
+    if (!isTrajectoryMissile(type)) {
       this.clearNukeTrajectory();
       return;
     }
@@ -356,7 +365,11 @@ export class BuildPreviewController implements Controller {
     // chosen. Keeping these in sync prevents the preview arc from
     // originating from a silo the game wouldn't use.
     const silos = myPlayer
-      .units(UnitType.MissileSilo)
+      .units(
+        type === UnitType.StealthMissile || type === UnitType.HypersonicMissile
+          ? UnitType.BunkerMissileSite
+          : UnitType.MissileSilo,
+      )
       .filter(
         (u) => u.isActive() && !u.isInCooldown() && !u.isUnderConstruction(),
       );
@@ -401,10 +414,19 @@ export class BuildPreviewController implements Controller {
           })
         : new Set();
     const sams: SAMInfo[] = [];
-    for (const s of this.game.units(UnitType.SAMLauncher)) {
+    for (const s of this.game.units(
+      UnitType.SAMLauncher,
+      UnitType.CIWSDefense,
+    )) {
       if (!s.isActive()) continue;
       const owner = s.owner();
-      if (owner === myPlayer) continue;
+      if (owner === myPlayer || s.isUnderConstruction()) continue;
+      if (
+        type === UnitType.HypersonicMissile &&
+        s.type() === UnitType.SAMLauncher &&
+        owner.smallID() !== this.game.ownerID(tileRef)
+      )
+        continue;
       if (
         !samThreatensNukePreview(
           owner.smallID(),
@@ -420,6 +442,7 @@ export class BuildPreviewController implements Controller {
         x: this.game.x(s.tile()),
         y: this.game.y(s.tile()),
         r,
+        alwaysIntercept: s.type() === UnitType.CIWSDefense,
       });
     }
 
@@ -430,6 +453,13 @@ export class BuildPreviewController implements Controller {
       srcY,
       directionUp,
       sams,
+      targetableAt:
+        type === UnitType.StealthMissile
+          ? (x, y) =>
+              this.game.isValidCoord(x, y) &&
+              this.game.ownerID(this.game.ref(x, y)) ===
+                this.game.ownerID(tileRef)
+          : undefined,
     };
   }
 
@@ -463,6 +493,7 @@ export class BuildPreviewController implements Controller {
     // previews show the outer blast radius at the target tile.
     let rangeRadius = 0;
     switch (u.type) {
+      case UnitType.CIWSDefense:
       case UnitType.SAMLauncher: {
         const level = this.resolveGhostRangeLevel(u) ?? 1;
         rangeRadius = this.game.config().samRange(level);
@@ -530,6 +561,10 @@ export class BuildPreviewController implements Controller {
       upgradeTargetTile,
       rangeRadius,
       rangeWarning: targetingAlly,
+      defenseTargetOwnerID:
+        u.type === UnitType.HypersonicMissile
+          ? this.game.ownerID(tileRef)
+          : undefined,
     };
   }
 
@@ -583,10 +618,9 @@ export class BuildPreviewController implements Controller {
       }
 
       const isNuke = unitType === UnitType.AtomBomb;
-      const rocketDirectionUp =
-        unitType === UnitType.AtomBomb || unitType === UnitType.HydrogenBomb
-          ? this.uiState.rocketDirectionUp
-          : undefined;
+      const rocketDirectionUp = isTrajectoryMissile(unitType)
+        ? this.uiState.rocketDirectionUp
+        : undefined;
       this.eventBus.emit(
         new BuildUnitIntentEvent(
           unitType,

@@ -1,3 +1,4 @@
+import { STEALTH_BLAST } from "@openfront/engine-api/game/AdvancedDefense";
 /**
  * Canonical unit type string constants.
  *
@@ -29,6 +30,7 @@ export const UT_FACTORY = "Factory" as const;
 export const UT_OIL_FACTORY = "Oil Factory" as const;
 export const UT_COPPER_MINE = "Copper Mine" as const;
 export const UT_LOGISTICS_CENTER = "Logistics Center" as const;
+export const UT_CIWS_DEFENSE = "CIWS Defense" as const;
 export const UT_BUNKER_MISSILE_SITE = "Bunker Missile Site" as const;
 export const UT_STEALTH_MISSILE = "Stealth Missile" as const;
 export const UT_HYPERSONIC_MISSILE = "Hypersonic Missile" as const;
@@ -42,6 +44,7 @@ export const UT_MISSILE_SILO = "Missile Silo" as const;
 // ---------------------------------------------------------------------------
 
 export const STRUCTURE_TYPES: ReadonlySet<string> = new Set([
+  UT_CIWS_DEFENSE,
   UT_COPPER_MINE,
   UT_LOGISTICS_CENTER,
   UT_CUSTOMS_OFFICE,
@@ -90,7 +93,7 @@ export const TRAIL_TYPES: ReadonlySet<string> = new Set([
 export const NUKE_MAGNITUDES: Readonly<
   Record<string, { inner: number; outer: number }>
 > = {
-  [UT_STEALTH_MISSILE]: { inner: 12, outer: 30 },
+  [UT_STEALTH_MISSILE]: STEALTH_BLAST,
   [UT_HYPERSONIC_MISSILE]: { inner: 12, outer: 30 },
   [UT_ATOM_BOMB]: { inner: 12, outer: 30 },
   [UT_HYDROGEN_BOMB]: { inner: 80, outer: 100 },
@@ -126,4 +129,5 @@ export const ALL_UNIT_TYPES = [
   UT_BUNKER_MISSILE_SITE,
   UT_STEALTH_MISSILE,
   UT_HYPERSONIC_MISSILE,
+  UT_CIWS_DEFENSE,
 ] as const;

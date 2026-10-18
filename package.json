@@ -11,6 +11,7 @@
     "build": "npm run build-prod && node scripts/source-archive.mjs",
     "start": "node scripts/serve.mjs",
     "test:community": "node scripts/community-check.mjs",
+    "test:defense": "node scripts/defense-upgrade-check.mjs",
     "test:bunker": "node scripts/bunker-missile-check.mjs",
     "test:customs": "node scripts/customs-office-check.mjs",
     "test:pages": "node scripts/pages-check.mjs",

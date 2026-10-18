@@ -135,7 +135,8 @@ float shapeSDF(vec2 p, float R) {
   if (vAtlasIdx < 8.5)
     return sdPolygon(p, R, 8.0, PI / 8.0);    // Logistics Center → octagon
   if (vAtlasIdx < 9.5) return sdPolygon(p, R, 5.0, PI * 0.5); // Customs
-  return sdPolygon(p, R, 6.0, PI * 0.5); // Bunker
+  if (vAtlasIdx < 10.5) return sdPolygon(p, R, 6.0, PI * 0.5); // Bunker
+  return sdPolygon(p, R, 8.0, PI / 8.0); // CIWS
 }
 
 void main() {

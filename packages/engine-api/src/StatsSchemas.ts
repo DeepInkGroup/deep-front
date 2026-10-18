@@ -52,6 +52,7 @@ export const otherUnits = [
   "logi",
   "cust",
   "bunker",
+  "ciws",
 ] as const;
 export const OtherUnitSchema = z.enum(otherUnits);
 export type OtherUnit = z.infer<typeof OtherUnitSchema>;
@@ -67,9 +68,11 @@ export type OtherUnitType =
   | UnitType.CopperMine
   | UnitType.LogisticsCenter
   | UnitType.CustomsOffice
-  | UnitType.BunkerMissileSite;
+  | UnitType.BunkerMissileSite
+  | UnitType.CIWSDefense;
 
 export const unitTypeToOtherUnit = {
+  [UnitType.CIWSDefense]: "ciws",
   [UnitType.BunkerMissileSite]: "bunker",
   [UnitType.City]: "city",
   [UnitType.DefensePost]: "defp",

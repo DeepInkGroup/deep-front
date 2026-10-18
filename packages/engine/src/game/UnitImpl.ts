@@ -97,7 +97,10 @@ export class UnitImpl implements Unit {
     if (this._type === UnitType.TransportShip) {
       this._transportShipState = { isRetreating: false, troops: 0 };
     }
-    if (this._type === UnitType.SAMLauncher) {
+    if (
+      this._type === UnitType.SAMLauncher ||
+      this._type === UnitType.CIWSDefense
+    ) {
       this._samLauncherState = {
         startRange: this.mg.config().samRange(1),
         targetLevel: 1,
@@ -125,6 +128,7 @@ export class UnitImpl implements Unit {
       case UnitType.BunkerMissileSite:
       case UnitType.MissileSilo:
       case UnitType.DefensePost:
+      case UnitType.CIWSDefense:
       case UnitType.SAMLauncher:
       case UnitType.City:
       case UnitType.Factory:
@@ -278,6 +282,7 @@ export class UnitImpl implements Unit {
       case UnitType.BunkerMissileSite:
       case UnitType.MissileSilo:
       case UnitType.DefensePost:
+      case UnitType.CIWSDefense:
       case UnitType.SAMLauncher:
       case UnitType.City:
       case UnitType.Factory:
@@ -416,6 +421,7 @@ export class UnitImpl implements Unit {
         case UnitType.BunkerMissileSite:
         case UnitType.MissileSilo:
         case UnitType.Port:
+        case UnitType.CIWSDefense:
         case UnitType.SAMLauncher:
         case UnitType.Warship:
         case UnitType.Factory:
@@ -774,7 +780,10 @@ export class UnitImpl implements Unit {
   increaseLevel(): void {
     const maxLevel = this.info().maxLevel;
     if (maxLevel !== undefined && this._level >= maxLevel) return;
-    if (this._type === UnitType.SAMLauncher) {
+    if (
+      this._type === UnitType.SAMLauncher ||
+      this._type === UnitType.CIWSDefense
+    ) {
       const currentTick = this.mg.ticks();
       const currentRange = this.mg.config().dynamicSamRange(this, currentTick);
       this._samLauncherState = {
@@ -811,7 +820,10 @@ export class UnitImpl implements Unit {
     ) {
       this._missileTimerQueue.pop();
     }
-    if (this._type === UnitType.SAMLauncher) {
+    if (
+      this._type === UnitType.SAMLauncher ||
+      this._type === UnitType.CIWSDefense
+    ) {
       this._samLauncherState = undefined;
     }
     if (this._level <= 0) {

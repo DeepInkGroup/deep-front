@@ -1,3 +1,4 @@
+import { EXTRA_BUILD_SHORTCUTS } from "./BuildShortcuts";
 import { Emoji, flattenedEmojiTable } from "@openfront/engine-api/Schemas";
 import { Cosmetics } from "@openfront/shared/CosmeticSchemas";
 import { PlayerPattern } from "@openfront/shared/WireSchemas";
@@ -31,6 +32,7 @@ export function getDefaultKeybinds(isMac: boolean): Record<string, string> {
     buildAtomBomb: "Digit8",
     buildHydrogenBomb: "Digit9",
     buildMIRV: "Digit0",
+    ...Object.fromEntries(EXTRA_BUILD_SHORTCUTS.map((s) => [s.key, s.code])),
     attackRatioDown: "KeyT",
     attackRatioUp: "KeyY",
     boatAttack: "KeyB",

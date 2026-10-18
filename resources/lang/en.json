@@ -203,8 +203,9 @@
       "sam_launcher": "Defends against incoming nukes",
       "warship": "Captures trade ships, destroys ships and boats",
       "bunker_missile_site": "Launches advanced missiles. 50s build; 5s per upgrade.",
-      "stealth_missile": "Hidden until the target border. SAM detection can fail. Requires a bunker.",
-      "hypersonic_missile": "Very fast. Only the target country?s SAMs can intercept. Requires a bunker."
+      "stealth_missile": "Hidden until the target border. Half atom blast area. Requires a bunker.",
+      "hypersonic_missile": "Very fast. Only the target country?s SAMs can intercept. Requires a bunker.",
+      "ciws_defense": "Guaranteed missile defense in range. SAM reaction speed. Max L5."
     },
     "not_enough_money": "Not enough money",
     "upgrade_amount": "x{amount}",
@@ -2529,7 +2530,8 @@
     "warship": "Warship",
     "bunker_missile_site": "Bunker Missile Site",
     "stealth_missile": "Stealth Missile",
-    "hypersonic_missile": "Hypersonic Missile"
+    "hypersonic_missile": "Hypersonic Missile",
+    "ciws_defense": "CIWS Defense"
   },
   "update_available": {
     "desktop": "A new version of OpenFront is available. It will download in the background; reload from the update bar once it is ready.",
@@ -2724,7 +2726,8 @@
     "zoom_in": "Zoom In",
     "zoom_in_desc": "Zoom in the map",
     "zoom_out": "Zoom Out",
-    "zoom_out_desc": "Zoom out the map"
+    "zoom_out_desc": "Zoom out the map",
+    "select_building_shortcut": "Select this building or missile for placement or upgrades."
   },
   "username": {
     "account_invalid_chars": "Username can only contain letters, numbers, underscores, hyphens, and single spaces between words.",

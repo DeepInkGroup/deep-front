@@ -1,3 +1,4 @@
+import { CIWS_COSTS } from "@openfront/engine-api/game/AdvancedDefense";
 import { OIL_FACTORY_COSTS } from "@openfront/engine-api/game/OilFactory";
 import { COPPER_MINE_COSTS } from "@openfront/engine-api/game/CopperMine";
 import { LOGISTICS_CENTER_COST } from "@openfront/engine-api/game/LogisticsCenter";
@@ -354,9 +355,9 @@ export class EngineConfig extends Config {
           UnitType.Factory,
         );
       case UnitType.StealthMissile:
-        return this.costWrapper(() => 1_000_000, UnitType.StealthMissile);
+        return this.costWrapper(() => 1_500_000, UnitType.StealthMissile);
       case UnitType.HypersonicMissile:
-        return this.costWrapper(() => 950_000_000, UnitType.HypersonicMissile);
+        return this.costWrapper(() => 950_000, UnitType.HypersonicMissile);
       case UnitType.AtomBomb:
         return this.costWrapper(() => 750_000, UnitType.AtomBomb);
       case UnitType.HydrogenBomb:
@@ -404,6 +405,7 @@ export class EngineConfig extends Config {
           () => Number(CUSTOMS_OFFICE_COST),
           UnitType.CustomsOffice,
         );
+      case UnitType.CIWSDefense:
       case UnitType.BunkerMissileSite:
       case UnitType.OilFactory:
       case UnitType.CopperMine:
@@ -414,11 +416,13 @@ export class EngineConfig extends Config {
           )
             return 0n;
           const costs =
-            type === UnitType.BunkerMissileSite
-              ? [1_000_000n, 1_300_000n, 1_500_000n]
-              : type === UnitType.OilFactory
-                ? OIL_FACTORY_COSTS
-                : COPPER_MINE_COSTS;
+            type === UnitType.CIWSDefense
+              ? CIWS_COSTS
+              : type === UnitType.BunkerMissileSite
+                ? [1_000_000n, 1_300_000n, 1_500_000n]
+                : type === UnitType.OilFactory
+                  ? OIL_FACTORY_COSTS
+                  : COPPER_MINE_COSTS;
           return costs[Math.min(unitLevel + extraLevels, costs.length - 1)];
         };
       case UnitType.TransportShip:

@@ -54,6 +54,7 @@ export interface OwnerComp {
 }
 
 export interface UnitParamsMap {
+  [UnitType.CIWSDefense]: Record<string, never>;
   [UnitType.BunkerMissileSite]: Record<string, never>;
   [UnitType.StealthMissile]: {
     targetTile?: number;

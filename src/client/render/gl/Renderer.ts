@@ -90,6 +90,10 @@ import { HeatManager } from "./utils/HeatManager";
 const SAM_RADIUS_GHOST_TYPES = new Set([
   "Missile Silo",
   "SAM Launcher",
+  "CIWS Defense",
+  "Stealth Missile",
+  "Hypersonic Missile",
+  "MIRV",
   "City",
   "Atom Bomb",
   "Hydrogen Bomb",
@@ -98,6 +102,10 @@ const SAM_RADIUS_GHOST_TYPES = new Set([
 /** Subset for build-button hover — excludes City/Silo (SAM radii irrelevant). */
 const SAM_RADIUS_HIGHLIGHT_TYPES = new Set([
   "SAM Launcher",
+  "CIWS Defense",
+  "Stealth Missile",
+  "Hypersonic Missile",
+  "MIRV",
   "Atom Bomb",
   "Hydrogen Bomb",
 ]);
@@ -1060,6 +1068,10 @@ export class GPURenderer {
   }
 
   updateGhostPreview(data: GhostPreviewData | null): void {
+    this.samRadiusPass.setMissileTarget(
+      data?.ghostType ?? null,
+      data?.defenseTargetOwnerID ?? null,
+    );
     this.structurePass.updateGhostPreview(data);
     this.railroadPass.updateGhostPreview(data);
     this.rangeCirclePass.updateGhostPreview(data);

@@ -35,3 +35,5 @@ export const stealthMissileIcon = assetUrl(
 export const hypersonicMissileIcon = assetUrl(
   "images/HypersonicMissileIconWhite.svg",
 );
+
+export const ciwsDefenseIcon = assetUrl("images/CIWSDefenseIconWhite.svg");

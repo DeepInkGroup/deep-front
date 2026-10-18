@@ -11,6 +11,7 @@ const icons = [
   "LogisticsCenter",
   "CustomsOffice",
   "BunkerMissileSite",
+  "CIWSDefense",
 ];
 let appended = "";
 for (const [index, name] of icons.entries()) {

@@ -216,6 +216,7 @@ export enum UnitType {
   BunkerMissileSite = "Bunker Missile Site",
   StealthMissile = "Stealth Missile",
   HypersonicMissile = "Hypersonic Missile",
+  CIWSDefense = "CIWS Defense",
 }
 
 export enum TrainType {
@@ -243,6 +244,7 @@ export const BuildableAttacks = unitTypeGroup([
 ] as const);
 
 export const Structures = unitTypeGroup([
+  UnitType.CIWSDefense,
   UnitType.BunkerMissileSite,
   UnitType.City,
   UnitType.DefensePost,

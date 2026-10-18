@@ -1,3 +1,5 @@
+import { interceptWithCIWS } from "../game/CIWSDefense";
+import { Nukes } from "@openfront/engine-api/game/GameTypes";
 import { canSAMDetectAdvancedMissile } from "../game/AdvancedMissiles";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { GameType, UnitType } from "@openfront/engine-api/game/GameTypes";
@@ -363,6 +365,16 @@ export class SAMLauncherExecution implements Execution {
       this.player = this.sam.owner();
     }
 
+    if (this.sam.type() === UnitType.CIWSDefense) {
+      for (const { unit } of this.mg.nearbyUnits(
+        this.sam.tile(),
+        this.mg.config().dynamicSamRange(this.sam, ticks),
+        Nukes.types,
+      )) {
+        interceptWithCIWS(this.mg, unit, unit.tile(), unit.tile());
+      }
+      return;
+    }
     while (this.sam.missileTimerQueue().length > 0) {
       const frontTime = this.sam.missileTimerQueue()[0];
       const cooldown =

@@ -113,8 +113,8 @@ describe("Bunker Missile Site", () => {
     for (const level of [2, 3, 10, 99])
       expect(info.cost(game, alice, 0, level)).toBe(1_500_000n);
     expect(info.maxLevel).toBeUndefined();
-    expect(game.unitInfo(STEALTH).cost(game, alice)).toBe(1_000_000n);
-    expect(game.unitInfo(HYPER).cost(game, alice)).toBe(950_000_000n);
+    expect(game.unitInfo(STEALTH).cost(game, alice)).toBe(1_500_000n);
+    expect(game.unitInfo(HYPER).cost(game, alice)).toBe(950_000n);
     expect(
       new EngineConfig(game.config().gameConfig(), false).nukeSpeed(HYPER),
     ).toBe(40);

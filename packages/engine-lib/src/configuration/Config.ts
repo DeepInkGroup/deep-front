@@ -1,4 +1,8 @@
 import {
+  STEALTH_BLAST,
+  CIWS_MAX_LEVEL,
+} from "@openfront/engine-api/game/AdvancedDefense";
+import {
   COPPER_MINE_MAX_BUILDINGS,
   COPPER_MINE_MAX_LEVEL,
 } from "@openfront/engine-api/game/CopperMine";
@@ -248,6 +252,15 @@ export class Config {
       case UnitType.DefensePost:
         info = { constructionDuration: this.instantBuild() ? 0 : 5 * 10 };
         break;
+      case UnitType.CIWSDefense:
+        info = {
+          constructionDuration: this.instantBuild()
+            ? 0
+            : SAM_CONSTRUCTION_TICKS,
+          upgradable: true,
+          maxLevel: CIWS_MAX_LEVEL,
+        };
+        break;
       case UnitType.SAMLauncher:
         info = {
           constructionDuration: this.instantBuild()
@@ -459,6 +472,7 @@ export class Config {
       case UnitType.MIRVWarhead:
         return { inner: 12, outer: 18 };
       case UnitType.StealthMissile:
+        return { ...STEALTH_BLAST };
       case UnitType.HypersonicMissile:
       case UnitType.AtomBomb:
         return { inner: 12, outer: 30 };
