@@ -2,7 +2,7 @@
 
 The bunker is available in solo and multiplayer. It takes 50 seconds to build.
 Level 1 costs 1,000,000 gold; upgrading to level 2 costs 1,300,000; every
-subsequent level costs 1,500,000. Every upgrade takes 5 seconds and temporarily
+subsequent level costs 1,500,000. Every upgrade takes 2 seconds and temporarily
 locks launching and further upgrades. There is no level or building cap.
 
 Each level adds one missile tube. Tubes use the existing silo reload time
@@ -20,7 +20,7 @@ The old 5 key now selects the bunker; S5 also works.
 | Hypersonic Missile |   950,000 gold | Four times the normal atom missile speed. SAMs belonging to transit countries cannot engage; only the country targeted at launch can attempt SAM interception. CIWS can intercept within any hostile CIWS coverage.                |
 | EMP Missile        | 1,000,000 gold | Hidden until the target border. An undetected arrival disables hostile CIWS within 70 tiles for 5 seconds, with no damage. Any successful SAM detection permanently cancels that missile's EMP effect. S7 selects it.              |
 
-Hypersonic missiles use the atom bomb blast radius and damage rules. Stealth missiles have 50% of the atom bomb blast area (both radii multiplied by sqrt(1/2)).
+Hypersonic missiles use the atom bomb's radius; Stealth missiles use 50% of its area (both radii multiplied by sqrt(1/2)). Both are conventional building strikes: they destroy structures only, leave land ownership and troops intact, and never create fallout or convert land to water, even with Water Nukes enabled.
 Every missile requires a completed, ready bunker and shares its missile tubes.
 Peace time and teammate protections apply to targeting and splash damage.
 Ordinary SAM interception still depends on range, flight timing and reload state.

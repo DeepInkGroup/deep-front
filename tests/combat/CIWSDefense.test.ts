@@ -169,7 +169,7 @@ describe("CIWS Defense", () => {
     const config = new Config(game.config().gameConfig(), false);
     const atom = config.nukeMagnitudes(UnitType.AtomBomb),
       stealth = config.nukeMagnitudes(UnitType.StealthMissile);
-    expect(stealth).toEqual(STEALTH_BLAST);
+    expect(stealth).toEqual({ ...STEALTH_BLAST, buildingsOnly: true });
     expect(stealth.outer ** 2 / atom.outer ** 2).toBeCloseTo(0.5);
     expect(stealth.inner ** 2 / atom.inner ** 2).toBeCloseTo(0.5);
     game = await setup(

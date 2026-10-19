@@ -37,6 +37,7 @@ export interface RailTile {
 }
 
 interface RailroadAnim {
+  tunnel: boolean;
   tiles: RailTile[];
   headIndex: number;
   tailIndex: number;
@@ -122,8 +123,9 @@ export class RailroadCache {
    * count drops to zero.
    */
   private tileRefCount = new Map<number, number>();
+  private tunnelRefCount = new Map<number, number>();
 
-  /** Per-tile railroad state (0=none, 1-6 = RailType+1). Ready for GPU upload. */
+  /** Per-tile railroad state: low 7 bits are RailType+1 (0=none), bit 7 marks tunnels. */
   readonly railroadState: Uint8Array;
 
   /** True if railroadState changed this tick. */
@@ -144,7 +146,8 @@ export class RailroadCache {
   apply(gu: GameUpdateViewData): void {
     const constructs = (gu.updates[GameUpdateType.RailroadConstructionEvent] ??
       []) as RailroadConstructionUpdate[];
-    for (const evt of constructs) this.addRailroad(evt.id, evt.tiles, false);
+    for (const evt of constructs)
+      this.addRailroad(evt.id, evt.tiles, false, evt.tunnel ?? false);
 
     const snaps = (gu.updates[GameUpdateType.RailroadSnapEvent] ??
       []) as RailroadSnapUpdate[];
@@ -200,6 +203,7 @@ export class RailroadCache {
   reset(): void {
     this.anims.clear();
     this.tileRefCount.clear();
+    this.tunnelRefCount.clear();
     this.railroadState.fill(0);
     this.railroadDirty = false;
   }
@@ -208,9 +212,16 @@ export class RailroadCache {
   // Private
   // -------------------------------------------------------------------------
 
-  private addRailroad(id: number, tileRefs: number[], complete: boolean): void {
+  private addRailroad(
+    id: number,
+    tileRefs: number[],
+    complete: boolean,
+    tunnel = false,
+  ): void {
+    if (this.anims.has(id)) this.removeRailroad(id);
     const tiles = computeRailTiles(tileRefs, this.mapW);
     const anim: RailroadAnim = {
+      tunnel,
       tiles,
       headIndex: complete ? tiles.length : 0,
       tailIndex: complete ? 0 : tiles.length,
@@ -221,10 +232,17 @@ export class RailroadCache {
     // Increment ref counts for all tiles in this railroad
     for (const rt of tiles) {
       this.tileRefCount.set(rt.ref, (this.tileRefCount.get(rt.ref) ?? 0) + 1);
+      if (tunnel)
+        this.tunnelRefCount.set(
+          rt.ref,
+          (this.tunnelRefCount.get(rt.ref) ?? 0) + 1,
+        );
     }
 
     if (complete) {
-      for (const rt of tiles) this.railroadState[rt.ref] = rt.type + 1;
+      for (const rt of tiles)
+        this.railroadState[rt.ref] =
+          (rt.type + 1) | (this.tunnelRefCount.has(rt.ref) ? 128 : 0);
       this.railroadDirty = true;
     }
   }
@@ -235,12 +253,20 @@ export class RailroadCache {
 
     // Decrement ref counts; only clear tiles whose count drops to zero
     for (const rt of anim.tiles) {
+      if (anim.tunnel) {
+        const tunnels = (this.tunnelRefCount.get(rt.ref) ?? 1) - 1;
+        if (tunnels <= 0) this.tunnelRefCount.delete(rt.ref);
+        else this.tunnelRefCount.set(rt.ref, tunnels);
+      }
       const count = (this.tileRefCount.get(rt.ref) ?? 1) - 1;
       if (count <= 0) {
         this.tileRefCount.delete(rt.ref);
         this.railroadState[rt.ref] = 0;
       } else {
         this.tileRefCount.set(rt.ref, count);
+        this.railroadState[rt.ref] =
+          (this.railroadState[rt.ref] & 127) |
+          (this.tunnelRefCount.has(rt.ref) ? 128 : 0);
       }
     }
 
@@ -255,7 +281,8 @@ export class RailroadCache {
       if (anim.tailIndex - anim.headIndex <= 2 * RAIL_INCREMENT) {
         for (let i = anim.headIndex; i < anim.tailIndex; i++) {
           const t = anim.tiles[i]!;
-          this.railroadState[t.ref] = t.type + 1;
+          this.railroadState[t.ref] =
+            (t.type + 1) | (this.tunnelRefCount.has(t.ref) ? 128 : 0);
           this.revealedRailTiles.push(t.ref);
         }
         anim.headIndex = anim.tailIndex;
@@ -264,12 +291,14 @@ export class RailroadCache {
       } else {
         for (let i = anim.headIndex; i < anim.headIndex + RAIL_INCREMENT; i++) {
           const t = anim.tiles[i]!;
-          this.railroadState[t.ref] = t.type + 1;
+          this.railroadState[t.ref] =
+            (t.type + 1) | (this.tunnelRefCount.has(t.ref) ? 128 : 0);
           this.revealedRailTiles.push(t.ref);
         }
         for (let i = anim.tailIndex - RAIL_INCREMENT; i < anim.tailIndex; i++) {
           const t = anim.tiles[i]!;
-          this.railroadState[t.ref] = t.type + 1;
+          this.railroadState[t.ref] =
+            (t.type + 1) | (this.tunnelRefCount.has(t.ref) ? 128 : 0);
           this.revealedRailTiles.push(t.ref);
         }
         anim.headIndex += RAIL_INCREMENT;

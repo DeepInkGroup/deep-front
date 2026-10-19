@@ -21,6 +21,8 @@ import { RailNetwork } from "./RailNetwork";
 import { Railroad } from "./Railroad";
 import { RailSpatialGrid } from "./RailroadSpatialGrid";
 import { Cluster, TrainStation } from "./TrainStation";
+import { waterTunnelPath, WATER_TUNNEL_MIN_LEVEL } from "./WaterTunnel";
+import { TrainStationExecution } from "../execution/TrainStationExecution";
 
 /**
  * The Stations handle their own neighbors so the graph is naturally traversable,
@@ -148,6 +150,73 @@ export class RailNetworkImpl implements RailNetwork {
     }
   }
 
+  refreshWaterTunnels(): void {
+    // High-level rail buildings can become portals even without a nearby hub.
+    for (const unit of this.game
+      .units()
+      .filter((u) => RailStructures.has(u.type()))) {
+      if (
+        unit.level() >= WATER_TUNNEL_MIN_LEVEL &&
+        !unit.isUnderConstruction() &&
+        !unit.hasTrainStation()
+      )
+        this.game.addExecution(
+          new TrainStationExecution(unit, unit.type() === UnitType.Factory),
+        );
+    }
+    const stations = [...this._stationManager.getAll()];
+    const checked = new Set<Railroad>();
+    for (const station of stations)
+      for (const rail of [...station.getRailroads()]) {
+        if (!rail.tunnel || checked.has(rail)) continue;
+        checked.add(rail);
+        if (!waterTunnelPath(this.game, rail.from.unit, rail.to.unit)) {
+          const cluster = rail.from.getCluster();
+          rail.delete(this.game);
+          this.railGrid.unregister(rail);
+          if (cluster) this.dirtyClusters.add(cluster);
+        }
+      }
+    this.recomputeClusters();
+    for (const from of stations) {
+      if (
+        from.unit.level() < WATER_TUNNEL_MIN_LEVEL ||
+        from.unit.isUnderConstruction()
+      )
+        continue;
+      for (const { unit } of this.game.nearbyUnits(
+        from.tile(),
+        this.game.config().trainStationMaxRange(),
+        RailStructures.types,
+      )) {
+        const to = this._stationManager.findStation(unit);
+        if (!to || to.id <= from.id) continue;
+        const path = waterTunnelPath(this.game, from.unit, unit);
+        if (!path) continue;
+        const existing = from.getRailroadTo(to);
+        if (existing) {
+          if (
+            !existing.tunnel &&
+            existing.tiles.some((t) => this.game.isWater(t))
+          ) {
+            existing.tunnel = true;
+            this.game.addUpdate({
+              type: GameUpdateType.RailroadConstructionEvent,
+              id: existing.id,
+              tiles: existing.tiles,
+              tunnel: true,
+            });
+          }
+          continue;
+        }
+        this.createConnection(from, to, path, true);
+        const a = from.getCluster(),
+          b = to.getCluster();
+        if (a && b && a !== b) this.mergeClusters(new Set([a, b]));
+      }
+    }
+  }
+
   recomputeClusters() {
     if (this.dirtyClusters.size === 0) return;
 
@@ -205,6 +274,8 @@ export class RailNetworkImpl implements RailNetwork {
 
     const editedClusters = new Set<Cluster>();
     for (const rail of rails) {
+      // Tunnel portals cannot be split by an intermediate low-level building.
+      if (rail.tunnel) continue;
       const from = rail.from;
       const to = rail.to;
       const originalId = rail.id;
@@ -270,6 +341,7 @@ export class RailNetworkImpl implements RailNetwork {
     }
     const tiles = new Set<TileRef>();
     for (const railroad of this.railGrid.query(tile, this.stationRadius)) {
+      if (railroad.tunnel) continue;
       for (const t of railroad.tiles) {
         tiles.add(t);
       }
@@ -278,7 +350,9 @@ export class RailNetworkImpl implements RailNetwork {
   }
 
   private canSnapToExistingRailway(tile: TileRef): boolean {
-    return this.railGrid.query(tile, this.stationRadius).size > 0;
+    return [...this.railGrid.query(tile, this.stationRadius)].some(
+      (rail) => !rail.tunnel,
+    );
   }
 
   computeGhostRailPaths(unitType: UnitType, tile: TileRef): TileRef[][] {
@@ -423,20 +497,32 @@ export class RailNetworkImpl implements RailNetwork {
   }
 
   private connect(from: TrainStation, to: TrainStation) {
-    const path = this.pathService.findTilePath(from.tile(), to.tile());
+    const tunnel = waterTunnelPath(this.game, from.unit, to.unit);
+    const path =
+      tunnel ?? this.pathService.findTilePath(from.tile(), to.tile());
     if (path.length > 0 && path.length < this.game.config().railroadMaxSize()) {
-      const railroad = new Railroad(from, to, path, this.nextId++);
-      this.game.addUpdate({
-        type: GameUpdateType.RailroadConstructionEvent,
-        id: railroad.id,
-        tiles: railroad.tiles,
-      });
-      from.addRailroad(railroad);
-      to.addRailroad(railroad);
-      this.railGrid.register(railroad);
+      this.createConnection(from, to, path, tunnel !== null);
       return true;
     }
     return false;
+  }
+
+  private createConnection(
+    from: TrainStation,
+    to: TrainStation,
+    path: TileRef[],
+    tunnel: boolean,
+  ) {
+    const railroad = new Railroad(from, to, path, this.nextId++, tunnel);
+    this.game.addUpdate({
+      type: GameUpdateType.RailroadConstructionEvent,
+      id: railroad.id,
+      tiles: railroad.tiles,
+      tunnel,
+    });
+    from.addRailroad(railroad);
+    to.addRailroad(railroad);
+    this.railGrid.register(railroad);
   }
 
   private distanceFrom(

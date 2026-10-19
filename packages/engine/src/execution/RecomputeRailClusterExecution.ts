@@ -18,6 +18,7 @@ export class RecomputeRailClusterExecution implements Execution {
   init(mg: Game, ticks: number): void {}
 
   tick(ticks: number): void {
+    if (ticks % 20 === 0) this.railNetwork.refreshWaterTunnels();
     this.railNetwork.recomputeClusters();
   }
 

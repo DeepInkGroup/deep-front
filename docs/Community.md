@@ -6,22 +6,24 @@ account is required to submit maps; guests can still play.
 
 ## Create a map
 
-1. Sign in, enter a map name and description, and choose Standard, Large or Grand.
-2. Paint Water, Plains, Hills and Mountains. Start with Archipelago, Continents,
-   Twin Straits, Inland Sea, Caldera or Blank ocean. Set a repeatable world seed
-   or choose Surprise me. Undo and Redo restore terrain and nation spawns.
-3. Select Nation spawn, enter a nation name, then click land to add it.
-4. Save draft to keep an editable copy on this device. Drafts also save
-   automatically after edits. They are separate for each account and browser.
-5. Choose **Publish for review**. The map is private while pending.
-6. Check **Your submissions** for the decision and feedback. **Edit a copy**
-   creates a new revision for review without modifying a published map.
+1. Sign in, name your map, and choose its size. New maps start as blank water.
+2. Paint Water, Plains, Hills or a narrow River / canal. Use a round or square
+   brush, connected fill, straight lines, rectangles or elliptical islands.
+3. Place named nation spawns manually or randomize 2-24 spawns across land.
+4. Save your draft on this device. Undo and Redo restore terrain and spawns;
+   Ctrl+Z and Ctrl+Shift+Z work while the canvas is focused.
+5. Publish for review, then check Your submissions for approval or feedback.
 
-The editor has 128 × 96 cells. Standard output is 1024 × 768; Large is
-1536 × 1152; Grand is 2048 × 1536 and is the default for new drafts. Older drafts
-retain their chosen size. Use River / canal for narrow waterways, Smooth for
-terrain edges, Fill connected terrain for large changes, and 100–300% zoom
-to work on detail. Coastlines and elevations are interpolated at game resolution.
+The editor has 128 x 96 editable cells. Output sizes range from Standard
+(1024 x 768) through Titan (4096 x 3072), including Large, Grand and Massive.
+Saved drafts retain their chosen size. Coastlines, shallow water and terrain
+shading preview the geography without changing the painted cell data.
+
+Use Space+drag, the middle mouse button, or Pan to navigate. Ctrl+scroll zooms
+around the cursor; Fit canvas brings the whole map back into view. Full screen
+map expands the painting workspace. B/F/L/R/E select Brush, Fill, Line,
+Rectangle and Ellipse. Mountains, smoothing controls and templates are omitted.
+
 The server validates the terrain, land area and nation locations,
 then generates full-size and compact game binaries when the administrator
 approves it. Approved maps appear under **Community maps** in both solo and

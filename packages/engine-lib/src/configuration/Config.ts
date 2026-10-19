@@ -31,6 +31,7 @@ import { assertNever } from "../Util";
 export interface NukeMagnitude {
   inner: number;
   outer: number;
+  buildingsOnly?: boolean;
 }
 
 const DEFAULT_SPAWN_IMMUNITY_TICKS = 5 * 10;
@@ -488,8 +489,9 @@ export class Config {
       case UnitType.MIRVWarhead:
         return { inner: 12, outer: 18 };
       case UnitType.StealthMissile:
-        return { ...STEALTH_BLAST };
+        return { ...STEALTH_BLAST, buildingsOnly: true };
       case UnitType.HypersonicMissile:
+        return { inner: 12, outer: 30, buildingsOnly: true };
       case UnitType.AtomBomb:
         return { inner: 12, outer: 30 };
       case UnitType.HydrogenBomb:

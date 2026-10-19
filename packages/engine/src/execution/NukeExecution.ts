@@ -489,6 +489,41 @@ export class NukeExecution implements Execution {
     const mg = this.mg;
     const config = mg.config();
 
+    if (
+      this.nukeType === UnitType.StealthMissile ||
+      this.nukeType === UnitType.HypersonicMissile
+    ) {
+      const magnitude = config.nukeMagnitudes(this.nukeType);
+      const affected = new Set<Player>();
+      for (const { unit } of mg.nearbyUnits(
+        this.dst,
+        magnitude.outer,
+        Structures.types,
+      )) {
+        if (this.isProtectedPlayer(unit.owner())) continue;
+        affected.add(unit.owner());
+        const friendly = this.player.isFriendly(unit.owner(), true);
+        unit.delete(true, friendly ? undefined : this.player);
+      }
+      // Conventional strikes leave territory, troops, ships, water and fallout untouched.
+      this.redrawBuildings(magnitude.outer + SPRITE_RADIUS);
+      this.active = false;
+      this.nuke.setReachedTarget();
+      this.nuke.delete(false);
+      for (const player of affected)
+        mg.displayMessage(
+          "events_display.advanced_missile_detonated",
+          MessageType.NUKE_DETONATED,
+          player.id(),
+          undefined,
+          { name: this.player.displayName() },
+          undefined,
+          this.player.id(),
+        );
+      mg.stats().bombLand(this.player, this.target(), this.nukeType);
+      return;
+    }
+
     const magnitude = config.nukeMagnitudes(this.nuke.type());
     const toDestroy = this.tilesToDestroy();
 

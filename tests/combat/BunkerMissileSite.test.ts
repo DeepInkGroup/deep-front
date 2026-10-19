@@ -77,7 +77,7 @@ describe("Bunker Missile Site", () => {
       expect(missile.isActive()).toBe(false);
       expect(game.owner(protectedTile)).toBe(bob);
       expect(protectedBuilding.isActive()).toBe(true);
-      expect(game.owner(target)).not.toBe(bot);
+      expect(game.owner(target)).toBe(bot);
     },
   );
   it("flies substantially faster with production hypersonic speed", async () => {
@@ -142,7 +142,7 @@ describe("Bunker Missile Site", () => {
       expect(bunker.isUnderConstruction()).toBe(false);
     },
   );
-  it("locks upgrades for 5 seconds, charges once and rejects bulk bypass", async () => {
+  it("locks upgrades for 2 seconds, charges once and rejects bulk bypass", async () => {
     const bunker = site(),
       before = alice.gold();
     game.addExecution(new UpgradeStructureExecution(alice, bunker.id(), 50));
@@ -152,7 +152,7 @@ describe("Bunker Missile Site", () => {
     expect(before - alice.gold()).toBe(1_300_000n);
     expect(alice.canUpgradeUnit(bunker)).toBe(false);
     expect(alice.canBuild(STEALTH, game.ref(180, 100))).toBe(false);
-    executeTicks(game, 49);
+    executeTicks(game, 19);
     expect(bunker.level()).toBe(1);
     executeTicks(game, 2);
     expect(bunker.level()).toBe(2);

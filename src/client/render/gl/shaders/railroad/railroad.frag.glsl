@@ -165,7 +165,9 @@ void main() {
   if (tc.x < 0 || tc.y < 0 || tc.x >= int(uMapSize.x) || tc.y >= int(uMapSize.y))
     discard;
 
-  uint railType = texelFetch(uRailroadTex, tc, 0).r;
+  uint encodedRail = texelFetch(uRailroadTex, tc, 0).r;
+  bool tunnel = (encodedRail & 128u) != 0u;
+  uint railType = encodedRail & 127u;
   uint ghostRailType = texelFetch(uGhostRailTex, tc, 0).r;
   vec2 f = fract(vWorldPos);
 
@@ -191,12 +193,14 @@ void main() {
       ivec2 ntc = tc + ivec2(dx, dy);
       if (ntc.x < 0 || ntc.y < 0 || ntc.x >= int(uMapSize.x) || ntc.y >= int(uMapSize.y))
         continue;
-      uint nRail = texelFetch(uRailroadTex, ntc, 0).r;
+      uint nEncoded = texelFetch(uRailroadTex, ntc, 0).r;
+      uint nRail = nEncoded & 127u;
       if (nRail == 0u) continue;
       if (!detailMode) {
         realCov = max(realCov, railLineCoverage(nRail, vWorldPos - vec2(ntc)));
       }
       if (hitBridge) continue;
+      if ((nEncoded & 128u) != 0u) continue;
       uint nTerr = texelFetch(uTerrainTex, ntc, 0).r;
       if ((nTerr & 0x80u) != 0u) continue; // land tile, no bridge
       ivec2 lp = fp - ntc * 2;
@@ -205,6 +209,13 @@ void main() {
   }
 
   bool hitRail = (realCov * uRailAlpha > 0.001);
+  bool underWater = (texelFetch(uTerrainTex, tc, 0).r & 128u) == 0u;
+  if (tunnel && underWater && hitRail) {
+    // Dashed cyan chart line marks the tunnel beneath the water.
+    float dash = step(0.3, fract((vWorldPos.x + vWorldPos.y) / 4.0));
+    fragColor = vec4(0.2, 0.8, 0.95, realCov * uRailAlpha * uRailFade * 0.65 * dash);
+    return;
+  }
   bool hitGhost = (ghostCov * uRailAlpha > 0.001);
 
   if (!hitBridge && !hitRail && !hitGhost) discard;

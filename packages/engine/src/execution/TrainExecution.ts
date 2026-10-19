@@ -128,6 +128,17 @@ export class TrainExecution implements Execution {
       this.deleteTrain();
       return;
     }
+    // A collapsed or de-qualified tunnel invalidates a train's old motion plan.
+    const rail = this.currentRailroad?.getState().railroad;
+    if (
+      rail?.tunnel &&
+      (rail.from.unit.level() < 31 ||
+        rail.to.unit.level() < 31 ||
+        this.stations[0].getRailroadTo(this.stations[1]) !== rail)
+    ) {
+      this.deleteTrain();
+      return;
+    }
 
     const tile = this.getNextTile();
     if (tile) {

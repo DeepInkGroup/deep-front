@@ -36,7 +36,7 @@ jobs:
         run: npx vitest run tests/combat/EMPMissile.test.ts tests/economy/StraitControl.test.ts tests/client/StraitTollPanel.test.ts tests/core/executions/TradeShipExecution.test.ts tests/PortExecution.test.ts
       - run: npm run build
       - name: DeepPlace and railroad trade validation
-        run: npx vitest run tests/DeepPlace.test.ts tests/core/game/TrainStation.test.ts tests/core/game/Cluster.test.ts tests/TradeTrainScenarios.test.ts tests/core/executions/TrainExecution.test.ts
+        run: npx vitest run tests/combat/ConventionalMissiles.test.ts tests/economy/WaterTunnels.test.ts tests/client/MapEditorTools.test.ts tests/client/WaterTunnelRendering.test.ts tests/DeepPlace.test.ts tests/core/game/TrainStation.test.ts tests/core/game/Cluster.test.ts tests/TradeTrainScenarios.test.ts tests/core/executions/TrainExecution.test.ts
       - name: Resource buildings, AI and bomb regression tests
         run: npx vitest run tests/economy/CopperMine.test.ts tests/economy/LogisticsCenter.test.ts tests/economy/CustomsOffice.test.ts tests/economy/EconomyAI.test.ts tests/economy/ResourceBombs.test.ts tests/NationStructureBehavior.test.ts tests/core/snapshot/BasicExecutions.test.ts tests/core/snapshot/SnapshotFixtures.test.ts
       - name: Production dependency security check

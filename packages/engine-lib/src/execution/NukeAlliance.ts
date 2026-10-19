@@ -21,6 +21,7 @@ export function computeNukeBlastCounts(
 
   const inner2 = magnitude.inner * magnitude.inner;
   const counts = new Map<number, number>();
+  if (magnitude.buildingsOnly) return counts;
 
   gm.circleSearch(targetTile, magnitude.outer, (tile: TileRef, d2: number) => {
     const ownerSmallId = gm.ownerID(tile);
@@ -65,6 +66,7 @@ export function wouldNukeBreakAlliance(
       unit.owner().isPlayer() && allySmallIds.has(unit.owner().smallID()),
   );
   if (wouldDestroyAlliedStructure) return true;
+  if (magnitude.buildingsOnly) return false;
 
   const inner2 = magnitude.inner * magnitude.inner;
   const allyTileCounts = new Map<number, number>();

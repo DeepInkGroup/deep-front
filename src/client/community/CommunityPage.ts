@@ -18,6 +18,12 @@ import {
   signOutCommunity,
 } from "./Community";
 import { blankDraft, terrainStats } from "./MapDesign";
+import {
+  paintBrush,
+  paintShape,
+  type PaintMode,
+  type EditorPoint,
+} from "./MapEditorTools";
 import { accountDate } from "./ProfilePage";
 
 const COLORS = ["#315a70", "#a9bb7d", "#b6a477", "#d3d0c2"];
@@ -32,7 +38,8 @@ export class CommunityPage extends LitElement {
   @state() private zoom = 1;
   @state() private mapFullscreen = false;
   @state() private grid = false;
-  @state() private fill = false;
+  @state() private paintMode: PaintMode = "brush";
+  @state() private squareBrush = false;
   @state() private tool = 1;
   @state() private brush = 4;
   @state() private spawnCount = 8;
@@ -48,6 +55,12 @@ export class CommunityPage extends LitElement {
   @state() private selectedDraft: MapDraft | null = null;
   @state() private filter = "pending";
   private painting = false;
+  private hoverPoint: EditorPoint | null = null;
+  private shapeStart: EditorPoint | null = null;
+  private shapeBase: number[] | null = null;
+  private spaceHeld = false;
+  private pan: { x: number; y: number; left: number; top: number } | null =
+    null;
   private dashboardTimer: ReturnType<typeof setInterval> | undefined;
   private undo: { tiles: number[]; nations: MapDraft["nations"] }[] = [];
   private redo: { tiles: number[]; nations: MapDraft["nations"] }[] = [];
@@ -73,6 +86,9 @@ export class CommunityPage extends LitElement {
     window.addEventListener("community-session", this.onSession);
     window.addEventListener("showPage", this.onPage);
     document.addEventListener("fullscreenchange", this.onFullscreenChange);
+    window.addEventListener("keydown", this.editorKeyDown);
+    window.addEventListener("keyup", this.editorKeyUp);
+    window.addEventListener("blur", this.editorKeyUp);
     this.dashboardTimer = setInterval(() => {
       if (
         this.user &&
@@ -89,6 +105,9 @@ export class CommunityPage extends LitElement {
     window.removeEventListener("community-session", this.onSession);
     window.removeEventListener("showPage", this.onPage);
     document.removeEventListener("fullscreenchange", this.onFullscreenChange);
+    window.removeEventListener("keydown", this.editorKeyDown);
+    window.removeEventListener("keyup", this.editorKeyUp);
+    window.removeEventListener("blur", this.editorKeyUp);
     clearInterval(this.dashboardTimer);
   }
   updated() {
@@ -279,8 +298,48 @@ export class CommunityPage extends LitElement {
     const s = canvas.width / W;
     for (let y = 0; y < H; y++)
       for (let x = 0; x < W; x++) {
-        ctx.fillStyle = COLORS[this.draft.tiles[y * W + x]];
+        const terrain = this.draft.tiles[y * W + x];
+        const adjacent = (dx: number, dy: number) =>
+          x + dx >= 0 && x + dx < W && y + dy >= 0 && y + dy < H
+            ? this.draft.tiles[(y + dy) * W + x + dx]
+            : 0;
+        const shore =
+          terrain === 0 &&
+          [
+            [1, 0],
+            [-1, 0],
+            [0, 1],
+            [0, -1],
+          ].some(([dx, dy]) => adjacent(dx, dy) > 0);
+        ctx.fillStyle =
+          terrain === 0 ? (shore ? "#32758b" : "#173d59") : COLORS[terrain];
         ctx.fillRect(x * s, y * s, s, s);
+        if (terrain > 0) {
+          const grain = ((x * 17 + y * 31) % 11) / 11;
+          ctx.fillStyle = grain > 0.5 ? "#ffffff09" : "#00000008";
+          ctx.fillRect(x * s, y * s, s, s);
+          ctx.strokeStyle = "#e0ce93";
+          ctx.lineWidth = Math.max(1, s * 0.22);
+          for (const [dx, dy] of [
+            [1, 0],
+            [-1, 0],
+            [0, 1],
+            [0, -1],
+          ])
+            if (adjacent(dx, dy) === 0) {
+              ctx.beginPath();
+              if (dx) {
+                const px = (x + (dx > 0 ? 1 : 0)) * s;
+                ctx.moveTo(px, y * s);
+                ctx.lineTo(px, (y + 1) * s);
+              } else {
+                const py = (y + (dy > 0 ? 1 : 0)) * s;
+                ctx.moveTo(x * s, py);
+                ctx.lineTo((x + 1) * s, py);
+              }
+              ctx.stroke();
+            }
+        }
       }
     ctx.strokeStyle = "#ffffff0a";
     ctx.lineWidth = 1;
@@ -295,6 +354,19 @@ export class CommunityPage extends LitElement {
       ctx.moveTo(0, y * s);
       ctx.lineTo(canvas.width, y * s);
       ctx.stroke();
+    }
+    if (this.hoverPoint && this.tool !== 7 && this.tool !== 4) {
+      const p = this.hoverPoint,
+        r = ((this.tool === 6 ? 1 : this.brush) * s) / 2;
+      ctx.strokeStyle = "#ffffffcc";
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 2]);
+      ctx.beginPath();
+      if (this.squareBrush)
+        ctx.rect((p.x + 0.5) * s - r, (p.y + 0.5) * s - r, r * 2, r * 2);
+      else ctx.arc((p.x + 0.5) * s, (p.y + 0.5) * s, r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
     for (const [i, n] of this.draft.nations.entries()) {
       ctx.fillStyle = "#ffe399";
@@ -332,22 +404,81 @@ export class CommunityPage extends LitElement {
     };
   }
   private paint(x: number, y: number) {
-    const radius = this.tool === 6 ? 0.6 : (this.brush - 1) / 2;
-    for (
-      let py = Math.max(0, Math.floor(y - radius));
-      py <= Math.min(H - 1, Math.ceil(y + radius));
-      py++
-    )
-      for (
-        let px = Math.max(0, Math.floor(x - radius));
-        px <= Math.min(W - 1, Math.ceil(x + radius));
-        px++
-      )
-        if ((px - x) ** 2 + (py - y) ** 2 <= (radius + 0.5) ** 2) {
-          const index = py * W + px;
-          this.draft.tiles[index] = this.tool === 6 ? 0 : this.tool;
-        }
+    paintBrush(
+      this.draft.tiles,
+      { x, y },
+      this.tool === 6 ? 0 : this.tool,
+      this.tool === 6 ? 1 : this.brush,
+      this.squareBrush,
+    );
   }
+  private editorKeyDown = (event: KeyboardEvent) => {
+    if (
+      !this.getClientRects().length ||
+      (event.target as HTMLElement)?.closest(
+        "input,textarea,select,[contenteditable]",
+      )
+    )
+      return;
+    if (event.code === "Space") {
+      event.preventDefault();
+      this.spaceHeld = true;
+      return;
+    }
+    if (this.painting) return;
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+      event.preventDefault();
+      event.shiftKey ? this.redoTerrain() : this.undoTerrain();
+      return;
+    }
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    const modes: Record<string, PaintMode> = {
+      b: "brush",
+      f: "fill",
+      l: "line",
+      r: "rectangle",
+      e: "ellipse",
+    };
+    const mode = modes[event.key.toLowerCase()];
+    if (mode) {
+      this.paintMode = mode;
+      event.preventDefault();
+    }
+  };
+  private editorKeyUp = () => {
+    this.spaceHeld = false;
+  };
+  private zoomAt = async (event: WheelEvent) => {
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    const viewport = event.currentTarget as HTMLElement;
+    const rect = viewport.getBoundingClientRect(),
+      x = event.clientX - rect.left,
+      y = event.clientY - rect.top;
+    const old = this.zoom,
+      next = Math.max(0.25, Math.min(4, old * (event.deltaY < 0 ? 1.25 : 0.8)));
+    const left = ((viewport.scrollLeft + x) * next) / old - x,
+      top = ((viewport.scrollTop + y) * next) / old - y;
+    this.zoom = Number(next.toFixed(3));
+    await this.updateComplete;
+    viewport.scrollLeft = left;
+    viewport.scrollTop = top;
+  };
+  private pointerLeave = () => {
+    if (!this.painting && !this.pan) {
+      this.hoverPoint = null;
+      this.draw();
+    }
+  };
+  private pointerCancel = () => {
+    if (this.shapeBase) this.draft = { ...this.draft, tiles: this.shapeBase };
+    this.pan = null;
+    this.painting = false;
+    this.shapeBase = null;
+    this.shapeStart = null;
+    this.lastPoint = null;
+    this.draw();
+  };
   private fillTerrain(x: number, y: number) {
     const original = this.draft.tiles[y * W + x];
     if (original === this.tool) return;
@@ -372,6 +503,19 @@ export class CommunityPage extends LitElement {
   private pointerDown = (event: PointerEvent) => {
     if (this.busy || this.user?.role !== "player") return;
     event.preventDefault();
+    if (event.button === 1 || this.spaceHeld || this.tool === 7) {
+      const viewport = this.querySelector<HTMLElement>(".terrain-viewport")!;
+      this.pan = {
+        x: event.clientX,
+        y: event.clientY,
+        left: viewport.scrollLeft,
+        top: viewport.scrollTop,
+      };
+      (event.currentTarget as HTMLCanvasElement).setPointerCapture(
+        event.pointerId,
+      );
+      return;
+    }
     const point = this.point(event);
     if (this.tool === 4) {
       if (!this.nationName.trim()) {
@@ -400,7 +544,7 @@ export class CommunityPage extends LitElement {
     }
     this.error = "";
     this.remember();
-    if (this.fill && this.tool < 4) {
+    if (this.paintMode === "fill" && this.tool < 4) {
       this.fillTerrain(point.x, point.y);
       this.draft = {
         ...this.draft,
@@ -412,6 +556,8 @@ export class CommunityPage extends LitElement {
       return;
     }
     this.painting = true;
+    this.shapeStart = point;
+    this.shapeBase = [...this.draft.tiles];
     this.lastPoint = point;
     (event.currentTarget as HTMLCanvasElement).setPointerCapture(
       event.pointerId,
@@ -420,7 +566,36 @@ export class CommunityPage extends LitElement {
     this.draw();
   };
   private pointerMove = (event: PointerEvent) => {
-    if (!this.painting) return;
+    if (this.pan) {
+      const viewport = this.querySelector<HTMLElement>(".terrain-viewport")!;
+      viewport.scrollLeft = this.pan.left + this.pan.x - event.clientX;
+      viewport.scrollTop = this.pan.top + this.pan.y - event.clientY;
+      return;
+    }
+    this.hoverPoint = this.point(event);
+    if (!this.painting) {
+      this.draw();
+      return;
+    }
+    if (
+      this.shapeBase &&
+      this.shapeStart &&
+      this.paintMode !== "brush" &&
+      this.paintMode !== "fill"
+    ) {
+      this.draft.tiles = [...this.shapeBase];
+      paintShape(
+        this.draft.tiles,
+        this.shapeStart,
+        this.hoverPoint,
+        this.paintMode,
+        this.tool === 6 ? 0 : this.tool,
+        this.tool === 6 ? 1 : this.brush,
+        this.squareBrush,
+      );
+      this.draw();
+      return;
+    }
     const point = this.point(event),
       from = this.lastPoint || point;
     const steps = Math.max(
@@ -438,7 +613,13 @@ export class CommunityPage extends LitElement {
     this.draw();
   };
   private pointerUp = () => {
+    if (this.pan) {
+      this.pan = null;
+      return;
+    }
     if (!this.painting) return;
+    this.shapeBase = null;
+    this.shapeStart = null;
     this.painting = false;
     this.lastPoint = null;
     this.draft = {
@@ -716,6 +897,13 @@ export class CommunityPage extends LitElement {
           </p>
         </div>
         <div class="community-panel terrain-panel">
+          <div class="studio-canvas-heading">
+            <div>
+              <span class="studio-eyebrow">WORLD BUILDER</span>
+              <h2>${this.draft.name || "Your blank canvas"}</h2>
+            </div>
+            <span class="studio-live-badge">Local draft</span>
+          </div>
           <div class="map-metrics" aria-label="Map statistics">
             <span
               ><strong
@@ -735,6 +923,7 @@ export class CommunityPage extends LitElement {
                 { name: "Hills", type: 2 },
                 { name: "Nation spawn", type: 4 },
                 { name: "River / canal", type: 6 },
+                { name: "Pan", type: 7 },
               ].map(
                 ({ name, type }) =>
                   html`<button
@@ -770,27 +959,49 @@ export class CommunityPage extends LitElement {
             <label
               >Paint mode<select
                 aria-label="Paint mode"
-                .value=${this.fill ? "fill" : "brush"}
+                .value=${this.paintMode}
                 @change=${(e: Event) =>
-                  (this.fill =
-                    (e.target as HTMLSelectElement).value === "fill")}
+                  (this.paintMode = (e.target as HTMLSelectElement)
+                    .value as PaintMode)}
               >
                 <option value="brush">Brush</option>
                 <option value="fill">Fill connected terrain</option>
+                <option value="line">Line</option>
+                <option value="rectangle">Rectangle</option>
+                <option value="ellipse">Ellipse / island</option>
               </select></label
             ><label
-              >Zoom<select
-                aria-label="Editor zoom"
-                .value=${String(this.zoom)}
+              >Brush shape<select
+                aria-label="Brush shape"
+                .value=${this.squareBrush ? "square" : "round"}
                 @change=${(e: Event) =>
-                  (this.zoom = Number((e.target as HTMLSelectElement).value))}
+                  (this.squareBrush =
+                    (e.target as HTMLSelectElement).value === "square")}
               >
-                <option value="1">100%</option>
-                <option value="1.5">150%</option>
-                <option value="2">200%</option>
-                <option value="3">300%</option>
+                <option value="round">Round</option>
+                <option value="square">Square</option>
               </select></label
-            ><label class="grid-toggle"
+            >
+            <label
+              >Zoom <span>${Math.round(this.zoom * 100)}%</span
+              ><input
+                aria-label="Editor zoom"
+                type="range"
+                min="0.25"
+                max="4"
+                step="0.05"
+                .value=${String(this.zoom)}
+                @input=${(e: Event) =>
+                  (this.zoom = Number((e.target as HTMLInputElement).value))}
+            /></label>
+            <button
+              type="button"
+              class="community-button small"
+              @click=${() => (this.zoom = 16 / this.draft.scale)}
+            >
+              Fit canvas
+            </button>
+            <label class="grid-toggle"
               ><input
                 type="checkbox"
                 .checked=${this.grid}
@@ -854,24 +1065,26 @@ export class CommunityPage extends LitElement {
             class="terrain-viewport"
             tabindex="0"
             aria-label="Map canvas. Scroll to pan when zoomed."
+            @wheel=${this.zoomAt}
           >
             <canvas
               class="terrain-editor"
               style=${this.mapFullscreen
                 ? `height:${(this.zoom * this.draft.scale * 100) / 16}%;width:auto;max-width:none`
                 : `width:${(this.zoom * this.draft.scale * 100) / 16}%;max-width:none`}
-              width="768"
-              height="576"
+              width="1024"
+              height="768"
               aria-label="Map terrain editor. Drag to paint terrain."
               @pointerdown=${this.pointerDown}
               @pointermove=${this.pointerMove}
               @pointerup=${this.pointerUp}
-              @pointercancel=${this.pointerUp}
+              @pointercancel=${this.pointerCancel}
+              @pointerleave=${this.pointerLeave}
             ></canvas>
           </div>
           <div class="editor-bottom">
             <span class="community-muted"
-              >Drag to paint · ${W} × ${H} editable cells</span
+              >Drag to paint · Space + drag to pan · Ctrl + scroll to zoom</span
             ><button
               type="button"
               class="community-button small"

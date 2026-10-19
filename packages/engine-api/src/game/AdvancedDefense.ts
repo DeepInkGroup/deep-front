@@ -9,3 +9,4 @@ export const CIWS_MAX_LEVEL = 5;
 export const EMP_COST = 1_000_000;
 export const EMP_RADIUS = 70;
 export const EMP_DISABLE_TICKS = 50;
+export const BUNKER_UPGRADE_TICKS = 20;

@@ -151,6 +151,7 @@ export interface BonusEventUpdate {
 }
 
 export interface RailroadConstructionUpdate {
+  tunnel?: boolean;
   type: GameUpdateType.RailroadConstructionEvent;
   id: number;
   tiles: TileRef[];

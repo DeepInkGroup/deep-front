@@ -331,6 +331,7 @@ export class ReplayFrameBuilder {
           type: GameUpdateType.RailroadConstructionEvent,
           id: e.id,
           tiles: e.tiles,
+          tunnel: e.tunnel,
         });
         break;
       case RailroadEventKind.Snap:

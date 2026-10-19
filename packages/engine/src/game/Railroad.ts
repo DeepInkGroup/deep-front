@@ -20,6 +20,7 @@ export class Railroad {
     public to: TrainStation,
     public tiles: TileRef[],
     public id: number,
+    public tunnel = false,
   ) {}
 
   delete(game: Game) {
@@ -57,6 +58,7 @@ export class Railroad {
       from: w.station(this.from),
       to: w.station(this.to),
       tiles: w.tiles(this.tiles),
+      tunnel: this.tunnel,
     };
   }
 
@@ -66,17 +68,20 @@ export class Railroad {
     this.from = r.station(s.from);
     this.to = r.station(s.to);
     this.tiles = Array.from(s.tiles);
+    this.tunnel = s.tunnel ?? false;
   }
 }
 
 export const RailroadSnapshot = snapshotType({
   name: "Railroad",
-  version: 1,
+  version: 2,
+  migrations: { 1: (s) => ({ ...s, tunnel: false }) },
   schema: z.object({
     id: zInt(),
     from: zRef(),
     to: zRef(),
     tiles: zTiles(),
+    tunnel: z.boolean().optional(),
   }),
 });
 export type RailroadState = z.infer<typeof RailroadSnapshot.schema>;

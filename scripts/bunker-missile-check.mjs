@@ -369,7 +369,7 @@ try {
   await launchMissiles(solo);
   await solo.context().close();
   console.log(
-    "Solo bunker: placement, 5s upgrades, both missile purchases and mobile controls passed",
+    "Solo bunker: placement, 2s upgrades, both missile purchases and mobile controls passed",
   );
 
   const host = await newPage("OilHost");

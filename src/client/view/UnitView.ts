@@ -1,4 +1,5 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
+import { BUNKER_UPGRADE_TICKS } from "@openfront/engine-api/game/AdvancedDefense";
 import {
   NukeState,
   Tick,
@@ -96,7 +97,7 @@ export class UnitView implements UnitLike {
       this.state.constructionDuration =
         this.type() === UnitType.BunkerMissileSite &&
         this._createdAt < this.gameView.ticks()
-          ? 50
+          ? BUNKER_UPGRADE_TICKS
           : this.gameView.config().unitInfo(this.type()).constructionDuration;
     } else if (!this.state.underConstruction) {
       this.state.constructionStartTick = null;

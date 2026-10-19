@@ -202,9 +202,9 @@
       "port": "Sends trade ships to generate gold",
       "sam_launcher": "Defends against incoming nukes",
       "warship": "Captures trade ships, destroys ships and boats",
-      "bunker_missile_site": "Launches all missiles: Atom, Hydrogen, MIRV, Stealth, Hypersonic and EMP. 50s build; 5s upgrades.",
-      "stealth_missile": "Hidden until the target border. Half atom blast area. Requires a bunker.",
-      "hypersonic_missile": "Very fast. Only the target country?s SAMs can intercept. Requires a bunker.",
+      "bunker_missile_site": "Launches all missiles: Atom, Hydrogen, MIRV, Stealth, Hypersonic and EMP. 50s build; 2s upgrades.",
+      "stealth_missile": "Hidden until the target border. Destroys buildings only in half the atom blast area. No fallout. Requires a bunker.",
+      "hypersonic_missile": "Fast building strike with no fallout. Only the target country's SAMs can intercept. Requires a bunker.",
       "ciws_defense": "Intercepts missiles in range. Vulnerable to Hydrogen Bombs and undetected EMP. Max L5.",
       "strait_control_station": "Aim at a narrow waterway or nearby land: snaps to a valid bank within 12 tiles. Own both banks. Max 2, L1.",
       "emp_missile": "Stealth EMP: disables hostile CIWS within 70 tiles for 5s if no SAM detects it. No damage. Requires a bunker."

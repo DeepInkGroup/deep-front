@@ -12,4 +12,5 @@ export interface RailNetwork {
   overlappingRailroads(unitType: UnitType, tile: TileRef): TileRef[];
   computeGhostRailPaths(unitType: UnitType, tile: TileRef): TileRef[][];
   recomputeClusters(): void;
+  refreshWaterTunnels(): void;
 }

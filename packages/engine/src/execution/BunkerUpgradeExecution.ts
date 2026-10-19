@@ -11,6 +11,7 @@ import type {
   SnapshotReader,
   SnapshotWriter,
 } from "../snapshot/SnapshotContext";
+import { BUNKER_UPGRADE_TICKS } from "@openfront/engine-api/game/AdvancedDefense";
 
 // Payment and the construction lock are applied together by Player.upgradeUnit.
 export class BunkerUpgradeExecution implements Execution {
@@ -21,7 +22,7 @@ export class BunkerUpgradeExecution implements Execution {
     private site: Unit,
   ) {}
   init(game: Game, ticks: number): void {
-    this.completeAt = ticks + 50;
+    this.completeAt = ticks + BUNKER_UPGRADE_TICKS;
   }
   tick(ticks: number): void {
     if (!this.site.isActive()) {

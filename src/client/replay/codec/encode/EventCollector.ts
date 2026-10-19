@@ -94,6 +94,7 @@ export class EventCollector {
         kind: RailroadEventKind.Construction,
         id: u.id,
         tiles: u.tiles.slice(),
+        tunnel: u.tunnel,
       });
     }
     for (const u of gu.updates[
