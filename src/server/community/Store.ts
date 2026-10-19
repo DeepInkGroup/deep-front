@@ -102,19 +102,25 @@ export class CommunityStore {
       const owner = this.db
         .prepare("SELECT id FROM users WHERE username='Admin'")
         .get()!;
-      for (const { id, draft } of entries) {
+      for (const { id, draft, legacyId } of entries) {
         if (this.db.prepare("SELECT id FROM maps WHERE id=?").get(id)) continue;
         const compiled = compileDraft(draft),
           now = Date.now();
+        const previous = this.db
+          .prepare("SELECT status FROM maps WHERE id=? AND author_credit=?")
+          .get(legacyId, CATALOG_AUTHOR);
+        const status =
+          previous?.status === "withdrawn" ? "withdrawn" : "approved";
         this.db
           .prepare(`INSERT INTO maps(id,owner_id,name,description,draft,status,notes,created_at,reviewed_at,approved_at,scale,author_credit)
-          VALUES(?,?,?,?,?,'approved',?,?,?,?,?,?)`)
+          VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`)
           .run(
             id,
             owner.id,
             draft.name,
             draft.description,
             JSON.stringify(draft),
+            status,
             "Curated release map. Build By Artin Zomorodian.",
             now,
             now,
@@ -126,7 +132,18 @@ export class CommunityStore {
           this.db
             .prepare("INSERT INTO map_assets VALUES(?,?,?)")
             .run(id, name, data);
-        this.record(CATALOG_AUTHOR, "Catalog map published", draft.name);
+        this.record(
+          CATALOG_AUTHOR,
+          previous ? "Catalog map updated" : "Catalog map published",
+          draft.name,
+        );
+        // Preserve old assets for games/replays already using the first edition.
+        if (previous)
+          this.db
+            .prepare(
+              "UPDATE maps SET status='withdrawn' WHERE id=? AND status='approved'",
+            )
+            .run(legacyId);
       }
       this.db.exec("COMMIT");
     } catch (error) {

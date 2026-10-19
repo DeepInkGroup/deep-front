@@ -10,20 +10,22 @@ export function paintBrush(
   value: number,
   size: number,
   square = false,
+  width = W,
+  height = H,
 ) {
   const r = (size - 1) / 2;
   for (
     let y = Math.max(0, Math.floor(point.y - r));
-    y <= Math.min(H - 1, Math.ceil(point.y + r));
+    y <= Math.min(height - 1, Math.ceil(point.y + r));
     y++
   )
     for (
       let x = Math.max(0, Math.floor(point.x - r));
-      x <= Math.min(W - 1, Math.ceil(point.x + r));
+      x <= Math.min(width - 1, Math.ceil(point.x + r));
       x++
     )
       if (square || (x - point.x) ** 2 + (y - point.y) ** 2 <= (r + 0.5) ** 2)
-        tiles[y * W + x] = value;
+        tiles[y * width + x] = value;
 }
 export function paintShape(
   tiles: number[],
@@ -33,6 +35,8 @@ export function paintShape(
   value: number,
   size: number,
   square = false,
+  width = W,
+  height = H,
 ) {
   if (mode === "brush" || mode === "line") {
     const steps = Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y));
@@ -47,6 +51,8 @@ export function paintShape(
         value,
         size,
         square,
+        width,
+        height,
       );
     }
     return;
@@ -65,5 +71,6 @@ export function paintShape(
         mode === "rectangle" ||
         ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1
       )
-        tiles[y * W + x] = value;
+        if (x >= 0 && x < width && y >= 0 && y < height)
+          tiles[y * width + x] = value;
 }

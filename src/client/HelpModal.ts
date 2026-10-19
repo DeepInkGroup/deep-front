@@ -240,9 +240,13 @@ export class HelpModal extends BaseModal {
           Use the header's <strong>Log in</strong> icon to sign in or create an
           account. The map creation icon appears after sign-in. Start with blank
           water, paint land and waterways, choose your map size, and place or
-          randomize nation spawns. Use fullscreen for more space. Publish sends
-          your map to admin review; it becomes playable after approval. Your
-          profile tracks submissions and account details.
+          randomize nation spawns. Use fullscreen for more space. You can also
+          open <strong>Import a map image</strong>, upload a PNG, JPG or WebP,
+          and preview an automatically generated pixel map. Adjust water
+          detection, use the generated terrain, then add spawns and keep
+          painting. Fine and Ultra terrain detail preserve more of the image's
+          coastline. Publish sends your map to admin review; it becomes playable
+          after approval. Your profile tracks submissions and account details.
         </p>
       </section>
       <section id="guide-controls">

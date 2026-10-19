@@ -124,6 +124,45 @@ describe("community accounts and durable storage", () => {
     ).toBeNull();
     expect(store.authenticate("Admin", "Admin123")?.role).toBe("admin");
   });
+  it("upgrades first-edition catalog maps without losing old replay assets or reversing moderation", () => {
+    const owner = store.authenticate("Admin", "Admin123")!;
+    const entries = catalogMaps();
+    for (const [index, entry] of entries.entries()) {
+      const input = draft(),
+        now = Date.now();
+      store.db
+        .prepare(`INSERT INTO maps(id,owner_id,name,description,draft,status,created_at,scale,approved_at,author_credit)
+        VALUES(?,?,?,?,?,?,?,?,?,?)`)
+        .run(
+          entry.legacyId,
+          owner.id,
+          entry.draft.name,
+          "First edition",
+          JSON.stringify(input),
+          index === 0 ? "withdrawn" : "approved",
+          now,
+          input.scale,
+          now,
+          CATALOG_AUTHOR,
+        );
+      store.db
+        .prepare("INSERT INTO map_assets VALUES(?,?,?)")
+        .run(entry.legacyId, "map.bin", Buffer.from([128, 129]));
+    }
+    store.installCatalogMaps();
+    expect(store.listMaps("published")).toHaveLength(2);
+    expect(store.listMaps("admin")).toHaveLength(6);
+    for (const entry of entries) {
+      expect(store.isPublished(entry.legacyId)).toBe(false);
+      expect(store.asset(entry.legacyId, "map.bin")).toEqual(
+        Buffer.from([128, 129]),
+      );
+      expect(store.draft(entry.id, owner).gridWidth).toBe(512);
+    }
+    expect(store.isPublished(entries[0].id)).toBe(false);
+    store.installCatalogMaps();
+    expect(store.listMaps("admin")).toHaveLength(6);
+  });
   it("reports exact admin totals and profile data, revokes only the selected player's sessions, and records moderation", () => {
     const maker = store.createUser("Maker", "password123"),
       other = store.createUser("OtherMaker", "password123");
@@ -253,6 +292,27 @@ describe("community accounts and durable storage", () => {
 });
 
 describe("community map compiler and review lifecycle", () => {
+  it("compiles fine image terrain at the selected world size with correct spawn coordinates and shaded previews", () => {
+    const input: MapDraft = {
+      name: "Image coast",
+      description: "Imported map",
+      gridWidth: 512,
+      scale: 8,
+      tiles: Array(512 * 384).fill(0),
+      nations: [{ name: "Capital", x: 350, y: 200 }],
+    };
+    for (let y = 20; y < 360; y++)
+      for (let x = 100; x < 480; x++)
+        input.tiles[y * 512 + x] = x > 300 ? 2 : 1;
+    const compiled = compileDraft(input);
+    expect(compiled.manifest.map).toMatchObject({ width: 1024, height: 768 });
+    expect(compiled.manifest.nations[0].coordinates).toEqual([701, 401]);
+    expect(compiled.files["map.bin"][401 * 1024 + 701] & 128).toBe(128);
+    expect(compiled.files["thumbnail.svg"].toString()).toContain(
+      "data:image/png;base64,",
+    );
+    expect(compiled.files["thumbnail.svg"].toString()).not.toContain("<rect");
+  });
   it.each([8, 12, 16] as const)(
     "compiles %s scale terrain, accurate land counts, spawns, and open straits at both game sizes",
     async (scale) => {

@@ -3,6 +3,7 @@ import {
   MAP_EDITOR_HEIGHT as H,
   type MapDraft,
 } from "@openfront/engine-api/game/CommunityMaps";
+import { refineCatalogTerrain } from "./CatalogTerrain";
 
 type Point = readonly [number, number];
 
@@ -365,132 +366,38 @@ function middleEast(): MapDraft {
 
 function fantasy(): MapDraft {
   const a = new Atlas();
-  // Four asymmetrical continents circle a crown-shaped inland sea.
-  a.polygon(
-    [
-      [5, 9],
-      [19, 5],
-      [28, 10],
-      [38, 6],
-      [48, 12],
-      [50, 22],
-      [45, 29],
-      [49, 36],
-      [40, 40],
-      [35, 34],
-      [30, 38],
-      [24, 30],
-      [16, 34],
-      [8, 27],
-      [11, 20],
-    ],
-    1,
-  );
-  a.polygon(
-    [
-      [65, 7],
-      [78, 4],
-      [86, 11],
-      [96, 7],
-      [115, 12],
-      [121, 24],
-      [114, 35],
-      [104, 32],
-      [100, 41],
-      [89, 39],
-      [83, 30],
-      [75, 33],
-      [69, 25],
-      [60, 22],
-    ],
-    1,
-  );
-  a.polygon(
-    [
-      [7, 54],
-      [18, 47],
-      [29, 51],
-      [35, 44],
-      [43, 49],
-      [48, 59],
-      [42, 69],
-      [47, 77],
-      [38, 88],
-      [26, 86],
-      [19, 91],
-      [10, 84],
-      [5, 70],
-    ],
-    1,
-  );
-  a.polygon(
-    [
-      [73, 47],
-      [82, 44],
-      [90, 49],
-      [99, 45],
-      [110, 51],
-      [116, 61],
-      [111, 70],
-      [120, 81],
-      [106, 90],
-      [92, 87],
-      [85, 91],
-      [72, 84],
-      [68, 73],
-      [74, 63],
-      [67, 55],
-    ],
-    1,
-  );
-  a.polygon(
-    [
-      [42, 18],
-      [47, 17],
-      [58, 36],
-      [55, 40],
-      [50, 35],
-    ],
-    2,
-  );
-  a.polygon(
-    [
-      [81, 22],
-      [86, 24],
-      [75, 41],
-      [70, 42],
-      [69, 38],
-    ],
-    2,
-  );
-  a.polygon(
-    [
-      [38, 69],
-      [35, 65],
-      [50, 53],
-      [54, 56],
-      [51, 61],
-    ],
-    2,
-  );
-  a.polygon(
-    [
-      [80, 73],
-      [74, 74],
-      [64, 60],
-      [66, 55],
-      [72, 58],
-    ],
-    2,
-  );
+  const island = (
+    x: number,
+    y: number,
+    cx: number,
+    cy: number,
+    rx: number,
+    ry: number,
+  ) => 1 - Math.hypot((x - cx) / rx, (y - cy) / ry);
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const nx = x + Math.sin(y * 0.36) * 1.3 + Math.sin(y * 0.91) * 0.45;
+      const ny = y + Math.sin(x * 0.29) * 1.5 + Math.sin(x * 0.83) * 0.5;
+      const shape = Math.max(
+        island(nx, ny, 22, 20, 19, 14),
+        island(nx, ny, 35, 29, 14, 11),
+        island(nx, ny, 98, 21, 23, 14),
+        island(nx, ny, 82, 27, 14, 12),
+        island(nx, ny, 22, 67, 18, 22),
+        island(nx, ny, 37, 56, 13, 11),
+        island(nx, ny, 95, 73, 23, 18),
+        island(nx, ny, 83, 54, 15, 12),
+      );
+      if (shape < 0) continue;
+      const ridge =
+        Math.sin(nx * 0.24 + Math.sin(ny * 0.25) * 2) * Math.cos(ny * 0.19);
+      a.tiles[y * W + x] =
+        shape > 0.2 && ridge > 0.45 ? 3 : shape > 0.08 && ridge > -0.1 ? 2 : 1;
+    }
   a.ellipse(58, 48, 8, 6, 1)
     .ellipse(59, 46, 3, 2, 2)
-    .ellipse(18, 18, 9, 4, 2, true)
-    .ellipse(98, 22, 9, 6, 3, true)
-    .ellipse(22, 69, 11, 7, 2, true)
-    .ellipse(96, 70, 13, 10, 2, true)
     .ellipse(20, 64, 3, 3, 0)
-    .ellipse(104, 59, 3, 5, 0);
+    .ellipse(104, 59, 3, 4, 0);
   for (const [x, y, rx, ry] of [
     [8, 41, 3, 2],
     [57, 11, 2, 3],
@@ -499,6 +406,10 @@ function fantasy(): MapDraft {
     [63, 69, 2, 2],
     [59, 28, 2, 2],
     [51, 71, 2, 2],
+    [68, 34, 2, 1],
+    [56, 62, 1, 2],
+    [70, 81, 2, 1],
+    [9, 88, 2, 1],
   ])
     a.ellipse(x, y, rx, ry, 1);
   a.nation("Ashen Vale", 19, 14)
@@ -515,15 +426,99 @@ function fantasy(): MapDraft {
     .nation("Far Lantern", 120, 44);
   return a.draft(
     "Shattered Crown",
-    "An original fantasy world of four broken continents and a contested central island. Narrow passages, island chains, inland lakes and unequal approaches create choices between rail empires and maritime trade. 12 fictional realms.",
+    "A remastered fantasy atlas of four rugged continents, a contested central crown and scattered outer islands. Winding rivers, sheltered bays, inland lakes and narrow sea passages reward rival rail and maritime empires. 12 fictional realms.",
   );
 }
 
 export const CATALOG_AUTHOR = "Artin Zomorodian";
 export function catalogMaps() {
   return [
-    { id: "a3700001-2026-4000-8000-000000000001", draft: iran() },
-    { id: "a3700002-2026-4000-8000-000000000002", draft: middleEast() },
-    { id: "a3700003-2026-4000-8000-000000000003", draft: fantasy() },
+    {
+      id: "a3700001-2026-4000-8000-000000000101",
+      legacyId: "a3700001-2026-4000-8000-000000000001",
+      draft: refineCatalogTerrain(iran(), 813, [
+        [
+          [43, 37],
+          [40, 42],
+          [36, 46],
+          [35, 51],
+          [30, 54],
+          [26, 60],
+        ],
+        [
+          [20, 29],
+          [18, 36],
+          [19, 43],
+          [23, 50],
+          [25, 58],
+        ],
+        [
+          [50, 32],
+          [49, 34],
+          [48, 36],
+        ],
+      ]),
+    },
+    {
+      id: "a3700002-2026-4000-8000-000000000102",
+      legacyId: "a3700002-2026-4000-8000-000000000002",
+      draft: refineCatalogTerrain(middleEast(), 1729, [
+        [
+          [31, 81],
+          [29, 71],
+          [31, 61],
+          [29, 51],
+          [29, 44],
+        ],
+        [
+          [49, 26],
+          [50, 32],
+          [54, 38],
+          [58, 42],
+          [64, 47],
+        ],
+        [
+          [43, 27],
+          [45, 31],
+          [45, 36],
+          [51, 40],
+          [58, 42],
+        ],
+      ]),
+    },
+    {
+      id: "a3700003-2026-4000-8000-000000000103",
+      legacyId: "a3700003-2026-4000-8000-000000000003",
+      draft: refineCatalogTerrain(fantasy(), 9017, [
+        [
+          [27, 14],
+          [28, 19],
+          [24, 22],
+          [24, 28],
+          [20, 33],
+        ],
+        [
+          [97, 16],
+          [94, 23],
+          [98, 27],
+          [99, 34],
+        ],
+        [
+          [25, 56],
+          [25, 61],
+          [29, 66],
+          [28, 72],
+          [32, 80],
+          [33, 87],
+        ],
+        [
+          [93, 58],
+          [90, 64],
+          [94, 71],
+          [98, 76],
+          [99, 87],
+        ],
+      ]),
+    },
   ];
 }

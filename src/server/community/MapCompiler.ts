@@ -4,13 +4,17 @@ import {
   MAP_EDITOR_HEIGHT as H,
   MapDraft,
   MapDraftSchema,
+  draftDimensions,
 } from "@openfront/engine-api/game/CommunityMaps";
+import { terrainThumbnail } from "./TerrainThumbnail";
+import { noise } from "./CatalogTerrain";
 import type { MapManifest } from "@openfront/engine-api/game/MapFiles";
 
 export const TERRAIN_COLORS = ["#315a70", "#a9bb7d", "#b6a477", "#d3d0c2"];
 
 export function validateDraft(input: unknown): MapDraft {
   const draft = MapDraftSchema.parse(input);
+  const { width: W, height: H } = draftDimensions(draft);
   const seen = new Uint8Array(W * H);
   let largest = 0;
   for (let start = 0; start < seen.length; start++) {
@@ -34,9 +38,9 @@ export function validateDraft(input: unknown): MapDraft {
     }
     largest = Math.max(largest, queue.length);
   }
-  if (largest < 64)
+  if (largest < 64 * (W / 128) ** 2)
     throw new Error(
-      "Draw at least one connected land area of 64 editor cells so players have room to spawn.",
+      "Draw a larger connected land area so players have room to spawn.",
     );
   const names = new Set<string>();
   for (const nation of draft.nations) {
@@ -50,30 +54,19 @@ export function validateDraft(input: unknown): MapDraft {
 }
 
 export function draftThumbnail(draft: MapDraft): string {
-  const parts = [
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" shape-rendering="crispEdges"><rect width="${W}" height="${H}" fill="${TERRAIN_COLORS[0]}"/>`,
-  ];
-  for (let y = 0; y < H; y++)
-    for (let x = 0; x < W; ) {
-      const type = draft.tiles[y * W + x];
-      let end = x + 1;
-      while (end < W && draft.tiles[y * W + end] === type) end++;
-      if (type)
-        parts.push(
-          `<rect x="${x}" y="${y}" width="${end - x}" height="1" fill="${TERRAIN_COLORS[type]}"/>`,
-        );
-      x = end;
-    }
-  for (const nation of draft.nations)
-    parts.push(
-      `<circle cx="${nation.x + 0.5}" cy="${nation.y + 0.5}" r="1.1" fill="#fce79f" stroke="#24362c" stroke-width=".4"/>`,
-    );
-  return parts.join("") + "</svg>";
+  const preview = terrainAtScale(draft, 4);
+  return terrainThumbnail(
+    preview.data,
+    preview.meta.width,
+    preview.meta.height,
+  );
 }
 
 function terrainAtScale(draft: MapDraft, scale: number) {
+  const { width: gridWidth, height: gridHeight } = draftDimensions(draft);
   const width = W * scale,
     height = H * scale,
+    cellSize = width / gridWidth,
     size = width * height;
   const terrain = Buffer.alloc(size),
     distance = new Uint16Array(size);
@@ -83,16 +76,31 @@ function terrainAtScale(draft: MapDraft, scale: number) {
     head = 0,
     landCount = 0;
   const levels = [0, 2, 13, 25];
+  const relief = new Float32Array(gridWidth * gridHeight);
+  for (let y = 0; y < gridHeight; y++)
+    for (let x = 0; x < gridWidth; x++) {
+      const type = draft.tiles[y * gridWidth + x];
+      const variation =
+        gridWidth > 128 && type > 0
+          ? (noise(x / 11, y / 11, 71) - 0.5) * (type === 1 ? 3 : 12) +
+            (noise(x / 3, y / 3, 911) - 0.5) * (type === 1 ? 1 : 4)
+          : 0;
+      relief[y * gridWidth + x] = Math.max(
+        1,
+        Math.min(30, levels[type] + variation),
+      );
+    }
   const sample = (x: number, y: number) =>
     draft.tiles[
-      Math.max(0, Math.min(H - 1, y)) * W + Math.max(0, Math.min(W - 1, x))
+      Math.max(0, Math.min(gridHeight - 1, y)) * gridWidth +
+        Math.max(0, Math.min(gridWidth - 1, x))
     ];
   for (let y = 0; y < height; y++)
     for (let x = 0; x < width; x++) {
       // Interpolate cell centers so coastlines and ridges curve naturally at
       // full resolution, while one-cell canals remain navigable at every size.
-      const gx = (x + 0.5) / scale - 0.5,
-        gy = (y + 0.5) / scale - 0.5;
+      const gx = (x + 0.5) / cellSize - 0.5,
+        gy = (y + 0.5) / cellSize - 0.5;
       const ix = Math.floor(gx),
         iy = Math.floor(gy),
         fx = gx - ix,
@@ -109,12 +117,30 @@ function terrainAtScale(draft: MapDraft, scale: number) {
         (1 - fx) * fy,
         fx * fy,
       ];
+      const heights = [
+        relief[
+          Math.max(0, Math.min(gridHeight - 1, iy)) * gridWidth +
+            Math.max(0, Math.min(gridWidth - 1, ix))
+        ],
+        relief[
+          Math.max(0, Math.min(gridHeight - 1, iy)) * gridWidth +
+            Math.max(0, Math.min(gridWidth - 1, ix + 1))
+        ],
+        relief[
+          Math.max(0, Math.min(gridHeight - 1, iy + 1)) * gridWidth +
+            Math.max(0, Math.min(gridWidth - 1, ix))
+        ],
+        relief[
+          Math.max(0, Math.min(gridHeight - 1, iy + 1)) * gridWidth +
+            Math.max(0, Math.min(gridWidth - 1, ix + 1))
+        ],
+      ];
       let coverage = 0,
         elevation = 0;
       for (let i = 0; i < 4; i++)
         if (neighbors[i]) {
           coverage += weights[i];
-          elevation += levels[neighbors[i]] * weights[i];
+          elevation += heights[i] * weights[i];
         }
       const ref = y * width + x;
       if (coverage >= 0.5) {
@@ -185,6 +211,7 @@ function terrainAtScale(draft: MapDraft, scale: number) {
 
 export function compileDraft(input: unknown) {
   const draft = validateDraft(input);
+  const cellSize = (W * draft.scale) / draftDimensions(draft).width;
   const normal = terrainAtScale(draft, draft.scale),
     mini = terrainAtScale(draft, draft.scale / 2),
     small = terrainAtScale(draft, draft.scale / 4);
@@ -197,8 +224,8 @@ export function compileDraft(input: unknown) {
       name: n.name,
       flag: "",
       coordinates: [
-        n.x * draft.scale + Math.floor(draft.scale / 2),
-        n.y * draft.scale + Math.floor(draft.scale / 2),
+        Math.floor((n.x + 0.5) * cellSize),
+        Math.floor((n.y + 0.5) * cellSize),
       ],
     })),
   };
@@ -209,7 +236,9 @@ export function compileDraft(input: unknown) {
       "map4x.bin": mini.data,
       "map16x.bin": small.data,
       "manifest.json": Buffer.from(JSON.stringify(manifest)),
-      "thumbnail.svg": Buffer.from(draftThumbnail(draft)),
+      "thumbnail.svg": Buffer.from(
+        terrainThumbnail(small.data, small.meta.width, small.meta.height),
+      ),
     },
     hash: createHash("sha256").update(normal.data).digest("hex"),
   };

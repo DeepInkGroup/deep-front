@@ -41,6 +41,7 @@ const log = logger.child({ comp: "m" });
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+app.use("/api/community/maps", express.json({ limit: "1mb" }));
 app.use(express.json());
 app.set("trust proxy", 3);
 if (ServerEnv.standalone()) {

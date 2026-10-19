@@ -8,8 +8,8 @@ import {
   CommunityAdminUser,
   MapDraft,
   MapDraftSchema,
-  MAP_EDITOR_WIDTH as W,
-  MAP_EDITOR_HEIGHT as H,
+  MAP_EDITOR_WIDTH,
+  MAP_EDITOR_HEIGHT,
 } from "@openfront/engine-api/game/CommunityMaps";
 import {
   communityRequest,
@@ -25,10 +25,25 @@ import {
   type EditorPoint,
 } from "./MapEditorTools";
 import { accountDate } from "./ProfilePage";
+import {
+  imageToTerrain,
+  resizeDraftGrid,
+  DEFAULT_IMAGE_OPTIONS,
+  IMPORT_WIDTH,
+  IMPORT_HEIGHT,
+  type ImageMapOptions,
+  type ImageMapMode,
+} from "./ImageMapImport";
 
 const COLORS = ["#315a70", "#a9bb7d", "#b6a477", "#d3d0c2"];
 @customElement("community-page")
 export class CommunityPage extends LitElement {
+  private get gridWidth() {
+    return this.draft.gridWidth ?? MAP_EDITOR_WIDTH;
+  }
+  private get gridHeight() {
+    return (this.gridWidth * 3) / 4;
+  }
   @state() private user: CommunityUser | null = communityUser();
   @state() private signUp = false;
   @state() private busy = false;
@@ -42,6 +57,17 @@ export class CommunityPage extends LitElement {
   @state() private squareBrush = false;
   @state() private tool = 1;
   @state() private brush = 4;
+  @state() private importOptions: ImageMapOptions = {
+    ...DEFAULT_IMAGE_OPTIONS,
+  };
+  @state() private importResult: ReturnType<typeof imageToTerrain> | null =
+    null;
+  @state() private importName = "";
+  @state() private importUrl = "";
+  @state() private importing = false;
+  @state() private importError = "";
+  private importPixels: ImageData | null = null;
+  private importSequence = 0;
   @state() private spawnCount = 8;
   @state() private nationName = "";
   @state() private maps: CommunityMapSummary[] = [];
@@ -62,13 +88,24 @@ export class CommunityPage extends LitElement {
   private pan: { x: number; y: number; left: number; top: number } | null =
     null;
   private dashboardTimer: ReturnType<typeof setInterval> | undefined;
-  private undo: { tiles: number[]; nations: MapDraft["nations"] }[] = [];
-  private redo: { tiles: number[]; nations: MapDraft["nations"] }[] = [];
+  private undo: {
+    gridWidth?: MapDraft["gridWidth"];
+    tiles: number[];
+    nations: MapDraft["nations"];
+  }[] = [];
+  private redo: {
+    gridWidth?: MapDraft["gridWidth"];
+    tiles: number[];
+    nations: MapDraft["nations"];
+  }[] = [];
   private lastPoint: { x: number; y: number } | null = null;
+  private terrainCache: HTMLCanvasElement | null = null;
+  private terrainDirty = true;
   createRenderRoot() {
     return this;
   }
   private onSession = () => {
+    if (this.user?.id !== communityUser()?.id) this.clearImageImport();
     this.user = communityUser();
     void this.loadDashboard();
   };
@@ -109,9 +146,11 @@ export class CommunityPage extends LitElement {
     window.removeEventListener("keyup", this.editorKeyUp);
     window.removeEventListener("blur", this.editorKeyUp);
     clearInterval(this.dashboardTimer);
+    this.clearImageImport();
   }
   updated() {
     this.draw();
+    this.drawImageImport();
   }
   private key() {
     return `deepfront.map-draft.${this.user?.id}`;
@@ -128,9 +167,9 @@ export class CommunityPage extends LitElement {
     try {
       const saved = localStorage.getItem(this.key());
       if (saved)
-        this.draft = MapDraftSchema.extend({ name: z.string().max(60) }).parse(
-          JSON.parse(saved),
-        );
+        this.draft = MapDraftSchema.safeExtend({
+          name: z.string().max(60),
+        }).parse(JSON.parse(saved));
     } catch {
       this.error = "The saved draft could not be restored.";
     }
@@ -141,6 +180,7 @@ export class CommunityPage extends LitElement {
     if (this.loadedFor !== this.user.id) {
       this.loadedFor = this.user.id;
       this.restoreDraft();
+      this.terrainDirty = true;
     }
     try {
       if (this.user.role === "admin") {
@@ -182,31 +222,319 @@ export class CommunityPage extends LitElement {
     });
   };
   private remember() {
+    this.terrainDirty = true;
     this.redo = [];
     this.undo.push({
+      gridWidth: this.draft.gridWidth,
       tiles: [...this.draft.tiles],
       nations: this.draft.nations.map((n) => ({ ...n })),
     });
     if (this.undo.length > 30) this.undo.shift();
   }
+  private clearImageImport() {
+    this.importSequence++;
+    if (this.importUrl) URL.revokeObjectURL(this.importUrl);
+    this.importUrl = "";
+    this.importPixels = null;
+    this.importResult = null;
+    this.importing = false;
+    this.importError = "";
+  }
+  private async readMapImage(file: File | undefined) {
+    if (!file || this.user?.role !== "player") return;
+    this.clearImageImport();
+    this.importName = file.name;
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
+      this.importError = "Choose a PNG, JPG or WebP image.";
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      this.importError = "Choose an image smaller than 20 MB.";
+      return;
+    }
+    const sequence = this.importSequence;
+    this.importing = true;
+    try {
+      const bitmap = await createImageBitmap(file);
+      try {
+        if (bitmap.width * bitmap.height > 24_000_000)
+          throw new Error("Use an image with at most 24 million pixels.");
+        if (sequence !== this.importSequence) return;
+        const canvas = document.createElement("canvas");
+        canvas.width = IMPORT_WIDTH;
+        canvas.height = IMPORT_HEIGHT;
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        if (!context)
+          throw new Error("Image conversion is unavailable in this browser.");
+        const scale = Math.min(
+          IMPORT_WIDTH / bitmap.width,
+          IMPORT_HEIGHT / bitmap.height,
+        );
+        const width = bitmap.width * scale,
+          height = bitmap.height * scale;
+        context.drawImage(
+          bitmap,
+          (IMPORT_WIDTH - width) / 2,
+          (IMPORT_HEIGHT - height) / 2,
+          width,
+          height,
+        );
+        this.importPixels = context.getImageData(
+          0,
+          0,
+          IMPORT_WIDTH,
+          IMPORT_HEIGHT,
+        );
+        this.importUrl = URL.createObjectURL(file);
+        this.importOptions = { ...DEFAULT_IMAGE_OPTIONS };
+        this.regenerateImageImport();
+      } finally {
+        bitmap.close();
+      }
+    } catch (error) {
+      if (sequence === this.importSequence)
+        this.importError =
+          error instanceof Error && !error.message.includes("source image")
+            ? error.message
+            : "This image could not be read. Try another PNG, JPG or WebP.";
+    } finally {
+      if (sequence === this.importSequence) this.importing = false;
+    }
+  }
+  private regenerateImageImport(options: Partial<ImageMapOptions> = {}) {
+    this.importOptions = { ...this.importOptions, ...options };
+    if (this.importPixels)
+      this.importResult = imageToTerrain(this.importPixels, this.importOptions);
+  }
+  private drawImageImport() {
+    const canvas = this.querySelector<HTMLCanvasElement>(
+      ".import-terrain-preview",
+    );
+    const context = canvas?.getContext("2d");
+    if (!context || !this.importResult) return;
+    const image = context.createImageData(IMPORT_WIDTH, IMPORT_HEIGHT);
+    const colors = [
+      [28, 69, 94],
+      [140, 167, 110],
+      [178, 163, 126],
+      [216, 213, 198],
+    ];
+    this.importResult.tiles.forEach((terrain, index) => {
+      image.data.set([...colors[terrain], 255], index * 4);
+    });
+    context.putImageData(image, 0, 0);
+  }
+  private applyImageImport() {
+    if (!this.importResult || this.importResult.largestLandArea < 1024) return;
+    this.remember();
+    this.draft = {
+      ...this.draft,
+      gridWidth: 512,
+      tiles: [...this.importResult.tiles],
+      nations: [],
+      name:
+        this.draft.name || this.importName.replace(/\.[^.]+$/, "").slice(0, 60),
+    };
+    this.zoom = 1;
+    this.hoverPoint = null;
+    this.error = "";
+    this.message =
+      "Image converted to editable terrain. Add nation spawns, refine the map, then publish for review. Undo restores your previous map.";
+    this.saveDraft();
+    this.clearImageImport();
+    void this.updateComplete.then(() =>
+      this.querySelector(".terrain-panel")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      }),
+    );
+  }
+  private renderImageImport() {
+    const result = this.importResult;
+    return html`<details class="image-map-import">
+      <summary>
+        <span>Import a map image</span><small>IMAGE TO PLAYABLE MAP</small>
+      </summary>
+      <div
+        class="import-content"
+        @dragover=${(e: DragEvent) => e.preventDefault()}
+        @drop=${(e: DragEvent) => {
+          e.preventDefault();
+          void this.readMapImage(e.dataTransfer?.files[0]);
+        }}
+      >
+        <p>
+          Upload a city, country or fantasy map. Preview the terrain, adjust
+          water detection, then keep painting.
+        </p>
+        <label class="import-upload"
+          >${this.importing ? "Reading image…" : "Choose or drop a map image"}
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            aria-label="Upload map image"
+            ?disabled=${this.importing}
+            @change=${(e: Event) => {
+              const input = e.target as HTMLInputElement;
+              void this.readMapImage(input.files?.[0]);
+              input.value = "";
+            }}
+          />
+          <small
+            >PNG, JPG or WebP · up to 20 MB · converted on your device</small
+          >
+        </label>
+        ${this.importError
+          ? html`<p role="alert" class="import-error">${this.importError}</p>`
+          : nothing}
+        ${result
+          ? html`<div class="import-previews">
+                <figure>
+                  <figcaption>Original image · ${this.importName}</figcaption>
+                  <img src=${this.importUrl} alt="Uploaded map" />
+                </figure>
+                <figure>
+                  <figcaption>Playable terrain · 512 × 384 detail</figcaption>
+                  <canvas
+                    class="import-terrain-preview"
+                    width="512"
+                    height="384"
+                    aria-label="Generated pixel map preview"
+                  ></canvas>
+                </figure>
+              </div>
+              <div class="import-controls">
+                <label
+                  >Water detection<select
+                    aria-label="Water detection"
+                    .value=${this.importOptions.mode}
+                    @change=${(e: Event) =>
+                      this.regenerateImageImport({
+                        mode: (e.target as HTMLSelectElement)
+                          .value as ImageMapMode,
+                      })}
+                  >
+                    <option value="auto">Automatic</option>
+                    <option value="blue">Blue water map</option>
+                    <option value="dark">Dark land silhouette</option>
+                    <option value="light">Light land silhouette</option>
+                    <option value="color">Choose water color</option>
+                    <option value="land">Land / city map</option>
+                  </select></label
+                >
+                ${this.importOptions.mode === "color"
+                  ? html`<label
+                      >Water color<input
+                        type="color"
+                        aria-label="Water color"
+                        .value=${this.importOptions.waterColor}
+                        @input=${(e: Event) =>
+                          this.regenerateImageImport({
+                            waterColor: (e.target as HTMLInputElement).value,
+                          })}
+                    /></label>`
+                  : nothing}
+                <label
+                  >Detection sensitivity
+                  <output>${this.importOptions.sensitivity}%</output
+                  ><input
+                    type="range"
+                    aria-label="Detection sensitivity"
+                    min="5"
+                    max="95"
+                    .value=${String(this.importOptions.sensitivity)}
+                    @input=${(e: Event) =>
+                      this.regenerateImageImport({
+                        sensitivity: Number(
+                          (e.target as HTMLInputElement).value,
+                        ),
+                      })}
+                /></label>
+                <label class="import-check"
+                  ><input
+                    type="checkbox"
+                    ?checked=${this.importOptions.elevation}
+                    @change=${(e: Event) =>
+                      this.regenerateImageImport({
+                        elevation: (e.target as HTMLInputElement).checked,
+                      })}
+                  />Infer hills from terrain colors</label
+                >
+                <label class="import-check"
+                  ><input
+                    type="checkbox"
+                    ?checked=${this.importOptions.clean}
+                    @change=${(e: Event) =>
+                      this.regenerateImageImport({
+                        clean: (e.target as HTMLInputElement).checked,
+                      })}
+                  />Remove tiny isolated specks</label
+                >
+              </div>
+              <div class="import-result">
+                <p>
+                  <strong>${result.landPercent}% land</strong> ·
+                  ${result.detectedMode === "background"
+                    ? "Outline background detected"
+                    : result.detectedMode === "land"
+                      ? "Land map detected"
+                      : "Water detection ready"}
+                </p>
+                ${result.largestLandArea < 1024
+                  ? html`<p class="import-error">
+                      Too little connected land. Adjust detection or choose
+                      another image.
+                    </p>`
+                  : nothing}
+                <button
+                  type="button"
+                  class="community-button primary"
+                  ?disabled=${result.largestLandArea < 1024}
+                  @click=${() => this.applyImageImport()}
+                >
+                  Use generated map
+                </button>
+                <button
+                  type="button"
+                  class="community-button"
+                  @click=${() => this.clearImageImport()}
+                >
+                  Cancel import
+                </button>
+              </div>`
+          : nothing}
+        <p class="import-hint">
+          Flat map images work best. Transparent areas become water. For street
+          maps without a sea, choose Land / city map. Buildings, street labels
+          and road networks are not imported. Using the result replaces terrain
+          and spawns; Undo restores them.
+        </p>
+      </div>
+    </details>`;
+  }
   private undoTerrain() {
+    this.terrainDirty = true;
     const previous = this.undo.pop();
     if (!previous) return;
     this.redo.push({
+      gridWidth: this.draft.gridWidth,
       tiles: [...this.draft.tiles],
       nations: this.draft.nations.map((n) => ({ ...n })),
     });
     this.draft = {
       ...this.draft,
+      gridWidth: previous.gridWidth,
       tiles: previous.tiles,
       nations: previous.nations,
     };
     this.saveDraft();
   }
   private redoTerrain() {
+    this.terrainDirty = true;
     const next = this.redo.pop();
     if (!next) return;
     this.undo.push({
+      gridWidth: this.draft.gridWidth,
       tiles: [...this.draft.tiles],
       nations: this.draft.nations.map((n) => ({ ...n })),
     });
@@ -217,7 +545,7 @@ export class CommunityPage extends LitElement {
     this.remember();
     this.draft = {
       ...this.draft,
-      tiles: Array(W * H).fill(0),
+      tiles: Array(this.gridWidth * this.gridHeight).fill(0),
       nations: [],
     };
     this.error = "";
@@ -254,12 +582,12 @@ export class CommunityPage extends LitElement {
       let ties = 0;
       for (const candidate of candidates) {
         if (selected.includes(candidate)) continue;
-        const x = candidate % W;
-        const y = Math.floor(candidate / W);
+        const x = candidate % this.gridWidth;
+        const y = Math.floor(candidate / this.gridWidth);
         let nearest = Number.POSITIVE_INFINITY;
         for (const chosen of selected) {
-          const dx = x - (chosen % W);
-          const dy = y - Math.floor(chosen / W);
+          const dx = x - (chosen % this.gridWidth);
+          const dy = y - Math.floor(chosen / this.gridWidth);
           nearest = Math.min(nearest, dx * dx + dy * dy);
         }
         if (nearest > bestDistance) {
@@ -278,8 +606,8 @@ export class CommunityPage extends LitElement {
     this.draft = {
       ...this.draft,
       nations: selected.map((index, i) => ({
-        x: index % W,
-        y: Math.floor(index / W),
+        x: index % this.gridWidth,
+        y: Math.floor(index / this.gridWidth),
         name: `Nation ${i + 1}`,
       })),
     };
@@ -293,63 +621,74 @@ export class CommunityPage extends LitElement {
   private draw() {
     const canvas = this.querySelector<HTMLCanvasElement>(".terrain-editor");
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const s = canvas.width / W;
-    for (let y = 0; y < H; y++)
-      for (let x = 0; x < W; x++) {
-        const terrain = this.draft.tiles[y * W + x];
-        const adjacent = (dx: number, dy: number) =>
-          x + dx >= 0 && x + dx < W && y + dy >= 0 && y + dy < H
-            ? this.draft.tiles[(y + dy) * W + x + dx]
-            : 0;
-        const shore =
-          terrain === 0 &&
-          [
-            [1, 0],
-            [-1, 0],
-            [0, 1],
-            [0, -1],
-          ].some(([dx, dy]) => adjacent(dx, dy) > 0);
-        ctx.fillStyle =
-          terrain === 0 ? (shore ? "#32758b" : "#173d59") : COLORS[terrain];
-        ctx.fillRect(x * s, y * s, s, s);
-        if (terrain > 0) {
-          const grain = ((x * 17 + y * 31) % 11) / 11;
-          ctx.fillStyle = grain > 0.5 ? "#ffffff09" : "#00000008";
-          ctx.fillRect(x * s, y * s, s, s);
-          ctx.strokeStyle = "#e0ce93";
-          ctx.lineWidth = Math.max(1, s * 0.22);
-          for (const [dx, dy] of [
-            [1, 0],
-            [-1, 0],
-            [0, 1],
-            [0, -1],
-          ])
-            if (adjacent(dx, dy) === 0) {
-              ctx.beginPath();
-              if (dx) {
-                const px = (x + (dx > 0 ? 1 : 0)) * s;
-                ctx.moveTo(px, y * s);
-                ctx.lineTo(px, (y + 1) * s);
-              } else {
-                const py = (y + (dy > 0 ? 1 : 0)) * s;
-                ctx.moveTo(x * s, py);
-                ctx.lineTo((x + 1) * s, py);
-              }
-              ctx.stroke();
-            }
+    const output = canvas.getContext("2d");
+    if (!output) return;
+    const s = canvas.width / this.gridWidth;
+    this.terrainCache ??= document.createElement("canvas");
+    let ctx = output;
+    if (this.terrainDirty || this.terrainCache.width !== canvas.width) {
+      this.terrainCache.width = canvas.width;
+      this.terrainCache.height = canvas.height;
+      const buffer = this.terrainCache.getContext("2d");
+      if (!buffer) return;
+      const raster = document.createElement("canvas");
+      raster.width = this.gridWidth;
+      raster.height = this.gridHeight;
+      const rasterContext = raster.getContext("2d");
+      if (!rasterContext) return;
+      const image = rasterContext.createImageData(
+        this.gridWidth,
+        this.gridHeight,
+      );
+      const palette = [
+        [23, 61, 89],
+        [169, 187, 125],
+        [182, 164, 119],
+        [211, 208, 194],
+      ];
+      for (let y = 0; y < this.gridHeight; y++)
+        for (let x = 0; x < this.gridWidth; x++) {
+          const index = y * this.gridWidth + x,
+            terrain = this.draft.tiles[index];
+          const neighbors = [
+            x > 0 ? this.draft.tiles[index - 1] : 0,
+            x < this.gridWidth - 1 ? this.draft.tiles[index + 1] : 0,
+            y > 0 ? this.draft.tiles[index - this.gridWidth] : 0,
+            y < this.gridHeight - 1
+              ? this.draft.tiles[index + this.gridWidth]
+              : 0,
+          ];
+          const shoreline = neighbors.some((n) => !!n !== !!terrain);
+          let color =
+            terrain === 0 && shoreline ? [50, 117, 139] : palette[terrain];
+          if (terrain > 0) {
+            const grain = ((x * 17 + y * 31) % 11) - 5;
+            color = color.map((c, i) =>
+              Math.round(
+                (shoreline ? c * 0.7 + [224, 206, 147][i] * 0.3 : c) +
+                  grain * 0.45,
+              ),
+            );
+          }
+          image.data.set([...color, 255], index * 4);
         }
-      }
+      rasterContext.putImageData(image, 0, 0);
+      buffer.imageSmoothingEnabled = false;
+      buffer.drawImage(raster, 0, 0, canvas.width, canvas.height);
+      this.terrainDirty = false;
+    }
+    ctx = output;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(this.terrainCache, 0, 0);
     ctx.strokeStyle = "#ffffff0a";
     ctx.lineWidth = 1;
-    for (let x = 0; this.grid && x <= W; x += 8) {
+    for (let x = 0; this.grid && x <= this.gridWidth; x += 8) {
       ctx.beginPath();
       ctx.moveTo(x * s, 0);
       ctx.lineTo(x * s, canvas.height);
       ctx.stroke();
     }
-    for (let y = 0; this.grid && y <= H; y += 8) {
+    for (let y = 0; this.grid && y <= this.gridHeight; y += 8) {
       ctx.beginPath();
       ctx.moveTo(0, y * s);
       ctx.lineTo(canvas.width, y * s);
@@ -390,26 +729,33 @@ export class CommunityPage extends LitElement {
       x: Math.max(
         0,
         Math.min(
-          W - 1,
-          Math.floor(((event.clientX - rect.left) / rect.width) * W),
+          this.gridWidth - 1,
+          Math.floor(
+            ((event.clientX - rect.left) / rect.width) * this.gridWidth,
+          ),
         ),
       ),
       y: Math.max(
         0,
         Math.min(
-          H - 1,
-          Math.floor(((event.clientY - rect.top) / rect.height) * H),
+          this.gridHeight - 1,
+          Math.floor(
+            ((event.clientY - rect.top) / rect.height) * this.gridHeight,
+          ),
         ),
       ),
     };
   }
   private paint(x: number, y: number) {
+    this.terrainDirty = true;
     paintBrush(
       this.draft.tiles,
       { x, y },
       this.tool === 6 ? 0 : this.tool,
       this.tool === 6 ? 1 : this.brush,
       this.squareBrush,
+      this.gridWidth,
+      this.gridHeight,
     );
   }
   private editorKeyDown = (event: KeyboardEvent) => {
@@ -471,6 +817,7 @@ export class CommunityPage extends LitElement {
     }
   };
   private pointerCancel = () => {
+    this.terrainDirty = true;
     if (this.shapeBase) this.draft = { ...this.draft, tiles: this.shapeBase };
     this.pan = null;
     this.painting = false;
@@ -480,14 +827,14 @@ export class CommunityPage extends LitElement {
     this.draw();
   };
   private fillTerrain(x: number, y: number) {
-    const original = this.draft.tiles[y * W + x];
+    const original = this.draft.tiles[y * this.gridWidth + x];
     if (original === this.tool) return;
-    const queue = [y * W + x];
+    const queue = [y * this.gridWidth + x];
     this.draft.tiles[queue[0]] = this.tool;
     for (let i = 0; i < queue.length; i++) {
       const t = queue[i],
-        px = t % W,
-        py = Math.floor(t / W);
+        px = t % this.gridWidth,
+        py = Math.floor(t / this.gridWidth);
       const visit = (n: number) => {
         if (this.draft.tiles[n] === original) {
           this.draft.tiles[n] = this.tool;
@@ -495,9 +842,9 @@ export class CommunityPage extends LitElement {
         }
       };
       if (px > 0) visit(t - 1);
-      if (px < W - 1) visit(t + 1);
-      if (py > 0) visit(t - W);
-      if (py < H - 1) visit(t + W);
+      if (px < this.gridWidth - 1) visit(t + 1);
+      if (py > 0) visit(t - this.gridWidth);
+      if (py < this.gridHeight - 1) visit(t + this.gridWidth);
     }
   }
   private pointerDown = (event: PointerEvent) => {
@@ -522,7 +869,7 @@ export class CommunityPage extends LitElement {
         this.error = "Enter a nation name, then click its spawn on land.";
         return;
       }
-      if (this.draft.tiles[point.y * W + point.x] === 0) {
+      if (this.draft.tiles[point.y * this.gridWidth + point.x] === 0) {
         this.error = "Place nation spawns on land.";
         return;
       }
@@ -549,7 +896,7 @@ export class CommunityPage extends LitElement {
       this.draft = {
         ...this.draft,
         nations: this.draft.nations.filter(
-          (n) => this.draft.tiles[n.y * W + n.x] !== 0,
+          (n) => this.draft.tiles[n.y * this.gridWidth + n.x] !== 0,
         ),
       };
       this.saveDraft();
@@ -583,6 +930,7 @@ export class CommunityPage extends LitElement {
       this.paintMode !== "brush" &&
       this.paintMode !== "fill"
     ) {
+      this.terrainDirty = true;
       this.draft.tiles = [...this.shapeBase];
       paintShape(
         this.draft.tiles,
@@ -592,6 +940,8 @@ export class CommunityPage extends LitElement {
         this.tool === 6 ? 0 : this.tool,
         this.tool === 6 ? 1 : this.brush,
         this.squareBrush,
+        this.gridWidth,
+        this.gridHeight,
       );
       this.draw();
       return;
@@ -625,7 +975,7 @@ export class CommunityPage extends LitElement {
     this.draft = {
       ...this.draft,
       nations: this.draft.nations.filter(
-        (n) => this.draft.tiles[n.y * W + n.x] !== 0,
+        (n) => this.draft.tiles[n.y * this.gridWidth + n.x] !== 0,
       ),
     };
     this.saveDraft();
@@ -648,6 +998,7 @@ export class CommunityPage extends LitElement {
         ...result.draft,
         name: (result.draft.name + " v2").slice(0, 60),
       };
+      this.terrainDirty = true;
       this.undo = [];
       this.redo = [];
       this.saveDraft();
@@ -838,6 +1189,26 @@ export class CommunityPage extends LitElement {
               placeholder="What makes this battlefield special?"
             ></textarea></label
           ><label
+            >Terrain detail<select
+              aria-label="Terrain detail"
+              .value=${String(this.gridWidth)}
+              @change=${(e: Event) => {
+                this.remember();
+                this.draft = resizeDraftGrid(
+                  this.draft,
+                  Number((e.target as HTMLSelectElement).value) as
+                    | 128
+                    | 256
+                    | 512,
+                );
+                this.saveDraft();
+              }}
+            >
+              <option value="128">Standard · 128 × 96</option>
+              <option value="256">Fine · 256 × 192</option>
+              <option value="512">Ultra · 512 × 384</option>
+            </select></label
+          ><label
             >Map size<select
               aria-label="Map size"
               .value=${String(this.draft.scale)}
@@ -904,10 +1275,12 @@ export class CommunityPage extends LitElement {
             </div>
             <span class="studio-live-badge">Local draft</span>
           </div>
+          ${this.renderImageImport()}
           <div class="map-metrics" aria-label="Map statistics">
             <span
               ><strong
-                >${W * this.draft.scale} × ${H * this.draft.scale}</strong
+                >${MAP_EDITOR_WIDTH * this.draft.scale} ×
+                ${MAP_EDITOR_HEIGHT * this.draft.scale}</strong
               >
               world size</span
             ><span><strong>${stats.landPercent}%</strong> land</span
@@ -1401,11 +1774,15 @@ export class CommunityPage extends LitElement {
                 <dt>Elevation</dt>
                 <dd>
                   ${Math.round(
-                    (terrainStats(this.selectedDraft).cells[2] / (W * H)) * 100,
+                    (terrainStats(this.selectedDraft).cells[2] /
+                      this.selectedDraft.tiles.length) *
+                      100,
                   )}%
                   hills ·
                   ${Math.round(
-                    (terrainStats(this.selectedDraft).cells[3] / (W * H)) * 100,
+                    (terrainStats(this.selectedDraft).cells[3] /
+                      this.selectedDraft.tiles.length) *
+                      100,
                   )}%
                   mountains
                 </dd>

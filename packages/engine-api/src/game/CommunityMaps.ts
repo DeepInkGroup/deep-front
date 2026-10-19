@@ -18,6 +18,9 @@ export const MapDraftSchema = z
   .object({
     name: z.string().trim().min(3).max(60),
     description: z.string().trim().max(600),
+    gridWidth: z
+      .union([z.literal(128), z.literal(256), z.literal(512)])
+      .optional(),
     scale: z.union([
       z.literal(8),
       z.literal(12),
@@ -27,29 +30,44 @@ export const MapDraftSchema = z
     ]),
     tiles: z
       .array(z.number().int().min(0).max(3))
-      .length(MAP_EDITOR_WIDTH * MAP_EDITOR_HEIGHT),
+      .min(MAP_EDITOR_WIDTH * MAP_EDITOR_HEIGHT)
+      .max(512 * 384),
     nations: z
       .array(
         z
           .object({
             name: z.string().trim().min(2).max(40),
-            x: z
-              .number()
-              .int()
-              .min(0)
-              .max(MAP_EDITOR_WIDTH - 1),
-            y: z
-              .number()
-              .int()
-              .min(0)
-              .max(MAP_EDITOR_HEIGHT - 1),
+            x: z.number().int().min(0).max(511),
+            y: z.number().int().min(0).max(383),
           })
           .strict(),
       )
       .max(24),
   })
-  .strict();
+  .strict()
+  .superRefine((draft, ctx) => {
+    const width = draft.gridWidth ?? MAP_EDITOR_WIDTH;
+    const height = (width * 3) / 4;
+    if (draft.tiles.length !== width * height)
+      ctx.addIssue({
+        code: "custom",
+        path: ["tiles"],
+        message: "Terrain size must match the selected detail resolution.",
+      });
+    draft.nations.forEach((nation, index) => {
+      if (nation.x >= width || nation.y >= height)
+        ctx.addIssue({
+          code: "custom",
+          path: ["nations", index],
+          message: "Nation spawn is outside the map.",
+        });
+    });
+  });
 export type MapDraft = z.infer<typeof MapDraftSchema>;
+export function draftDimensions(draft: Pick<MapDraft, "gridWidth">) {
+  const width = draft.gridWidth ?? MAP_EDITOR_WIDTH;
+  return { width, height: (width * 3) / 4 };
+}
 export interface CommunityUser {
   id: string;
   username: string;

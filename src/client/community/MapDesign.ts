@@ -151,7 +151,9 @@ export function terrainStats(draft: MapDraft) {
   const land = cells[1] + cells[2] + cells[3];
   return {
     cells,
-    landPercent: Math.round((land / (W * H)) * 100),
-    landTiles: land * draft.scale ** 2,
+    landPercent: Math.round((land / draft.tiles.length) * 100),
+    landTiles: Math.round(
+      (land / draft.tiles.length) * W * H * draft.scale ** 2,
+    ),
   };
 }
