@@ -41,6 +41,7 @@ try {
     await page.screenshot({ path: `artifacts/settings-${width}.png` });
     await page.getByRole("button", { name: "Play", exact: true }).click();
     await page
+      .locator("desktop-nav-bar")
       .getByRole("button", { name: "How to play", exact: true })
       .click();
     await expect(page.locator("#page-help")).toBeVisible();
@@ -52,9 +53,8 @@ try {
   const health = await page.request.get(`${baseUrl}/api/health`);
   assert.equal(health.status(), 200);
   const source = await page.request.head(`${baseUrl}/source.zip`);
-  assert.equal(source.status(), 200);
-  assert.match(source.headers()["content-type"], /zip/);
-  console.log("Production health and modified-source download: passed");
+  assert.equal(source.status(), 404);
+  console.log("Production health and retired source download: passed");
 } finally {
   await browser.close();
 }

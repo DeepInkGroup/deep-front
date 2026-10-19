@@ -6,6 +6,10 @@ import type { AddressInfo } from "node:net";
 import type { Duplex } from "node:stream";
 import { CommunityStore } from "../../src/server/community/Store";
 import {
+  catalogMaps,
+  CATALOG_AUTHOR,
+} from "../../src/server/community/CatalogMaps";
+import {
   createCommunityRouter,
   rejectAdminUpgrade,
 } from "../../src/server/community/Routes";
@@ -61,6 +65,49 @@ afterEach(() => {
 });
 
 describe("community accounts and durable storage", () => {
+  it("installs three credited, playable release maps once and preserves moderation across restarts", () => {
+    store.installCatalogMaps();
+    const published = store.listMaps("published");
+    expect(published).toHaveLength(3);
+    expect(
+      new Set(catalogMaps().map(({ draft }) => JSON.stringify(draft.tiles)))
+        .size,
+    ).toBe(3);
+    for (const { id, draft } of catalogMaps()) {
+      expect(validateDraft(draft)).toEqual(draft);
+      expect(draft.nations).toHaveLength(12);
+      expect(draft.description).toContain("Build By Artin Zomorodian");
+      expect(published.find((m) => m.id === id)).toMatchObject({
+        author: CATALOG_AUTHOR,
+        width: 2048,
+        height: 1536,
+        status: "approved",
+      });
+      const manifest = JSON.parse(store.asset(id, "manifest.json")!.toString());
+      expect(manifest.nations).toHaveLength(12);
+      const terrain = store.asset(id, "map.bin")!;
+      expect(terrain.length).toBe(manifest.map.width * manifest.map.height);
+      for (const {
+        coordinates: [x, y],
+      } of manifest.nations)
+        expect(terrain[y * manifest.map.width + x] & 128).toBe(128);
+    }
+    const withdrawn = published[0].id;
+    store.withdraw(withdrawn, "Admin");
+    store.close();
+    store = new CommunityStore(folder);
+    store.installCatalogMaps();
+    expect(store.listMaps("published")).toHaveLength(2);
+    expect(store.listMaps("admin")).toHaveLength(3);
+    expect(
+      store
+        .dashboard()
+        .activity.filter((a) => a.action === "Catalog map published"),
+    ).toHaveLength(3);
+    expect(store.users()).toHaveLength(1);
+    store.republish(withdrawn, "Admin");
+    expect(store.isPublished(withdrawn)).toBe(true);
+  });
   it("migrates an existing database without changing accounts, sessions or drafts", () => {
     const author = store.createUser("ExistingMaker", "password123"),
       token = store.createSession(author.id);
@@ -432,6 +479,10 @@ describe("community HTTP authorization", () => {
     ).toBe(200);
     const assets = await request(`/maps/${map.id}/map.bin`);
     expect(assets.status).toBe(200);
+    expect(assets.headers.get("content-type")).toContain(
+      "application/vnd.deepfront.terrain",
+    );
+    expect(assets.headers.get("content-disposition")).toBe("inline");
     expect((await assets.arrayBuffer()).byteLength).toBe(1024 * 768);
     const manifest = await (
       await request(`/maps/${map.id}/manifest.json`)

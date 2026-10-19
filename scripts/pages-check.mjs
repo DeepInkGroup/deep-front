@@ -53,7 +53,7 @@ try {
       page.getByRole("link", { name: "GitHub", exact: true }),
     ).toHaveAttribute("href", "https://github.com/DeepInkGroup");
     await expect(
-      page.getByRole("link", { name: "Create map", exact: true }),
+      page.getByRole("link", { name: "Log in", exact: true }),
     ).toHaveAttribute("href", "#setup");
     await expect(page.locator(".multiplayer-art")).toHaveJSProperty(
       "complete",

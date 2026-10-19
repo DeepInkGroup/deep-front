@@ -158,13 +158,14 @@ export function createCommunityRouter(store = communityStore()) {
     if (!data)
       return res.status(404).json({ error: "Published map not found." });
     res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    if (file.endsWith(".bin")) res.setHeader("Content-Disposition", "inline");
     res
       .type(
         file.endsWith(".json")
           ? "application/json"
           : file.endsWith(".svg")
             ? "image/svg+xml"
-            : "application/octet-stream",
+            : "application/vnd.deepfront.terrain",
       )
       .send(data);
   });

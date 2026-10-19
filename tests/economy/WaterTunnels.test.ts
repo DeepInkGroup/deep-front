@@ -74,8 +74,8 @@ function fixture(gameType = GameType.Singleplayer, narrow = false) {
   for (let y = 40; y < 160; y++)
     for (let x = 20; x < 180; x++)
       if (game.isLand(game.ref(x, y))) owner.conquer(game.ref(x, y));
-  const factory = owner.buildUnit(UnitType.Factory, game.ref(60, 100), {}),
-    city = owner.buildUnit(UnitType.City, game.ref(140, 100), {});
+  const factory = owner.buildUnit(UnitType.Factory, game.ref(80, 100), {}),
+    city = owner.buildUnit(UnitType.City, game.ref(120, 100), {});
   factory.setTrainStation(true);
   city.setTrainStation(true);
   const a = new TrainStation(game, factory),
@@ -116,7 +116,7 @@ describe("Underwater rail tunnels", () => {
     const before = f.owner.gold();
     const trip = new TrainExecution(f.rail, f.owner, f.a, f.b, 2);
     f.game.addExecution(trip);
-    executeTicks(f.game, 23);
+    executeTicks(f.game, 10);
     expect(
       f.game.units(UnitType.Train).some((u) => f.game.isWater(u.tile())),
     ).toBe(true);
@@ -130,7 +130,7 @@ describe("Underwater rail tunnels", () => {
     f.level(f.city, 31);
     f.rail.refreshWaterTunnels();
     f.game.addExecution(new TrainExecution(f.rail, f.owner, f.a, f.b, 2));
-    executeTicks(f.game, 23);
+    executeTicks(f.game, 10);
     const bytes = snapshotGame(f.game),
       restored = restoreGame(bytes, {
         ...maps(),
@@ -170,7 +170,19 @@ describe("Underwater rail tunnels", () => {
     expect(f.a.getRailroadTo(f.b)?.tunnel).toBe(true);
     expect(f.a.getRailroads().size).toBe(1);
   });
-  it("does not drill through impassable terrain, connect dry pairs, or exceed the normal range", () => {
+  it("accepts exactly 40 tiles but rejects a 41-tile crossing inside normal rail range", () => {
+    const f = fixture();
+    f.level(f.factory, 31);
+    f.level(f.city, 31);
+    expect(waterTunnelPath(f.game, f.factory, f.city)).not.toBeNull();
+    const beyond = f.owner.buildUnit(UnitType.City, f.game.ref(121, 100), {});
+    f.level(beyond, 31);
+    expect(waterTunnelPath(f.game, f.factory, beyond)).toBeNull();
+    f.rail.refreshWaterTunnels();
+    expect(f.a.getRailroadTo(f.b)?.tunnel).toBe(true);
+    expect(f.a.getRailroads().size).toBe(1);
+  });
+  it("does not drill through impassable terrain, connect dry pairs, or exceed the short tunnel range", () => {
     const f = fixture();
     f.level(f.factory, 31);
     f.level(f.city, 31);

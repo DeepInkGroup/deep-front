@@ -41,7 +41,9 @@ export class Footer extends LitElement {
       </nav>
       <span
         >Solo & multiplayer <span class="footer-separator">·</span>
-        <a href="/source.zip">Source code (AGPL-3.0)</a>
+        <button class="nav-menu-item footer-help" data-page="page-help">
+          How to play
+        </button>
         <span class="footer-separator">·</span>
         <a
           href="https://github.com/openfrontio/OpenFrontIO"

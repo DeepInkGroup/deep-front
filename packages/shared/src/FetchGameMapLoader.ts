@@ -56,7 +56,12 @@ export class FetchGameMapLoader implements GameMapLoader {
   }
 
   private url(map: string, path: string) {
-    if (map.startsWith("/api/community/maps/")) return `${map}/${path}`;
+    if (map.startsWith("/api/community/maps/")) {
+      // These are game data, not downloadable files. A stable format query
+      // avoids generic .bin capture by desktop download managers and still
+      // lets browsers cache the immutable map assets.
+      return `${map}/${path}${path.endsWith(".bin") ? "?format=terrain" : ""}`;
+    }
     return this.resolveUrl(`${map}/${path}`);
   }
 
@@ -69,6 +74,10 @@ export class FetchGameMapLoader implements GameMapLoader {
     }
 
     const data = await response.arrayBuffer();
+    if (data.byteLength === 0)
+      throw new Error(
+        `Empty terrain response for ${url}. Please retry loading the map.`,
+      );
     console.log(
       `[MapLoader] ${url}: ${(performance.now() - startTime).toFixed(0)}ms`,
     );

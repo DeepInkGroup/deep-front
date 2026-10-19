@@ -25,7 +25,7 @@ jobs:
         run: npx --yes npm@12.1.0 run inst -- --include=dev
       - run: npm run typecheck
       - name: Community accounts, admin authorization, and map publishing
-        run: npx vitest run tests/server/Community.test.ts
+        run: npx vitest run tests/server/Community.test.ts tests/core/game/FetchGameMapLoader.test.ts
       - name: Multiplayer server regression tests
         run: npx vitest run tests/server/Standalone.test.ts tests/server/MapPlaylistTrusted.test.ts tests/server/PrivateLobbyCap.test.ts tests/server/WorkerLobbyServiceClients.test.ts tests/core/ClusterConfig.test.ts
       - name: Peace time and combat regression tests

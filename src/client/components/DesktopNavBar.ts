@@ -27,26 +27,28 @@ export class DesktopNavBar extends LitElement {
         ><span class="edition">OPENFRONT EDITION</span></a
       >
       <div class="front-nav-actions">
-        <button
-          class="nav-menu-item"
-          data-page="page-community"
-          aria-label=${this.admin ? "Admin panel" : "Create map"}
-          title=${this.admin ? "Admin panel" : "Create map"}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            aria-hidden="true"
-          >
-            <path
-              d="m3 6 6-3 6 3 6-3v10M3 6v15l6-3 5 2M9 3v15M15 6v5"
-              stroke-linejoin="round"
-            />
-            <path d="M18 14v8m-4-4h8" stroke-linecap="round" />
-          </svg>
-        </button>
+        ${this.account
+          ? html`<button
+              class="nav-menu-item"
+              data-page="page-community"
+              aria-label=${this.admin ? "Admin panel" : "Create map"}
+              title=${this.admin ? "Admin panel" : "Create map"}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+              >
+                <path
+                  d="m3 6 6-3 6 3 6-3v10M3 6v15l6-3 5 2M9 3v15M15 6v5"
+                  stroke-linejoin="round"
+                />
+                <path d="M18 14v8m-4-4h8" stroke-linecap="round" />
+              </svg>
+            </button>`
+          : nothing}
         <button
           class="nav-menu-item"
           data-page="page-play"
@@ -125,7 +127,26 @@ export class DesktopNavBar extends LitElement {
                 />
               </svg>
             </button>`
-          : nothing}
+          : html`<button
+              class="nav-menu-item login-nav"
+              data-page="page-community"
+              aria-label="Log in"
+              title="Log in or sign up"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+              >
+                <path
+                  d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5M3 12h12m-4-4 4 4-4 4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>`}
       </div>
       <span id="game-version" hidden></span>
     </nav>`;

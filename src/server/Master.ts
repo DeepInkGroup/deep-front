@@ -104,6 +104,8 @@ app.get("/desktop/release.json", async (_req, res) => {
   }
 });
 
+// Retire the old download URL even if an earlier build left an archive behind.
+app.all("/source.zip", (_req, res) => res.sendStatus(404));
 app.use(
   express.static(path.join(__dirname, "../../static"), {
     maxAge: "1y", // Set max-age to 1 year for all static assets

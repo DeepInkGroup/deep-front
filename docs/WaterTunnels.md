@@ -1,8 +1,9 @@
 # Underwater train tunnels
 
 Nearby rail-capable buildings connect across rivers or seas when **both are
-level 31 or higher**. The existing station range (110 tiles) and maximum rail
-path length apply. Cities, Ports and Factories can reach this requirement;
+level 31 or higher** and the endpoints are **at most 40 tiles apart** (straight-line
+distance, including land approaches). The normal maximum rail path length still
+applies. Cities, Ports and Factories can reach this requirement;
 buildings with lower level caps retain their normal rail connections.
 
 Connections appear automatically within two game seconds after the second

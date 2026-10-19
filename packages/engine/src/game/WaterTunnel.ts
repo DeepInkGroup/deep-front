@@ -2,6 +2,7 @@ import { TileRef } from "@openfront/engine-api/game/GameMap";
 import { Game, Unit } from "./Game";
 
 export const WATER_TUNNEL_MIN_LEVEL = 31;
+export const WATER_TUNNEL_MAX_RANGE = 40;
 
 /** A bounded, cardinal staircase keeps rail sprites and train motion continuous.
  * It crosses water only when both portals qualify; impassable terrain is never drilled. */
@@ -21,7 +22,7 @@ export function waterTunnelPath(
     return null;
   if (
     game.euclideanDistSquared(from.tile(), to.tile()) >
-    game.config().trainStationMaxRange() ** 2
+    WATER_TUNNEL_MAX_RANGE ** 2
   )
     return null;
   if (!game.isLand(from.tile()) || !game.isLand(to.tile())) return null;

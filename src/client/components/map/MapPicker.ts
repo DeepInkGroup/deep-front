@@ -397,7 +397,8 @@ export class MapPicker extends LitElement {
                         loading="lazy"
                       /><strong>${map.name}</strong
                       ><span
-                        >by ${map.author} · ${map.width} × ${map.height}</span
+                        >Build By ${map.author} · ${map.width} ×
+                        ${map.height}</span
                       >
                     </button>`,
                 )}

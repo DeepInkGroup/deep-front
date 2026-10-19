@@ -28,7 +28,7 @@ async function api(page, path, body) {
   });
 }
 async function openStudio(page) {
-  await page.getByRole("button", { name: "Create map", exact: true }).click();
+  await page.getByRole("button", { name: /^(Create map|Log in)$/ }).click();
   await expect(page.locator("community-page")).toBeVisible();
 }
 async function chooseMap(page, mapName) {

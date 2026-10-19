@@ -8,9 +8,10 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build-prod && node scripts/source-archive.mjs",
+    "build": "npm run build-prod",
     "start": "node scripts/serve.mjs",
     "test:community": "node scripts/community-check.mjs",
+    "test:catalog": "node scripts/catalog-check.mjs",
     "test:defense": "node scripts/defense-upgrade-check.mjs",
     "test:bunker": "node scripts/bunker-missile-check.mjs",
     "test:customs": "node scripts/customs-office-check.mjs",

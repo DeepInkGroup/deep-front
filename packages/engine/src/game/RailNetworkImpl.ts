@@ -21,7 +21,11 @@ import { RailNetwork } from "./RailNetwork";
 import { Railroad } from "./Railroad";
 import { RailSpatialGrid } from "./RailroadSpatialGrid";
 import { Cluster, TrainStation } from "./TrainStation";
-import { waterTunnelPath, WATER_TUNNEL_MIN_LEVEL } from "./WaterTunnel";
+import {
+  waterTunnelPath,
+  WATER_TUNNEL_MIN_LEVEL,
+  WATER_TUNNEL_MAX_RANGE,
+} from "./WaterTunnel";
 import { TrainStationExecution } from "../execution/TrainStationExecution";
 
 /**
@@ -186,7 +190,7 @@ export class RailNetworkImpl implements RailNetwork {
         continue;
       for (const { unit } of this.game.nearbyUnits(
         from.tile(),
-        this.game.config().trainStationMaxRange(),
+        WATER_TUNNEL_MAX_RANGE,
         RailStructures.types,
       )) {
         const to = this._stationManager.findStation(unit);

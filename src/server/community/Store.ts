@@ -17,6 +17,7 @@ import {
   MAP_EDITOR_HEIGHT,
 } from "@openfront/engine-api/game/CommunityMaps";
 import { compileDraft, validateDraft } from "./MapCompiler";
+import { catalogMaps, CATALOG_AUTHOR } from "./CatalogMaps";
 
 const SESSION_LIFETIME = 14 * 24 * 60 * 60 * 1000;
 const digest = (token: string) =>
@@ -51,6 +52,13 @@ export class CommunityStore {
           .some((r) => r.name === "last_login_at")
       )
         this.db.exec("ALTER TABLE users ADD COLUMN last_login_at INTEGER");
+      if (
+        !this.db
+          .prepare("PRAGMA table_info(maps)")
+          .all()
+          .some((r) => r.name === "author_credit")
+      )
+        this.db.exec("ALTER TABLE maps ADD COLUMN author_credit TEXT");
       this.db.exec(
         `CREATE TABLE IF NOT EXISTS activity(id INTEGER PRIMARY KEY AUTOINCREMENT,at INTEGER NOT NULL,actor TEXT NOT NULL,action TEXT NOT NULL,target TEXT NOT NULL)`,
       );
@@ -79,6 +87,52 @@ export class CommunityStore {
   }
   close() {
     this.db.close();
+  }
+  /** Install the release's curated maps once. Never undo administrator moderation. */
+  installCatalogMaps() {
+    const entries = catalogMaps();
+    if (
+      entries.every(({ id }) =>
+        this.db.prepare("SELECT id FROM maps WHERE id=?").get(id),
+      )
+    )
+      return;
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      const owner = this.db
+        .prepare("SELECT id FROM users WHERE username='Admin'")
+        .get()!;
+      for (const { id, draft } of entries) {
+        if (this.db.prepare("SELECT id FROM maps WHERE id=?").get(id)) continue;
+        const compiled = compileDraft(draft),
+          now = Date.now();
+        this.db
+          .prepare(`INSERT INTO maps(id,owner_id,name,description,draft,status,notes,created_at,reviewed_at,approved_at,scale,author_credit)
+          VALUES(?,?,?,?,?,'approved',?,?,?,?,?,?)`)
+          .run(
+            id,
+            owner.id,
+            draft.name,
+            draft.description,
+            JSON.stringify(draft),
+            "Curated release map. Build By Artin Zomorodian.",
+            now,
+            now,
+            now,
+            draft.scale,
+            CATALOG_AUTHOR,
+          );
+        for (const [name, data] of Object.entries(compiled.files))
+          this.db
+            .prepare("INSERT INTO map_assets VALUES(?,?,?)")
+            .run(id, name, data);
+        this.record(CATALOG_AUTHOR, "Catalog map published", draft.name);
+      }
+      this.db.exec("COMMIT");
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
   }
   private record(actor: string, action: string, target: string) {
     this.db
@@ -277,7 +331,7 @@ export class CommunityStore {
       ownerId: row.owner_id,
       name: row.name,
       description: row.description,
-      author: row.username,
+      author: row.author_credit || row.username,
       status: row.status,
       notes: row.notes,
       createdAt: row.created_at,
@@ -429,9 +483,19 @@ export class CommunityStore {
 }
 let store: CommunityStore | undefined;
 export function communityStore() {
-  return (store ??= new CommunityStore(
-    process.env.COMMUNITY_DATA_DIR || path.resolve(".data"),
-  ));
+  if (!store) {
+    const opened = new CommunityStore(
+      process.env.COMMUNITY_DATA_DIR || path.resolve(".data"),
+    );
+    try {
+      opened.installCatalogMaps();
+      store = opened;
+    } catch (error) {
+      opened.close();
+      throw error;
+    }
+  }
+  return store;
 }
 export function mapIsAvailable(map: string) {
   const id = communityMapId(map);
