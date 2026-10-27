@@ -1220,7 +1220,8 @@ export class CommunityPage extends LitElement {
                     | 12
                     | 16
                     | 24
-                    | 32,
+                    | 32
+                    | 40,
                 };
                 this.saveDraft();
               }}
@@ -1239,6 +1240,9 @@ export class CommunityPage extends LitElement {
               </option>
               <option value="32" ?selected=${this.draft.scale === 32}>
                 Titan · 4096 × 3072
+              </option>
+              <option value="40" ?selected=${this.draft.scale === 40}>
+                Colossal · 5120 × 3840
               </option>
             </select></label
           >

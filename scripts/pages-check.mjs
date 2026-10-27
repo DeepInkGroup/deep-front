@@ -38,6 +38,9 @@ const server = http.createServer(async (req, res) => {
 });
 await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const base = `http://127.0.0.1:${server.address().port}`;
+const config = JSON.parse(
+  await fs.readFile(new URL("../pages/config.json", import.meta.url), "utf8"),
+);
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 try {
   await fs.mkdir("artifacts", { recursive: true });
@@ -54,7 +57,15 @@ try {
     ).toHaveAttribute("href", "https://github.com/DeepInkGroup");
     await expect(
       page.getByRole("link", { name: "Log in", exact: true }),
-    ).toHaveAttribute("href", "#setup");
+    ).toHaveAttribute(
+      "href",
+      config.serverUrl ? `${config.serverUrl}/#community` : "#setup",
+    );
+    if (config.serverUrl)
+      await expect(page.locator("#play-button")).toHaveAttribute(
+        "href",
+        config.serverUrl,
+      );
     await expect(page.locator(".multiplayer-art")).toHaveJSProperty(
       "complete",
       true,

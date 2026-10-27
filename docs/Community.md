@@ -15,7 +15,7 @@ account is required to submit maps; guests can still play.
 5. Publish for review, then check Your submissions for approval or feedback.
 
 The editor has 128 x 96 editable cells. Output sizes range from Standard
-(1024 x 768) through Titan (4096 x 3072), including Large, Grand and Massive.
+(1024 x 768) through Colossal (5120 x 3840), including Large, Grand, Massive and Titan.
 Saved drafts retain their chosen size. Coastlines, shallow water and terrain
 shading preview the geography without changing the painted cell data.
 

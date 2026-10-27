@@ -4,6 +4,7 @@ import {
   type MapDraft,
 } from "@openfront/engine-api/game/CommunityMaps";
 import { refineCatalogTerrain } from "./CatalogTerrain";
+import { colossalMaps } from "./ColossalMaps";
 
 type Point = readonly [number, number];
 
@@ -520,5 +521,6 @@ export function catalogMaps() {
         ],
       ]),
     },
+    ...colossalMaps(),
   ];
 }

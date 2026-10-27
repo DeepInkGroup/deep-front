@@ -27,6 +27,7 @@ export const MapDraftSchema = z
       z.literal(16),
       z.literal(24),
       z.literal(32),
+      z.literal(40),
     ]),
     tiles: z
       .array(z.number().int().min(0).max(3))

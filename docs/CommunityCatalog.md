@@ -1,6 +1,6 @@
 # Curated community maps
 
-The release installs three original maps, each credited **Build By Artin
+The release installs six original maps, each credited **Build By Artin
 Zomorodian**, into the community catalog:
 
 - **Iran: Caspian to Hormuz**: stylized Iranian geography, Caspian basin,
@@ -10,7 +10,7 @@ Zomorodian**, into the community catalog:
 - **Shattered Crown**: four fictional continents, a central crown island,
   narrow passages and island chains.
 
-Each remastered map is 2048 x 1536 with a 512 x 384 authoring grid and 12 named
+The three regional/remastered maps are 2048 x 1536 with a 512 x 384 authoring grid and 12 named
 land spawns. The second edition adds detailed coasts, meandering rivers,
 fertile valleys and textured relief. Shattered Crown has newly shaped
 continents, sheltered bays and outer islands. Shaded relief thumbnails are
@@ -19,6 +19,23 @@ Geometry is hand-authored
 in `src/server/community/CatalogMaps.ts`; regional maps are stylized rather
 than political boundary datasets. All three use the same compiler and assets
 as approved player maps and are selectable in solo and multiplayer.
+
+Three additional Colossal worlds, all **5120 x 3840**, have 24 named, spaced
+land spawns each and original detailed coastlines, river valleys and ridges:
+
+- **The Silk Road: Great Expanse**: a fictional northern heartland, southern
+  peninsulas and eastern island arc inspired by ancient continental trade.
+- **Leviathan Isles**: a sprawling maritime fantasy of island kingdoms,
+  sheltered bays and long sea routes.
+- **Riftlands: Twin Horizons**: two immense continents separated by a winding
+  ocean rift, southern islands and river-cut interiors.
+
+Each is larger in both dimensions than Giant World Map (4108 x 1948), with
+about 2.46 times its total area. Their layouts live in `ColossalMaps.ts`.
+These are new catalog entries; existing maps and moderation are preserved.
+The map studio also offers Colossal output size. Large maps require more
+memory and longer loading/compilation than regional maps; small multiplayer
+lobbies are recommended on the free server.
 
 Startup installs missing IDs transactionally in the existing community
 database, under the administrator's ownership with a separate author credit.
@@ -39,7 +56,7 @@ The old source archive download is no longer built or served.
 Validation: `npx vitest run tests/server/Community.test.ts` covers installation,
 terrain assets, land spawns, persistence and moderation. With the production
 server running, `npm run test:catalog` checks guest access, signup and login,
-responsive guide layouts, all three maps in solo and a two-client multiplayer
+responsive guide layouts, all six maps in solo and a two-client Colossal multiplayer
 game. Screenshots are written under `artifacts/`.
 
 ## Import a map image
@@ -60,7 +77,7 @@ building footprints or street networks. Flat map images give the clearest result
 cells), clears previous spawns and supports Undo/Redo. Players can paint, place
 or randomize spawns, save drafts, change world size and publish through normal
 admin review. Standard/Fine/Ultra detail changes the editing grid independently
-of the 1024 x 768 through 4096 x 3072 playable world sizes. Old 128 x 96 drafts
+of the 1024 x 768 through 5120 x 3840 playable world sizes. Old 128 x 96 drafts
 remain supported.
 
 `npm run test:image-map` verifies real file upload, controls, responsive previews,

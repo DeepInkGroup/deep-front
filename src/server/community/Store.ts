@@ -106,9 +106,11 @@ export class CommunityStore {
         if (this.db.prepare("SELECT id FROM maps WHERE id=?").get(id)) continue;
         const compiled = compileDraft(draft),
           now = Date.now();
-        const previous = this.db
-          .prepare("SELECT status FROM maps WHERE id=? AND author_credit=?")
-          .get(legacyId, CATALOG_AUTHOR);
+        const previous = legacyId
+          ? this.db
+              .prepare("SELECT status FROM maps WHERE id=? AND author_credit=?")
+              .get(legacyId, CATALOG_AUTHOR)
+          : undefined;
         const status =
           previous?.status === "withdrawn" ? "withdrawn" : "approved";
         this.db
@@ -138,7 +140,7 @@ export class CommunityStore {
           draft.name,
         );
         // Preserve old assets for games/replays already using the first edition.
-        if (previous)
+        if (previous && legacyId)
           this.db
             .prepare(
               "UPDATE maps SET status='withdrawn' WHERE id=? AND status='approved'",

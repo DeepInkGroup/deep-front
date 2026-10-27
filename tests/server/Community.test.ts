@@ -30,6 +30,7 @@ import {
 } from "@openfront/engine-api/game/CommunityMaps";
 import { GameMapSize } from "@openfront/engine-api/game/GameTypes";
 import { loadTerrainMap } from "@openfront/engine-lib/game/TerrainMapLoader";
+import giantWorld from "../../resources/maps/giantworldmap/manifest.json";
 import {
   encodeServerMessage,
   decodeServerMessage,
@@ -65,26 +66,34 @@ afterEach(() => {
 });
 
 describe("community accounts and durable storage", () => {
-  it("installs three credited, playable release maps once and preserves moderation across restarts", () => {
+  it("installs six credited, playable release maps once and preserves moderation across restarts", () => {
     store.installCatalogMaps();
     const published = store.listMaps("published");
-    expect(published).toHaveLength(3);
+    expect(published).toHaveLength(6);
     expect(
       new Set(catalogMaps().map(({ draft }) => JSON.stringify(draft.tiles)))
         .size,
-    ).toBe(3);
+    ).toBe(6);
     for (const { id, draft } of catalogMaps()) {
       expect(validateDraft(draft)).toEqual(draft);
-      expect(draft.nations).toHaveLength(12);
+      const colossal = draft.scale === 40;
+      expect(draft.nations).toHaveLength(colossal ? 24 : 12);
       expect(draft.description).toContain("Build By Artin Zomorodian");
       expect(published.find((m) => m.id === id)).toMatchObject({
         author: CATALOG_AUTHOR,
-        width: 2048,
-        height: 1536,
+        width: colossal ? 5120 : 2048,
+        height: colossal ? 3840 : 1536,
         status: "approved",
       });
       const manifest = JSON.parse(store.asset(id, "manifest.json")!.toString());
-      expect(manifest.nations).toHaveLength(12);
+      expect(manifest.nations).toHaveLength(colossal ? 24 : 12);
+      if (colossal) {
+        expect(manifest.map.width).toBeGreaterThan(giantWorld.map.width);
+        expect(manifest.map.height).toBeGreaterThan(giantWorld.map.height);
+        expect(manifest.map.num_land_tiles).toBeGreaterThan(
+          giantWorld.map.num_land_tiles,
+        );
+      }
       const terrain = store.asset(id, "map.bin")!;
       expect(terrain.length).toBe(manifest.map.width * manifest.map.height);
       for (const {
@@ -97,17 +106,17 @@ describe("community accounts and durable storage", () => {
     store.close();
     store = new CommunityStore(folder);
     store.installCatalogMaps();
-    expect(store.listMaps("published")).toHaveLength(2);
-    expect(store.listMaps("admin")).toHaveLength(3);
+    expect(store.listMaps("published")).toHaveLength(5);
+    expect(store.listMaps("admin")).toHaveLength(6);
     expect(
       store
         .dashboard()
         .activity.filter((a) => a.action === "Catalog map published"),
-    ).toHaveLength(3);
+    ).toHaveLength(6);
     expect(store.users()).toHaveLength(1);
     store.republish(withdrawn, "Admin");
     expect(store.isPublished(withdrawn)).toBe(true);
-  });
+  }, 120_000);
   it("migrates an existing database without changing accounts, sessions or drafts", () => {
     const author = store.createUser("ExistingMaker", "password123"),
       token = store.createSession(author.id);
@@ -126,7 +135,9 @@ describe("community accounts and durable storage", () => {
   });
   it("upgrades first-edition catalog maps without losing old replay assets or reversing moderation", () => {
     const owner = store.authenticate("Admin", "Admin123")!;
-    const entries = catalogMaps();
+    const entries = catalogMaps().filter(
+      (entry) => entry.legacyId !== undefined,
+    );
     for (const [index, entry] of entries.entries()) {
       const input = draft(),
         now = Date.now();
@@ -150,8 +161,8 @@ describe("community accounts and durable storage", () => {
         .run(entry.legacyId, "map.bin", Buffer.from([128, 129]));
     }
     store.installCatalogMaps();
-    expect(store.listMaps("published")).toHaveLength(2);
-    expect(store.listMaps("admin")).toHaveLength(6);
+    expect(store.listMaps("published")).toHaveLength(5);
+    expect(store.listMaps("admin")).toHaveLength(9);
     for (const entry of entries) {
       expect(store.isPublished(entry.legacyId)).toBe(false);
       expect(store.asset(entry.legacyId, "map.bin")).toEqual(
@@ -161,8 +172,8 @@ describe("community accounts and durable storage", () => {
     }
     expect(store.isPublished(entries[0].id)).toBe(false);
     store.installCatalogMaps();
-    expect(store.listMaps("admin")).toHaveLength(6);
-  });
+    expect(store.listMaps("admin")).toHaveLength(9);
+  }, 120_000);
   it("reports exact admin totals and profile data, revokes only the selected player's sessions, and records moderation", () => {
     const maker = store.createUser("Maker", "password123"),
       other = store.createUser("OtherMaker", "password123");
@@ -312,6 +323,30 @@ describe("community map compiler and review lifecycle", () => {
       "data:image/png;base64,",
     );
     expect(compiled.files["thumbnail.svg"].toString()).not.toContain("<rect");
+  });
+  it("marks the largest sea as ocean while preserving inland lakes", () => {
+    const input = draft();
+    input.nations = [];
+    for (let y = 30; y < 38; y++)
+      for (let x = 30; x < 38; x++) input.tiles[y * W + x] = 0;
+    const compiled = compileDraft(input);
+    for (const [name, meta] of [
+      ["map.bin", compiled.manifest.map],
+      ["map4x.bin", compiled.manifest.map4x],
+      ["map16x.bin", compiled.manifest.map16x],
+    ] as const) {
+      const data = compiled.files[name],
+        cell = meta.width / W;
+      expect(data[0] & (128 | 32)).toBe(32);
+      expect(
+        data[Math.floor(34 * cell) * meta.width + Math.floor(34 * cell)] &
+          (128 | 32),
+      ).toBe(0);
+      expect(
+        data[Math.floor(20 * cell) * meta.width + Math.floor(20 * cell)] &
+          (128 | 32),
+      ).toBe(128);
+    }
   });
   it.each([8, 12, 16] as const)(
     "compiles %s scale terrain, accurate land counts, spawns, and open straits at both game sizes",

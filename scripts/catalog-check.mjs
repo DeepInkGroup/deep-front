@@ -39,7 +39,7 @@ async function select(page, map) {
         .locator("single-player-modal:visible, host-lobby-modal:visible")
         .evaluate((modal) => modal.defaultNationCount),
     )
-    .toBe(12);
+    .toBe(map.width === 5120 ? 24 : 12);
   await page.getByRole("button", { name: /^random spawn$/i }).click();
 }
 async function running(page, map) {
@@ -65,7 +65,7 @@ async function running(page, map) {
     await page.evaluate(() =>
       document.querySelector("control-panel").game.width(),
     ),
-    2048,
+    map.width,
   );
   await expect(
     page.getByText("Connection error!", { exact: true }),
@@ -76,17 +76,17 @@ try {
   const maps = (
     await (await page.request.get(base + "/api/community/maps")).json()
   ).maps.filter((m) => m.author === "Artin Zomorodian");
-  assert.equal(maps.length, 3);
+  assert.equal(maps.length, 6);
   for (const map of maps) {
-    assert.equal(map.width, 2048);
-    assert.equal(map.height, 1536);
+    assert.ok(map.width === 2048 || map.width === 5120);
+    assert.equal(map.height, (map.width * 3) / 4);
     assert.match(map.description, /Build By Artin Zomorodian/);
     const manifest = await (
       await page.request.get(
         `${base}/api/community/maps/${map.id}/manifest.json`,
       )
     ).json();
-    assert.equal(manifest.nations.length, 12);
+    assert.equal(manifest.nations.length, map.width === 5120 ? 24 : 12);
   }
   // Header guest access, plain text guide, and responsive layout.
   for (const width of [1440, 390, 320]) {
@@ -176,9 +176,9 @@ try {
     .fill("");
   await page.locator(".approved-map-section:visible").scrollIntoViewIfNeeded();
   await page.screenshot({ path: "artifacts/catalog-maps.png" });
-  // Inspect all three original map thumbnails at a useful scale.
+  // Inspect all six original map thumbnails at a useful scale.
   const atlas = await browser.newPage({
-    viewport: { width: 1440, height: 650 },
+    viewport: { width: 1440, height: 1200 },
   });
   await atlas.goto(base);
   await atlas.setContent(
@@ -202,7 +202,7 @@ try {
   }
   const host = await player("CatalogHost"),
     guest = await player("CatalogGuest"),
-    map = maps.find((m) => m.name === "Shattered Crown");
+    map = maps.find((m) => m.name === "Riftlands: Twin Horizons");
   await host.getByRole("button", { name: "Host a game", exact: true }).click();
   await expect.poll(() => host.url()).toMatch(/\/game\//);
   await select(host, map);
@@ -222,7 +222,7 @@ try {
   await host.screenshot({ path: "artifacts/catalog-multiplayer.png" });
   assert.deepEqual(errors, []);
   console.log(
-    "Shattered Crown: two-client multiplayer game and synchronization passed",
+    "Riftlands: Twin Horizons: two-client multiplayer game and synchronization passed",
   );
 } catch (error) {
   console.error("Browser errors:", errors);

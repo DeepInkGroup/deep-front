@@ -4,6 +4,8 @@ Source repository: https://github.com/DeepInkGroup/deep-front
 
 Project page: https://deepinkgroup.github.io/deep-front/
 
+Current multiplayer service: https://deep-front.onrender.com
+
 ## Render
 
 [Deploy Deep Front on Render](https://render.com/deploy?repo=https://github.com/DeepInkGroup/deep-front)
@@ -19,7 +21,10 @@ Sign into Render, connect the repository, and apply the included `render.yaml` B
 7. Copy its actual HTTPS `onrender.com` address. Open it to play; everyone should use the same address.
 8. Choose **Host a game**, share the lobby link with friends, and start once they have joined.
 
-To connect the project page's public Play button permanently, set `serverUrl` in `pages/config.json` to that actual HTTPS address, then commit and push. The GitHub Pages workflow republishes automatically. The page also lets each visitor paste and save a server address in their own browser.
+The project page's Play button is configured for `https://deep-front.onrender.com`.
+If the service address changes, update `serverUrl` in `pages/config.json`, then
+commit and push. The GitHub Pages workflow republishes automatically. Visitors
+can also paste and save a different server address in their own browser.
 
 If you create a **Web Service** manually instead of using a Blueprint, select **Node** and enter these exact values:
 

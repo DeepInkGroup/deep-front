@@ -168,7 +168,8 @@ function terrainAtScale(draft: MapDraft, scale: number) {
   }
   // Mark the largest water component as ocean, preserving inland lakes.
   const seen = new Uint8Array(size);
-  let ocean: Uint32Array = new Uint32Array();
+  let oceanStart = -1,
+    oceanSize = 0;
   for (let start = 0; start < size; start++) {
     if (seen[start] || terrain[start] & 128) continue;
     head = 0;
@@ -190,9 +191,34 @@ function terrainAtScale(draft: MapDraft, scale: number) {
       if (y > 0) water(t - width);
       if (y < height - 1) water(t + width);
     }
-    if (tail > ocean.length) ocean = queue.slice(0, tail);
+    if (tail > oceanSize) {
+      oceanStart = start;
+      oceanSize = tail;
+    }
   }
-  for (const t of ocean) terrain[t] |= 32;
+  // Reuse the BFS queue rather than retaining another full ocean-sized array.
+  // This keeps compilation of Colossal maps within small-server memory budgets.
+  if (oceanStart >= 0) {
+    head = 0;
+    tail = 1;
+    queue[0] = oceanStart;
+    terrain[oceanStart] |= 32;
+    const visitOcean = (n: number) => {
+      if (!(terrain[n] & (128 | 32))) {
+        terrain[n] |= 32;
+        queue[tail++] = n;
+      }
+    };
+    while (head < tail) {
+      const t = queue[head++],
+        x = t % width,
+        y = Math.floor(t / width);
+      if (x > 0) visitOcean(t - 1);
+      if (x < width - 1) visitOcean(t + 1);
+      if (y > 0) visitOcean(t - width);
+      if (y < height - 1) visitOcean(t + width);
+    }
+  }
   for (let y = 0; y < height; y++)
     for (let x = 0; x < width; x++) {
       const t = y * width + x,
