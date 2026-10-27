@@ -6,7 +6,17 @@ export const STEALTH_BLAST = {
 export const CIWS_COSTS = [2_000_000n, 3_000_000n, 3_500_000n] as const;
 export const CIWS_MAX_LEVEL = 5;
 
-export const EMP_COST = 1_000_000;
+export const EMP_COST = 750_000;
+/** Each expiry represents one temporarily suppressed SAM interception slot. */
+export function empSAMCapacity(
+  level: number,
+  expiries: readonly number[] | undefined,
+  ticks: number,
+): number {
+  let suppressed = 0;
+  for (const expiry of expiries ?? []) if (expiry > ticks) suppressed++;
+  return Math.max(0, level - suppressed);
+}
 export const EMP_RADIUS = 70;
 export const EMP_DISABLE_TICKS = 50;
 export const BUNKER_UPGRADE_TICKS = 20;

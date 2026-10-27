@@ -217,6 +217,7 @@ export interface UnitUpdate {
   loaded?: boolean; // Only for trains
   samUpgrade?: SamLauncherState;
   empDisabledUntil?: number;
+  empSuppressionExpiries?: number[];
 }
 
 export interface AttackUpdate {

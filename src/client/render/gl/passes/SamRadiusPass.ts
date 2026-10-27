@@ -14,6 +14,7 @@
  */
 
 import type { UnitState } from "../../types";
+import { empSAMCapacity } from "@openfront/engine-api/game/AdvancedDefense";
 import { UT_CIWS_DEFENSE, UT_SAM_LAUNCHER } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
@@ -159,6 +160,9 @@ export class SAMRadiusPass {
       u.isActive &&
       !u.underConstruction &&
       (u.empDisabledUntil ?? 0) <= this.currentTick &&
+      (u.unitType !== UT_SAM_LAUNCHER ||
+        empSAMCapacity(u.level, u.empSuppressionExpiries, this.currentTick) >
+          0) &&
       !(
         u.unitType === UT_CIWS_DEFENSE &&
         (this.missileType === "Hydrogen Bomb" ||
@@ -381,7 +385,9 @@ export class SAMRadiusPass {
     const w = this.mapW;
     this.dirtyGroups.clear();
     this.hasDisabledCIWS = [...structures.values()].some(
-      (u) => (u.empDisabledUntil ?? 0) > this.currentTick,
+      (u) =>
+        (u.empDisabledUntil ?? 0) > this.currentTick ||
+        u.empSuppressionExpiries?.some((t) => t > this.currentTick),
     );
 
     for (const u of structures.values()) {

@@ -207,7 +207,7 @@
       "hypersonic_missile": "Fast building strike with no fallout. Only the target country's SAMs can intercept. Requires a bunker.",
       "ciws_defense": "Intercepts missiles in range. Vulnerable to Hydrogen Bombs and undetected EMP. Max L5.",
       "strait_control_station": "Aim at a narrow waterway or nearby land: snaps to a valid bank within 12 tiles. Own both banks. Max 2, L1.",
-      "emp_missile": "Stealth EMP: disables hostile CIWS within 70 tiles for 5s if no SAM detects it. No damage. Requires a bunker."
+      "emp_missile": "750K stealth EMP: each arrival suppresses one interception slot per hostile SAM within 70 tiles for 5s; hits stack and recover separately. Undetected arrivals also disable CIWS for 5s. No damage. Requires a bunker."
     },
     "not_enough_money": "Not enough money",
     "upgrade_amount": "x{amount}",
@@ -919,7 +919,8 @@
     "strait_toll_request": "{name} requests a {rate}% strait toll. Open Strait tolls to accept or reject passage.",
     "strait_toll_cancelled": "Strait toll cancelled: control or waterway conditions changed.",
     "emp_missile_inbound": "EMP Missile detected at your border!",
-    "emp_defense_disabled": "{name} disabled nearby CIWS for 5 seconds with an EMP!"
+    "emp_defense_disabled": "{name} disabled nearby CIWS for 5 seconds with an EMP!",
+    "emp_sam_suppressed": "{name}'s EMP reduced this SAM's interception capacity by one for 5 seconds!"
   },
   "featured_stream": {
     "expand": "Expand",

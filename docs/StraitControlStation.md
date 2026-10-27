@@ -54,9 +54,10 @@ use another route or wait; tolls cannot overdraw their balance.
 
 Destroying the station removes its toll and passage restriction. Bombs can
 destroy stations. Losing either bank cancels the existing toll. Capturing a
-station clears the old owner's terms and consent; the new owner must control
-both banks and enable a new agreement. A captured station above the new
-owner's two-building limit is destroyed.
+station destroys it immediately, clears the former toll and consent, and awards
+no captured station to the conqueror. Build a new station under your own control
+to charge tolls again. Customs Offices are also destroyed on capture rather than
+transferring their train-income bonus.
 
 Water terrain changes also trigger a topology check and cancel a toll if
 the crossing no longer qualifies. Regaining control does not silently

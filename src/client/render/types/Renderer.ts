@@ -123,6 +123,7 @@ export interface UnitState {
   /** Local construction/upgrade duration, in simulation ticks. */
   constructionDuration?: number;
   empDisabledUntil?: number;
+  empSuppressionExpiries?: number[];
   samUpgradeStartTick: number | null;
   samUpgradeStartRange: number | null;
   samUpgradeTargetLevel: number | null;

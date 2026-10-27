@@ -9,7 +9,13 @@ Unlike ordinary SAMs, CIWS can intercept hypersonic missiles crossing its countr
 Hydrogen Bombs bypass CIWS and can destroy it on impact; SAM Launchers can still
 intercept Hydrogen Bombs. An undetected EMP bypasses CIWS and disables hostile
 sites within 70 tiles of its impact for exactly five seconds. A SAM detection
-cancels that EMP effect permanently and makes the EMP interceptable by CIWS.
+cancels the CIWS shutdown permanently and makes the EMP interceptable by CIWS.
+EMP missiles cost 750K. A missile that reaches its target also removes one
+interception slot from each hostile SAM within 70 tiles for five seconds,
+regardless of prior detection. These losses stack with independent expiry times;
+purchased levels, normal reload timers and range are unchanged. A fully suppressed
+SAM cannot launch until a slot returns. An EMP shot down before arrival has no
+suppression effect.
 Shutdowns dim the affected building and remove its active-range overlay.
 
 The simulation checks the whole movement segment, so a fast missile cannot jump

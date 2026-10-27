@@ -5,6 +5,7 @@ import {
   UnitType,
 } from "@openfront/engine-api/game/GameTypes";
 import { ConstructionExecution } from "@openfront/engine/execution/ConstructionExecution";
+import { PlayerExecution } from "@openfront/engine/execution/PlayerExecution";
 import { NukeExecution } from "@openfront/engine/execution/NukeExecution";
 import { OilFactoryExecution } from "@openfront/engine/execution/OilFactoryExecution";
 import { TrainExecution } from "@openfront/engine/execution/TrainExecution";
@@ -49,6 +50,18 @@ function office(player = alice, x = 99, y = 40) {
 beforeEach(() => fixture());
 
 describe("Customs Office border placement and limits", () => {
+  it("destroys an unfinished office when its tile is conquered through normal player execution", () => {
+    const customs = office();
+    customs.setUnderConstruction(true);
+    bob.conquer(customs.tile());
+    const execution = new PlayerExecution(alice);
+    execution.init(game, game.ticks());
+    execution.tick(game.ticks());
+    expect(customs.isActive()).toBe(false);
+    expect(game.owner(customs.tile())).toBe(bob);
+    expect(bob.units(CUSTOMS)).toHaveLength(0);
+    expect(alice.units(CUSTOMS)).toHaveLength(0);
+  });
   it("costs 1M, has one level, and rejects interior, neutral and diagonal-only borders without charging", () => {
     const before = alice.gold();
     for (const [x, y] of [
@@ -99,23 +112,29 @@ describe("Customs Office border placement and limits", () => {
     expect(trainTradeIncome(alice, bob, 25_000n)).toBe(27_500n);
     expect(trainTradeIncome(alice, carol, 25_000n)).toBe(25_000n);
   });
-  it("preserves per-neighbor limits through captures, including capture by its own trade partner", () => {
-    const customs = office();
-    bob.captureUnit(customs);
-    expect(customsPartner(customs)).toBe(alice);
-    expect(trainTradeIncome(bob, alice, 25_000n)).toBe(27_500n);
-    alice.captureUnit(customs);
-    expect(customsPartner(customs)).toBe(bob);
-    office(carol, 99, 160); // Carol already has an office for Bob.
-    carol.captureUnit(customs);
-    expect(customs.isActive()).toBe(false);
-    expect(carol.units(CUSTOMS)).toHaveLength(1);
-    const another = office();
-    office(bob, 100, 100); // Bob already has an office for Alice.
-    bob.captureUnit(another);
-    expect(another.isActive()).toBe(false);
-    expect(bob.units(CUSTOMS)).toHaveLength(1);
-  });
+  it.each([GameType.Singleplayer, GameType.Private])(
+    "destroys a captured office and removes its trade bonus in %s",
+    (gameType) => {
+      game.config().gameConfig().gameType = gameType;
+      const customs = office();
+      bob.captureUnit(customs);
+      expect(customs.isActive()).toBe(false);
+      expect(alice.units(CUSTOMS)).toHaveLength(0);
+      expect(bob.units(CUSTOMS)).toHaveLength(0);
+      expect(trainTradeIncome(bob, alice, 25_000n)).toBe(25_000n);
+      expect(trainTradeIncome(alice, bob, 25_000n)).toBe(25_000n);
+      office(carol, 99, 160); // Carol already has an office for Bob.
+      const thirdParty = office();
+      carol.captureUnit(thirdParty);
+      expect(thirdParty.isActive()).toBe(false);
+      expect(carol.units(CUSTOMS)).toHaveLength(1);
+      const another = office();
+      office(bob, 100, 100); // Bob already has an office for Alice.
+      bob.captureUnit(another);
+      expect(another.isActive()).toBe(false);
+      expect(bob.units(CUSTOMS)).toHaveLength(1);
+    },
+  );
 });
 
 describe("Customs Office train economy", () => {

@@ -314,6 +314,9 @@ export interface Unit extends UnitLike {
   samLauncherState(): SamLauncherState | undefined;
   empDisabledUntil(): number;
   disableByEMP(until: number): void;
+  empSuppressionExpiries(): readonly number[];
+  suppressSAMByEMP(until: number): void;
+  expireEMPSuppression(ticks: number): void;
 
   // Trade Ships
   setSafeFromPirates(): void; // Only for trade ships

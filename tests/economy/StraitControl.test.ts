@@ -23,6 +23,7 @@ import {
   tradePassageNext,
 } from "@openfront/engine/game/StraitTradeRoute";
 import { ConstructionExecution } from "@openfront/engine/execution/ConstructionExecution";
+import { PlayerExecution } from "@openfront/engine/execution/PlayerExecution";
 import { StraitControlExecution } from "@openfront/engine/execution/StraitControlExecution";
 import { TradeShipExecution } from "@openfront/engine/execution/TradeShipExecution";
 import { NukeExecution } from "@openfront/engine/execution/NukeExecution";
@@ -458,26 +459,33 @@ describe("Strait Control Station", () => {
       );
     }
   });
-  it("cancels tolls immediately when either bank is captured, and restores no old agreement when the station changes hands", () => {
-    const f = fixture();
-    const station = f.owner.buildUnit(S, f.game.ref(109, 120), {});
-    enable(f, station);
-    reply(f, station, "accept");
-    const lifecycle = new StraitControlExecution(f.owner, station.id());
-    lifecycle.init(f.game);
-    f.sender.conquer(f.game.ref(120, 120));
-    expect(activeStraits(f.game)).toHaveLength(0);
-    lifecycle.tick();
-    expect(station.straitState()!.enabled).toBe(false);
-    expect(station.straitState()!.accepted).toEqual([]);
-    f.owner.conquer(f.game.ref(120, 120));
-    enable(f, station);
-    f.sender.captureUnit(station);
-    expect(station.straitState()!.enabled).toBe(false);
-    expect(activeStraits(f.game)).toHaveLength(0);
-    station.delete(true, f.owner);
-    expect(activeStraits(f.game)).toHaveLength(0);
-  });
+  it.each([GameType.Singleplayer, GameType.Private])(
+    "cancels bank tolls and destroys the station when its own tile is conquered in %s",
+    (gameType) => {
+      const f = fixture(gameType);
+      const station = f.owner.buildUnit(S, f.game.ref(109, 120), {});
+      enable(f, station);
+      reply(f, station, "accept");
+      const lifecycle = new StraitControlExecution(f.owner, station.id());
+      lifecycle.init(f.game);
+      f.sender.conquer(f.game.ref(120, 120));
+      expect(activeStraits(f.game)).toHaveLength(0);
+      lifecycle.tick();
+      expect(station.straitState()!.enabled).toBe(false);
+      expect(station.straitState()!.accepted).toEqual([]);
+      f.owner.conquer(f.game.ref(120, 120));
+      enable(f, station);
+      f.sender.conquer(station.tile());
+      const ownerExecution = new PlayerExecution(f.owner);
+      ownerExecution.init(f.game, f.game.ticks());
+      ownerExecution.tick(f.game.ticks());
+      expect(station.isActive()).toBe(false);
+      expect(f.sender.units(S)).toHaveLength(0);
+      expect(station.straitState()!.enabled).toBe(false);
+      expect(activeStraits(f.game)).toHaveLength(0);
+      expect(activeStraits(f.game)).toHaveLength(0);
+    },
+  );
   it.each([
     UnitType.AtomBomb,
     UnitType.HydrogenBomb,

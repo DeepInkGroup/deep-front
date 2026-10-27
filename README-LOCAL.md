@@ -91,10 +91,9 @@ bonus. Each side needs its own office to receive its own bonus. With a completed
 Logistics Center, the bonuses add to **25%**, rounded down to whole gold.
 
 Offices connect to nearby rail buildings and serve as train stops. Destruction
-removes their bonus and frees that neighbor's slot. Capture retains the trade
-partner; if the partner captures the office, it instead links to the previous
-owner. A captured office is destroyed if it would duplicate the captor's office
-for that partner.
+removes their bonus and frees that neighbor's slot. Capturing an office always
+destroys it instead of transferring the trade bonus. Strait Control Stations
+are also destroyed on capture and their toll agreements are cancelled.
 
 Both AI tribes and nations build Logistics Centers and Customs Offices with real
 gold after developing their resource economy, obeying placement, limits and

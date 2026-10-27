@@ -423,6 +423,9 @@ export class BuildPreviewController implements Controller {
       if (
         !s.isActive() ||
         s.empDisabledUntil() > this.game.ticks() ||
+        (s.type() === UnitType.SAMLauncher &&
+          s.empSuppressionExpiries().filter((t) => t > this.game.ticks())
+            .length >= s.level()) ||
         ((type === UnitType.HydrogenBomb || type === UnitType.EMPMissile) &&
           s.type() === UnitType.CIWSDefense)
       )

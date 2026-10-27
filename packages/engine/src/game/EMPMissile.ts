@@ -41,7 +41,7 @@ export function detectEMPBySAM(game: Game, missile: Unit): void {
 /** EMP affects defenses only: no territory, terrain, troops, or building damage. */
 export function applyEMP(game: Game, missile: Unit, target: TileRef): void {
   const notified = new Set<number>();
-  for (const site of game.units(UnitType.CIWSDefense)) {
+  for (const site of game.units(UnitType.CIWSDefense, UnitType.SAMLauncher)) {
     const owner = site.owner();
     if (
       !site.isActive() ||
@@ -51,6 +51,21 @@ export function applyEMP(game: Game, missile: Unit, target: TileRef): void {
       game.euclideanDistSquared(target, site.tile()) > EMP_RADIUS * EMP_RADIUS
     )
       continue;
+    if (site.type() === UnitType.SAMLauncher) {
+      site.suppressSAMByEMP(game.ticks() + EMP_DISABLE_TICKS);
+      game.displayMessage(
+        "events_display.emp_sam_suppressed",
+        MessageType.CHAT,
+        owner.id(),
+        undefined,
+        { name: missile.owner().displayName() },
+        site.id(),
+        missile.owner().id(),
+      );
+      continue;
+    }
+    // SAM detection still protects CIWS, but does not cancel a direct SAM hit.
+    if (missile.nukeState().detectedBySAM) continue;
     site.disableByEMP(game.ticks() + EMP_DISABLE_TICKS);
     if (!notified.has(owner.smallID())) {
       notified.add(owner.smallID());

@@ -242,6 +242,7 @@ export class FrameNormalizer {
       // client gets a structured clone, but in the processor the array
       // would keep changing under older states and hide the deltas.
       next.missileTimerQueue = next.missileTimerQueue.slice();
+      next.empSuppressionExpiries = next.empSuppressionExpiries?.slice();
       const prev = this.units.get(u.id);
       if (prev !== undefined && this.plans.hasGridPlan(u.id)) {
         // The plan decides the position, the update's value lags behind.

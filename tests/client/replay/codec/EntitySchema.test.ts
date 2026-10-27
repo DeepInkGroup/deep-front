@@ -146,6 +146,8 @@ const baseUnit: UnitState = {
   samUpgradeStartRange: null,
   samUpgradeTargetLevel: null,
   samUpgradeDuration: null,
+  empDisabledUntil: 0,
+  empSuppressionExpiries: undefined,
 };
 
 const unitAlternatives: { [K in keyof UnitFields]: UnitFields[K] } = {
@@ -166,6 +168,7 @@ const unitAlternatives: { [K in keyof UnitFields]: UnitFields[K] } = {
   targetTile: 77,
   troops: 3_000_000,
   missileTimerQueue: [100_000, 100_050],
+  empSuppressionExpiries: [100_100, 100_120],
   level: 3,
   veterancy: 2,
   hasTrainStation: true,
@@ -175,6 +178,7 @@ const unitAlternatives: { [K in keyof UnitFields]: UnitFields[K] } = {
   samUpgradeStartRange: 70.5,
   samUpgradeTargetLevel: 2,
   samUpgradeDuration: 150,
+  empDisabledUntil: 100_100,
 };
 
 function roundTripFull<T>(

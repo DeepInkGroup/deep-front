@@ -1,5 +1,8 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
-import { BUNKER_UPGRADE_TICKS } from "@openfront/engine-api/game/AdvancedDefense";
+import {
+  BUNKER_UPGRADE_TICKS,
+  empSAMCapacity,
+} from "@openfront/engine-api/game/AdvancedDefense";
 import {
   NukeState,
   Tick,
@@ -202,8 +205,20 @@ export class UnitView implements UnitLike {
   empDisabledUntil(): number {
     return this.state.empDisabledUntil ?? 0;
   }
+  empSuppressionExpiries(): readonly number[] {
+    return this.state.empSuppressionExpiries ?? [];
+  }
+  private missileCapacity(): number {
+    return this.state.unitType === UnitType.SAMLauncher
+      ? empSAMCapacity(
+          this.state.level,
+          this.state.empSuppressionExpiries,
+          this.gameView.ticks(),
+        )
+      : this.state.level;
+  }
   isInCooldown(): boolean {
-    return this.state.missileTimerQueue.length === this.state.level;
+    return this.state.missileTimerQueue.length >= this.missileCapacity();
   }
   targetUnitId(): number | undefined {
     return this.state.targetUnitId ?? undefined;
@@ -214,14 +229,15 @@ export class UnitView implements UnitLike {
 
   // How "ready" this unit is from 0 to 1.
   missileReadinesss(): number {
-    const maxMissiles = this.state.level;
+    const maxMissiles = this.missileCapacity();
+    if (maxMissiles === 0) return 0;
     const missilesReloading = this.state.missileTimerQueue.length;
 
     if (missilesReloading === 0) {
-      return 1;
+      return maxMissiles / this.state.level;
     }
 
-    const missilesReady = maxMissiles - missilesReloading;
+    const missilesReady = Math.max(0, maxMissiles - missilesReloading);
 
     if (missilesReady === 0 && maxMissiles > 1) {
       // Unless we have just one missile (level 1),
@@ -229,7 +245,7 @@ export class UnitView implements UnitLike {
       return 0;
     }
 
-    let readiness = missilesReady / maxMissiles;
+    let readiness = missilesReady / this.state.level;
 
     const cooldownDuration =
       this.state.unitType === UnitType.SAMLauncher
@@ -239,10 +255,10 @@ export class UnitView implements UnitLike {
     for (const cooldown of this.state.missileTimerQueue) {
       const cooldownProgress = this.gameView.ticks() - cooldown;
       const cooldownRatio = cooldownProgress / cooldownDuration;
-      const adjusted = cooldownRatio / maxMissiles;
+      const adjusted = cooldownRatio / this.state.level;
       readiness += adjusted;
     }
-    return readiness;
+    return Math.max(0, Math.min(maxMissiles / this.state.level, readiness));
   }
 
   level(): number {

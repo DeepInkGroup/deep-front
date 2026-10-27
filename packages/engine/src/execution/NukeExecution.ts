@@ -477,8 +477,7 @@ export class NukeExecution implements Execution {
 
     if (this.nukeType === UnitType.EMPMissile) {
       detectEMPBySAM(this.mg, this.nuke);
-      if (!this.nuke.nukeState().detectedBySAM)
-        applyEMP(this.mg, this.nuke, this.dst);
+      applyEMP(this.mg, this.nuke, this.dst);
       this.active = false;
       this.nuke.setReachedTarget();
       this.nuke.delete(false);

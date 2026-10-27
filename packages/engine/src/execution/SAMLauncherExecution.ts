@@ -349,6 +349,7 @@ export class SAMLauncherExecution implements Execution {
       this.sam = this.player.buildUnit(UnitType.SAMLauncher, spawnTile, {});
     }
     this.targetingSystem ??= new SAMTargetingSystem(this.mg, this.sam);
+    this.sam.expireEMPSuppression(ticks);
 
     if (this.lastLevel !== this.sam.level()) {
       this.lastLevel = this.sam.level();

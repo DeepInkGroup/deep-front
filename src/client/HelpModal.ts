@@ -152,7 +152,9 @@ export class HelpModal extends BaseModal {
           Customs Offices must sit on a border with another player. Once a
           building limit is reached, you can still select and upgrade existing
           buildings until they reach their maximum level. Captured Oil Factories
-          and Copper Mines beyond your limit are removed.
+          and Copper Mines beyond your limit are removed. Customs Offices and
+          Strait Control Stations are destroyed when captured; rebuild your own
+          to collect bonuses or tolls.
         </p>
       </section>
       <section id="guide-trade">
@@ -212,11 +214,15 @@ export class HelpModal extends BaseModal {
             intercept it; the target country's SAM Launchers can. It destroys
             buildings without radioactive land.
           </dd>
-          <dt>EMP Missile / 1M</dt>
+          <dt>EMP Missile / 750K</dt>
           <dd>
             A hidden, non-damaging strike. On arrival it disables hostile CIWS
             in its effect area for 5 seconds, provided no enemy SAM Launcher
-            detected it earlier.
+            detected it earlier. Each arrival also suppresses one interception
+            slot in every hostile SAM within 70 tiles for 5 seconds, even if the
+            missile was detected. Multiple hits stack and each slot recovers on
+            its own timer. A level-20 SAM hit twice has capacity 18 until the
+            effects expire; its purchased level stays 20.
           </dd>
           <dt>CIWS Defense</dt>
           <dd>

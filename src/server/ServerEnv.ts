@@ -152,7 +152,15 @@ export class ServerEnv {
     return ServerEnv.workerPortByIndex(ServerEnv.workerIndex(gameID));
   }
   static workerPortByIndex(index: number): number {
-    return 3001 + index;
+    return ServerEnv.internalPortBase() + 1 + index;
+  }
+  static internalPortBase(): number {
+    const base = Number(process.env.DEEP_FRONT_INTERNAL_PORT || 3000);
+    if (!Number.isSafeInteger(base) || base < 1024 || base > 65502)
+      throw new Error(
+        "DEEP_FRONT_INTERNAL_PORT must be an integer from 1024 to 65502",
+      );
+    return base;
   }
   // Mint a game id under this deployment's instance letter.
   static generateGameId(): GameID {

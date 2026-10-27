@@ -205,6 +205,49 @@ describe("UnitView accessors", () => {
   });
 
   describe("missileReadinesss", () => {
+    it("shows partial SAM capacity and recovers without changing its displayed level", () => {
+      const game = makeGameView();
+      let ticks = 0;
+      vi.spyOn(game, "ticks").mockImplementation(() => ticks);
+      const u = new UnitView(
+        game,
+        makeUnitUpdate({
+          unitType: UnitType.SAMLauncher,
+          level: 20,
+          missileTimerQueue: [],
+          empSuppressionExpiries: [50, 60],
+        }),
+      );
+      expect(u.level()).toBe(20);
+      expect(u.missileReadinesss()).toBe(0.9);
+      u.update(
+        makeUnitUpdate({
+          unitType: UnitType.SAMLauncher,
+          level: 20,
+          missileTimerQueue: Array(18).fill(0),
+          empSuppressionExpiries: [50, 60],
+        }),
+      );
+      expect(u.isInCooldown()).toBe(true);
+      ticks = 50;
+      expect(u.isInCooldown()).toBe(false);
+      ticks = 60;
+      expect(u.empSuppressionExpiries()).toEqual([50, 60]);
+      const one = new UnitView(
+        game,
+        makeUnitUpdate({
+          unitType: UnitType.SAMLauncher,
+          level: 1,
+          missileTimerQueue: [],
+          empSuppressionExpiries: [100],
+        }),
+      );
+      expect(one.isInCooldown()).toBe(true);
+      expect(one.missileReadinesss()).toBe(0);
+      ticks = 100;
+      expect(one.isInCooldown()).toBe(false);
+      expect(one.missileReadinesss()).toBe(1);
+    });
     it("returns 1 when nothing is reloading", () => {
       const game = makeGameView();
       const u = new UnitView(

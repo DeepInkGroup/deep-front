@@ -23,19 +23,19 @@ To connect the project page's public Play button permanently, set `serverUrl` in
 
 If you create a **Web Service** manually instead of using a Blueprint, select **Node** and enter these exact values:
 
-| Setting | Value |
-| --- | --- |
-| Branch | `main` |
-| Root directory | Leave empty |
-| Build command | `npx --yes npm@12.1.0 run inst -- --include=dev && npm run build` |
-| Start command | `npm start` |
-| Instance | Free, one instance |
-| Region | Frankfurt |
-| Health check | `/api/health` |
-| `NODE_VERSION` | `24.21.0` |
-| `NODE_ENV` | `production` |
-| `NUM_WORKERS` | `1` |
-| `BIND_HOST` | `0.0.0.0` |
+| Setting        | Value                                                             |
+| -------------- | ----------------------------------------------------------------- |
+| Branch         | `main`                                                            |
+| Root directory | Leave empty                                                       |
+| Build command  | `npx --yes npm@12.1.0 run inst -- --include=dev && npm run build` |
+| Start command  | `npm start`                                                       |
+| Instance       | Free, one instance                                                |
+| Region         | Frankfurt                                                         |
+| Health check   | `/api/health`                                                     |
+| `NODE_VERSION` | `24.21.0`                                                         |
+| `NODE_ENV`     | `production`                                                      |
+| `NUM_WORKERS`  | `1`                                                               |
+| `BIND_HOST`    | `0.0.0.0`                                                         |
 
 Render assigns `PORT` automatically; do not set it to an internal worker port. No database, API key, or custom domain is required.
 
@@ -58,3 +58,9 @@ npm start
 Run `npm start` under a process manager or service manager so it restarts after a reboot. Expose port 9000, or set `PORT` to your hosting platform's assigned public port. Terminate HTTPS at a reverse proxy that forwards **both HTTP and WebSocket upgrades** to this port. Check readiness at `/api/health`.
 
 This game needs a persistent Node process. GitHub Pages and static-only hosting cannot run its multiplayer server.
+
+If another local application uses port 3000, set `DEEP_FRONT_INTERNAL_PORT=3100`
+in your local `.env` before `npm start`. This moves only Deep Front's private
+master/worker ports to 3100, 3101, 3102, etc.; the public game still uses `PORT`
+(9000 by default). Keep the public port outside this private range. Hosted
+deployments can retain the default private range starting at 3000.

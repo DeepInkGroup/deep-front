@@ -5,7 +5,7 @@ import {
   copyStraitState,
 } from "@openfront/engine-api/game/StraitControl";
 import { invalidateStraitBanks, straitAt } from "./StraitControl";
-import { customsPartner, hasCustomsOffice } from "./CustomsOffice";
+import { empSAMCapacity } from "@openfront/engine-api/game/AdvancedDefense";
 import {
   MessageType,
   NukeState,
@@ -48,6 +48,7 @@ export class UnitImpl implements Unit {
   private _straitState: StraitState | undefined;
   private _active = true;
   private _empDisabledUntil = 0;
+  private _empSuppressionExpiries: number[] = [];
   private _targetTile: TileRef | undefined;
   private _targetPlayer: Player | TerraNullius | undefined;
   private _targetUnit: Unit | undefined;
@@ -201,6 +202,9 @@ export class UnitImpl implements Unit {
         ? copyStraitState(this._straitState)
         : undefined,
       empDisabledUntil: this._empDisabledUntil,
+      empSuppressionExpiries: this._empSuppressionExpiries.length
+        ? [...this._empSuppressionExpiries]
+        : undefined,
       id: this._id,
       troops: this._troops,
       ownerID: this._owner.smallID(),
@@ -284,24 +288,21 @@ export class UnitImpl implements Unit {
   }
 
   setOwner(newOwner: PlayerImpl): void {
-    if (this._straitState && newOwner !== this._owner)
-      this._straitState = {
-        ...this._straitState,
-        collectedGold: 0n,
-        passages: 0,
-        enabled: false,
-        revision: this._straitState.revision + 1,
-        accepted: [],
-        rejected: [],
-      };
-    if (this._type === UnitType.CustomsOffice && newOwner !== this._owner) {
-      const oldPartner = customsPartner(this);
-      const partner = oldPartner === newOwner ? this._owner : oldPartner;
-      if (!partner || hasCustomsOffice(newOwner, partner)) {
-        this.delete(true, newOwner);
-        return;
-      }
-      this._targetPlayer = partner;
+    if (
+      newOwner !== this._owner &&
+      (this._type === UnitType.CustomsOffice ||
+        this._type === UnitType.StraitControlStation)
+    ) {
+      if (this._straitState)
+        this._straitState = {
+          ...this._straitState,
+          enabled: false,
+          accepted: [],
+          rejected: [],
+          revision: this._straitState.revision + 1,
+        };
+      this.delete(true, newOwner);
+      return;
     }
     const maxCount = this.info().maxCount;
     if (
@@ -643,6 +644,9 @@ export class UnitImpl implements Unit {
       simpleHash(this.type()) * this._id +
       policyHash +
       this._empDisabledUntil +
+      (this._empSuppressionExpiries.length
+        ? simpleHash(this._empSuppressionExpiries.join(","))
+        : 0) +
       (this._nukeState?.detectedBySAM ? 1 : 0)
     );
   }
@@ -661,7 +665,15 @@ export class UnitImpl implements Unit {
   }
 
   isInCooldown(): boolean {
-    return this._missileTimerQueue.length === this._level;
+    const capacity =
+      this._type === UnitType.SAMLauncher
+        ? empSAMCapacity(
+            this._level,
+            this._empSuppressionExpiries,
+            this.mg.ticks(),
+          )
+        : this._level;
+    return this._missileTimerQueue.length >= capacity;
   }
 
   missileTimerQueue(): number[] {
@@ -685,6 +697,29 @@ export class UnitImpl implements Unit {
   disableByEMP(until: number): void {
     if (this._type !== UnitType.CIWSDefense) return;
     this._empDisabledUntil = Math.max(this._empDisabledUntil, until);
+    this.touch();
+  }
+  empSuppressionExpiries(): readonly number[] {
+    return this._empSuppressionExpiries;
+  }
+  suppressSAMByEMP(until: number): void {
+    if (
+      this._type !== UnitType.SAMLauncher ||
+      !this.isActive() ||
+      until <= this.mg.ticks()
+    )
+      return;
+    this._empSuppressionExpiries = this._empSuppressionExpiries.filter(
+      (t) => t > this.mg.ticks(),
+    );
+    this._empSuppressionExpiries.push(until);
+    this.touch();
+  }
+  expireEMPSuppression(ticks: number): void {
+    if (!this._empSuppressionExpiries.some((t) => t <= ticks)) return;
+    this._empSuppressionExpiries = this._empSuppressionExpiries.filter(
+      (t) => t > ticks,
+    );
     this.touch();
   }
 
@@ -986,6 +1021,7 @@ export class UnitImpl implements Unit {
       trainType: this._trainType ?? null,
       deletionAt: this._deletionAt,
       empDisabledUntil: this._empDisabledUntil,
+      empSuppressionExpiries: [...this._empSuppressionExpiries],
       straitState: this._straitState
         ? copyStraitState(this._straitState)
         : null,
@@ -1046,6 +1082,7 @@ export class UnitImpl implements Unit {
     this._trainType = s.trainType ?? undefined;
     this._deletionAt = s.deletionAt;
     this._empDisabledUntil = s.empDisabledUntil ?? 0;
+    this._empSuppressionExpiries = [...(s.empSuppressionExpiries ?? [])];
     this._straitState = s.straitState
       ? copyStraitState(s.straitState)
       : undefined;
@@ -1057,10 +1094,11 @@ export class UnitImpl implements Unit {
 
 export const UnitSnapshot = snapshotType({
   name: "Unit",
-  version: 3,
+  version: 4,
   migrations: {
     1: (s) => ({ ...s, straitState: null }),
     2: (s) => ({ ...s, empDisabledUntil: 0 }),
+    3: (s) => ({ ...s, empSuppressionExpiries: [] }),
   },
   schema: z.object({
     id: zInt(),
@@ -1112,6 +1150,7 @@ export const UnitSnapshot = snapshotType({
     trainType: z.enum(TrainType).nullable(),
     deletionAt: zInt().nullable(),
     empDisabledUntil: zInt().optional(),
+    empSuppressionExpiries: z.array(zInt()).optional(),
     straitState: StraitStateSchema.nullable().optional(),
     samLauncherState: z
       .object({

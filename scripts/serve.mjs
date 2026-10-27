@@ -17,14 +17,23 @@ if (!Number.isSafeInteger(workers) || workers < 1 || workers > 32) {
   throw new Error("NUM_WORKERS must be between 1 and 32");
 }
 const port = Number(process.env.PORT || 9000);
+const internalPort = Number(process.env.DEEP_FRONT_INTERNAL_PORT || 3000);
+if (
+  !Number.isSafeInteger(internalPort) ||
+  internalPort < 1024 ||
+  internalPort > 65502
+)
+  throw new Error(
+    "DEEP_FRONT_INTERNAL_PORT must be an integer from 1024 to 65502",
+  );
 if (
   !Number.isInteger(port) ||
   port < 1 ||
   port > 65535 ||
-  (port >= 3000 && port <= 3000 + workers)
+  (port >= internalPort && port <= internalPort + workers)
 ) {
   throw new Error(
-    "PORT must be a valid public port outside the internal 3000..worker port range",
+    "PORT must be a valid public port outside the internal master/worker port range",
   );
 }
 const host = process.env.BIND_HOST || "0.0.0.0";
@@ -61,14 +70,17 @@ function target(url, method) {
   const worker = /^\/w(\d+)(?:\/|$)/.exec(url);
   if (worker && Number(worker[1]) < workers) {
     return {
-      port: 3001 + Number(worker[1]),
+      port: internalPort + 1 + Number(worker[1]),
       path: url.replace(/^\/w\d+/, "") || "/",
     };
   }
   if (method === "POST" && /^\/api\/create_game(?:\?|$)/.test(url)) {
-    return { port: 3001 + Math.floor(Math.random() * workers), path: url };
+    return {
+      port: internalPort + 1 + Math.floor(Math.random() * workers),
+      path: url,
+    };
   }
-  return { port: 3000, path: url };
+  return { port: internalPort, path: url };
 }
 const gateway = http.createServer((req, res) => {
   const route = target(req.url || "/", req.method);

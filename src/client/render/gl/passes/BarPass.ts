@@ -13,6 +13,7 @@
  */
 
 import { UnitType } from "@openfront/engine-api/game/GameTypes";
+import { empSAMCapacity } from "@openfront/engine-api/game/AdvancedDefense";
 import type { Config } from "@openfront/engine-lib/configuration/Config";
 import { maxHealthWithVeterancy } from "@openfront/engine-lib/game/Veterancy";
 import type { RendererConfig, UnitState } from "../../types";
@@ -334,22 +335,26 @@ export class BarPass {
   }
 
   private missileReadiness(unit: UnitState, gameTick: number): number {
-    const maxMissiles = unit.level;
+    const maxMissiles =
+      unit.unitType === UT_SAM_LAUNCHER
+        ? empSAMCapacity(unit.level, unit.empSuppressionExpiries, gameTick)
+        : unit.level;
+    if (maxMissiles === 0) return 0;
     const reloading = unit.missileTimerQueue.length;
-    if (reloading === 0) return 1;
+    if (reloading === 0) return maxMissiles / unit.level;
 
-    const ready = maxMissiles - reloading;
+    const ready = Math.max(0, maxMissiles - reloading);
 
     const cooldown =
       unit.unitType === UT_SAM_LAUNCHER
         ? this.config.SAMCooldown()
         : this.config.SiloCooldown();
 
-    let readiness = ready / maxMissiles;
+    let readiness = ready / unit.level;
     for (const timer of unit.missileTimerQueue) {
       const progress = gameTick - timer;
-      readiness += progress / cooldown / maxMissiles;
+      readiness += progress / cooldown / unit.level;
     }
-    return Math.max(0, Math.min(1, readiness));
+    return Math.max(0, Math.min(maxMissiles / unit.level, readiness));
   }
 }

@@ -417,6 +417,7 @@ export const UNIT_FIELDS: readonly FieldDef<UnitFields>[] = [
     ["samUpgradeDuration", maybe(F64, null)],
   ),
   field(["empDisabledUntil", maybe(U32, undefined)]),
+  field(["empSuppressionExpiries", maybe(list(U32), undefined)]),
 ];
 
 for (const [name, schema] of [

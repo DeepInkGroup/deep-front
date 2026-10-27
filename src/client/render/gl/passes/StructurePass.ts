@@ -15,6 +15,7 @@
  */
 
 import type { GhostPreviewData, RendererConfig, UnitState } from "../../types";
+import { empSAMCapacity } from "@openfront/engine-api/game/AdvancedDefense";
 import {
   UT_CITY,
   UT_DEFENSE_POST,
@@ -342,10 +343,17 @@ export class StructurePass {
       this.instanceBuf.float32[off + 2] = unit.ownerID;
       this.instanceBuf.float32[off + 3] = unit.underConstruction ? 1 : 0;
       this.instanceBuf.float32[off + 4] = atlasIdx;
+      const empActive =
+        (unit.empDisabledUntil ?? 0) > this.currentTick ||
+        (unit.unitType === UT_SAM_LAUNCHER &&
+          empSAMCapacity(
+            unit.level,
+            unit.empSuppressionExpiries,
+            this.currentTick,
+          ) < unit.level);
       this.instanceBuf.float32[off + 5] =
-        (unit.markedForDeletion !== false ? 1 : 0) +
-        ((unit.empDisabledUntil ?? 0) > this.currentTick ? 2 : 0);
-      this.hasEMPStates ||= (unit.empDisabledUntil ?? 0) > this.currentTick;
+        (unit.markedForDeletion !== false ? 1 : 0) + (empActive ? 2 : 0);
+      this.hasEMPStates ||= empActive;
 
       count++;
     }

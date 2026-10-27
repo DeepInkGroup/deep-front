@@ -13,6 +13,19 @@ afterEach(() => {
 });
 const id = "11111111-1111-4111-8111-111111111111";
 describe("standalone anonymous multiplayer", () => {
+  it("uses a configurable internal port range without changing public game paths", () => {
+    vi.stubEnv("DEEP_FRONT_INTERNAL_PORT", "");
+    expect(ServerEnv.internalPortBase()).toBe(3000);
+    expect(ServerEnv.workerPortByIndex(1)).toBe(3002);
+    vi.stubEnv("DEEP_FRONT_INTERNAL_PORT", "3100");
+    expect(ServerEnv.internalPortBase()).toBe(3100);
+    expect(ServerEnv.workerPortByIndex(0)).toBe(3101);
+    expect(ServerEnv.workerPortByIndex(1)).toBe(3102);
+    vi.stubEnv("DEEP_FRONT_INTERNAL_PORT", "invalid");
+    expect(() => ServerEnv.internalPortBase()).toThrow(
+      "DEEP_FRONT_INTERNAL_PORT",
+    );
+  });
   it("accepts local identities only after explicit standalone opt-in in production", async () => {
     vi.spyOn(ServerEnv, "env").mockReturnValue(GameEnv.Prod);
     vi.stubEnv("STANDALONE", "false");
