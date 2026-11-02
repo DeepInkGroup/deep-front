@@ -326,6 +326,7 @@ export class Config {
         };
         break;
       case UnitType.TransportShip:
+      case UnitType.OilTanker:
       case UnitType.SAMMissile:
       case UnitType.EMPMissile:
       case UnitType.StealthMissile:

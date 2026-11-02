@@ -1695,6 +1695,7 @@ export class PlayerImpl implements Player {
       case UnitType.MIRVWarhead:
         return targetTile;
       case UnitType.Port:
+      case UnitType.OilFactory:
         return this.portSpawn(targetTile, validTiles);
       case UnitType.Warship:
         return this.warshipSpawn(targetTile);
@@ -1705,6 +1706,12 @@ export class PlayerImpl implements Player {
         return canBuildTransportShip(this.mg, this, targetTile);
       case UnitType.TradeShip:
         return this.tradeShipSpawn(targetTile);
+      case UnitType.OilTanker:
+        return this.units(UnitType.OilFactory).some(
+          (u) => u.tile() === targetTile && !u.isUnderConstruction(),
+        )
+          ? targetTile
+          : false;
       case UnitType.Train:
         return this.landBasedUnitSpawn(targetTile);
       case UnitType.BunkerMissileSite:
@@ -1714,7 +1721,6 @@ export class PlayerImpl implements Player {
       case UnitType.SAMLauncher:
       case UnitType.City:
       case UnitType.Factory:
-      case UnitType.OilFactory:
       case UnitType.CopperMine:
       case UnitType.LogisticsCenter:
         return this.landBasedStructureSpawn(targetTile, validTiles);

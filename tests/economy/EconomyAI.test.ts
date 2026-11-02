@@ -30,19 +30,46 @@ async function aiGame(
 }
 
 describe.each([PlayerType.Bot, PlayerType.Nation])("%s economy AI", (type) => {
-  it("builds both building types, upgrades them, obeys caps and spends gold", async () => {
+  it("builds inland economy buildings without placing oil factories away from water", async () => {
     const { game, player } = await aiGame(type);
     const before = player.gold();
     game.addExecution(new EconomyAIExecution(player));
     executeTicks(game, 1800);
     const oil = player.units(UnitType.OilFactory),
       copper = player.units(UnitType.CopperMine);
-    expect(oil).toHaveLength(5);
+    expect(oil).toHaveLength(0);
     expect(copper).toHaveLength(2);
     expect(oil.every((unit) => unit.level() === 3)).toBe(true);
     expect(copper.every((unit) => unit.level() === 2)).toBe(true);
     expect(player.units(UnitType.LogisticsCenter)).toHaveLength(1);
     expect(player.gold()).toBeLessThan(before);
+  });
+  it("builds and upgrades three coastal oil factories with full tanker fleets", async () => {
+    const game = await setup(
+      "half_land_half_ocean",
+      {
+        instantBuild: true,
+        disabledUnits: [
+          UnitType.CopperMine,
+          UnitType.LogisticsCenter,
+          UnitType.CustomsOffice,
+        ],
+      },
+      [new PlayerInfo("AI", type, null, "ai")],
+    );
+    const player = game.player("ai");
+    player.addGold(100_000_000n);
+    game.config().structureMinDist = () => 1;
+    for (let y = 0; y < 16; y++)
+      for (let x = 0; x < 8; x++) player.conquer(game.ref(x, y));
+    game.addExecution(new EconomyAIExecution(player));
+    executeTicks(game, 1800);
+    const oil = player.units(UnitType.OilFactory);
+    expect(oil).toHaveLength(3);
+    expect(oil.every((u) => u.level() === 3 && game.isShore(u.tile()))).toBe(
+      true,
+    );
+    expect(player.units(UnitType.OilTanker)).toHaveLength(15);
   });
 
   it("respects disabled buildings independently", async () => {

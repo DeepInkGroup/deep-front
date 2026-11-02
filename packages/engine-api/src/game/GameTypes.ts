@@ -220,6 +220,7 @@ export enum UnitType {
   CIWSDefense = "CIWS Defense",
   StraitControlStation = "Strait Control Station",
   EMPMissile = "EMP Missile",
+  OilTanker = "Oil Tanker",
 }
 
 export enum TrainType {

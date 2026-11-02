@@ -65,14 +65,15 @@ export function tradeRouteAvailable(
   from: TileRef,
   to: TileRef,
   stations: Unit[],
+  shipmentGold?: bigint,
 ) {
   if (!stations.length) return true;
   const normal = new WaterPathFinder(game, 0, true);
   const route = normal.findPath(from, to);
   if (!route) return false;
-  const cargo = game
-    .config()
-    .tradeShipGold(Math.max(0, route.length - 1), sender);
+  const cargo =
+    shipmentGold ??
+    game.config().tradeShipGold(Math.max(0, route.length - 1), sender);
   const closed = stations.filter(
     (s) =>
       !freeStraitPassage(s, sender) &&

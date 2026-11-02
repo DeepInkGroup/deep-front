@@ -14,6 +14,7 @@ import { STEALTH_BLAST } from "@openfront/engine-api/game/AdvancedDefense";
 // Mobile units
 export const UT_TRANSPORT = "Transport" as const;
 export const UT_TRADE_SHIP = "Trade Ship" as const;
+export const UT_OIL_TANKER = "Oil Tanker" as const;
 export const UT_WARSHIP = "Warship" as const;
 export const UT_ATOM_BOMB = "Atom Bomb" as const;
 export const UT_HYDROGEN_BOMB = "Hydrogen Bomb" as const;
@@ -138,4 +139,6 @@ export const ALL_UNIT_TYPES = [
   UT_CIWS_DEFENSE,
   UT_STRAIT_CONTROL_STATION,
   UT_EMP_MISSILE,
+  UT_OIL_TANKER,
 ] as const;
+// Append types to preserve indices in existing render streams/replays.

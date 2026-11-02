@@ -61,6 +61,7 @@ export class HoverHighlightController implements Controller {
       for (const u of this.game.units(
         UnitType.Warship,
         UnitType.TradeShip,
+        UnitType.OilTanker,
         UnitType.TransportShip,
       )) {
         const distSquared = this.game.euclideanDistSquared(ref, u.tile());

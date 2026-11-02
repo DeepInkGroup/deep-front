@@ -13,6 +13,7 @@ import {
   UT_SHELL,
   UT_TRAIN,
   UT_WARSHIP,
+  UT_OIL_TANKER,
 } from "../../../types";
 import { DynamicInstanceBuffer } from "../../DynamicBuffer";
 import type { RenderSettings } from "../../RenderSettings";
@@ -362,7 +363,7 @@ export class FxSpritePass {
       return;
     }
 
-    if (typeName === UT_WARSHIP) {
+    if (typeName === UT_WARSHIP || typeName === UT_OIL_TANKER) {
       this.pushFx(x, y, FX_UNIT_EXPLOSION, now);
       this.pushFx(x, y, FX_SINKING_SHIP, now);
       return;

@@ -226,7 +226,7 @@ describe("Customs Office train economy", () => {
     income.init(game, 0);
     const beforeOil = alice.gold();
     income.tick(100);
-    expect(alice.gold() - beforeOil).toBe(50_000n);
+    expect(alice.gold()).toBe(beforeOil); // Oil is paid by deliveries, never by the rail bonus.
   });
   it("connects to rail stations and cleans up its rails and bonus on destruction", () => {
     const city = alice.buildUnit(UnitType.City, game.ref(60, 40), {});

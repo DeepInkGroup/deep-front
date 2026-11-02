@@ -48,6 +48,7 @@ import {
   UT_SAM_MISSILE,
   UT_SHELL,
   UT_TRADE_SHIP,
+  UT_OIL_TANKER,
   UT_TRAIN,
   UT_TRANSPORT,
   UT_WARSHIP,
@@ -64,7 +65,7 @@ import {
 } from "../utils/ColorUtils";
 import { createProgram, shaderSrc } from "../utils/GlUtils";
 
-const unitAtlasUrl = assetUrl("atlases/unit-atlas.png");
+const unitAtlasUrl = assetUrl("atlases/mobile-atlas.svg");
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -88,6 +89,7 @@ const UNIT_ORDER = [
   "TrainEngine",
   "TrainCarriage",
   "TrainCarriageLoaded",
+  UT_OIL_TANKER,
 ] as const;
 
 const ATLAS_COLS = UNIT_ORDER.length;
@@ -509,7 +511,7 @@ export class UnitPass {
       //   otherwise                          -> red    (owner affiliation)
       let tradeFlag = FLAG_NORMAL;
       if (
-        unit.unitType === UT_TRADE_SHIP &&
+        (unit.unitType === UT_TRADE_SHIP || unit.unitType === UT_OIL_TANKER) &&
         unit.targetUnitId !== null &&
         this.localPlayerID > 0
       ) {

@@ -35,13 +35,24 @@ Development exposes the Vite source server and should be used for local developm
 
 ## Oil Factory
 
-Oil Factories generate gold every ten seconds of game time. Each player may own five separate buildings, each upgradable to level three. Capturing an extra factory while at the limit destroys it.
+Oil Factories use the same coastline placement as Ports. Each player may own three separate buildings, each upgradable to level three. Capturing an extra factory while at the limit destroys it. There is no passive oil income.
 
-| Level | Build / upgrade cost | Gold every 10 seconds |
-| ----- | -------------------- | --------------------- |
-| 1     | 1,200,000            | 50,000                |
-| 2     | 1,300,000            | 75,000                |
-| 3     | 1,500,000            | 90,000                |
+| Level | Build / upgrade cost | Reusable oil tankers |
+| ----- | -------------------- | -------------------- |
+| 1     | 1,200,000            | 2                    |
+| 2     | 1,300,000            | 3                    |
+| 3     | 1,500,000            | 5                    |
+
+Tankers deliver to other players' completed, reachable trading ports, earn
+100K plus 250 gold per tile of direct Manhattan distance (capped at 250K),
+and give the receiving port a 25% import bonus. Payment happens only on arrival.
+Each hull returns empty and cannot depart again until at least 60 seconds after
+its previous departure. Tankers sail at half normal trade-ship speed, with a
+20% larger sprite. Every lost hull has its own 150-second replacement timer;
+successful deliveries reuse the hull immediately without this loss penalty.
+Embargoes, closed straits and port/factory capture or destruction are honored.
+Strait tolls use the shipment value and charge the sender separately. Empty
+return legs still respect closed passages but carry no taxable cargo.
 
 Oil Factory can be switched off in **Disable Units** in both solo and multiplayer settings.
 

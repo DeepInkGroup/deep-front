@@ -165,7 +165,7 @@ void main() {
   // 5×5 train sprites fill only the middle of the 13-tile unit cell, so an
   // icon-space gradient would show a sliver of the palette per car, whereas a
   // world-space one runs along the whole train.
-  if (vAtlasCol > float(TRAIN_FIRST_COL) - 0.1) {
+  if (vAtlasCol > float(TRAIN_FIRST_COL) - 0.1 && vAtlasCol < float(TRAIN_FIRST_COL) + 2.1) {
     vec3 effectRGB;
     float diag = vWorldPos.x + vWorldPos.y;
     if (spriteEffectColor(TRAIN_EFFECT_ROW_BASE, int(vOwnerID + 0.5), diag, false, effectRGB)) {

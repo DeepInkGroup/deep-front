@@ -122,8 +122,14 @@ export class HelpModal extends BaseModal {
               <tr>
                 <th>Oil Factory</th>
                 <td>1.2M / 1.3M / 1.5M</td>
-                <td>50K / 75K / 90K gold every 10 seconds</td>
-                <td>5 buildings, level 3</td>
+                <td>
+                  Coastal shipping: 2 / 3 / 5 tankers, earning 100K–250K per
+                  delivery to another player's port
+                </td>
+                <td>
+                  3 coastal buildings, level 3. Lost tankers rebuild in 150
+                  seconds.
+                </td>
               </tr>
               <tr>
                 <th>Copper Mine</th>

@@ -142,6 +142,11 @@ export class WarshipExecution implements Execution {
     }
 
     // Priority 3: Hunt trade ship only if not healing and no enemy warship
+    if (this.warship.targetUnit()?.type() === UnitType.OilTanker) {
+      this.shootTarget();
+      this.patrol();
+      return;
+    }
     if (this.warship.targetUnit()?.type() === UnitType.TradeShip) {
       this.huntDownTradeShip();
       return;
@@ -255,7 +260,12 @@ export class WarshipExecution implements Execution {
 
   private findTargetUnit(): Unit | undefined {
     return this.findBestTarget(
-      [UnitType.TransportShip, UnitType.Warship, UnitType.TradeShip],
+      [
+        UnitType.TransportShip,
+        UnitType.Warship,
+        UnitType.OilTanker,
+        UnitType.TradeShip,
+      ],
       true,
     );
   }
@@ -305,6 +315,15 @@ export class WarshipExecution implements Execution {
       }
 
       const type = unit.type();
+
+      // Preserve incoming trade with our own/allied ports. Tankers are sunk
+      // with shells, so unlike piracy they do not require a port to hunt them.
+      if (
+        type === UnitType.OilTanker &&
+        (unit.targetUnit()?.owner() === owner ||
+          unit.targetUnit()?.owner().isFriendly(owner))
+      )
+        continue;
 
       if (includeTradeShips && type === UnitType.TradeShip) {
         if (warshipComponent === undefined) {

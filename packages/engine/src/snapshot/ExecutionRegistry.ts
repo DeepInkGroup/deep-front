@@ -20,6 +20,7 @@ import { EmbargoExecutionSnapshot } from "../execution/EmbargoExecution";
 import { EmojiExecutionSnapshot } from "../execution/EmojiExecution";
 import { FactoryExecutionSnapshot } from "../execution/FactoryExecution";
 import { OilFactoryExecutionSnapshot } from "../execution/OilFactoryExecution";
+import { OilTankerExecutionSnapshot } from "../execution/OilTankerExecution";
 import { CopperMineExecutionSnapshot } from "../execution/CopperMineExecution";
 import { EconomyAIExecutionSnapshot } from "../execution/EconomyAIExecution";
 import { MarkDisconnectedExecutionSnapshot } from "../execution/MarkDisconnectedExecution";
@@ -78,6 +79,7 @@ export const EXECUTION_SNAPSHOT_TYPES = [
   EmojiExecutionSnapshot,
   FactoryExecutionSnapshot,
   OilFactoryExecutionSnapshot,
+  OilTankerExecutionSnapshot,
   CopperMineExecutionSnapshot,
   EconomyAIExecutionSnapshot,
   MarkDisconnectedExecutionSnapshot,

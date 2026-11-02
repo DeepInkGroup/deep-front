@@ -194,7 +194,7 @@ describe.each([GameType.Singleplayer, GameType.Private])(
   "Capped buildings during full conquest in %s",
   (gameType) => {
     it.each([
-      [UnitType.OilFactory, 5],
+      [UnitType.OilFactory, 3],
       [UnitType.CopperMine, 2],
       [LOGISTICS, 1],
     ] as const)(

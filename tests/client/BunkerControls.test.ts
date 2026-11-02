@@ -126,7 +126,7 @@ describe("Bunker controls and concealed missiles", () => {
         Array(
           capped
             ? type === UnitType.OilFactory
-              ? 5
+              ? 3
               : type === UnitType.CopperMine
                 ? 2
                 : type === UnitType.LogisticsCenter

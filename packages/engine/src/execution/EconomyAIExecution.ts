@@ -4,7 +4,7 @@ import {
   UnitType,
 } from "@openfront/engine-api/game/GameTypes";
 import { COPPER_MINE_INCOME } from "@openfront/engine-api/game/CopperMine";
-import { OIL_FACTORY_INCOME } from "@openfront/engine-api/game/OilFactory";
+import { OIL_TANKERS_BY_LEVEL } from "@openfront/engine-api/game/OilFactory";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
 import {
   zInt,
@@ -86,7 +86,9 @@ export class EconomyAIExecution implements Execution {
         continue;
       }
       const income =
-        type === UnitType.OilFactory ? OIL_FACTORY_INCOME : COPPER_MINE_INCOME;
+        type === UnitType.OilFactory
+          ? OIL_TANKERS_BY_LEVEL.map((count) => BigInt(count) * 16_666n)
+          : COPPER_MINE_INCOME;
       const owned = this.player.units(type);
       const cost = info.cost(this.game, this.player);
       if (owned.length < info.maxCount! && this.player.gold() >= cost) {
@@ -115,22 +117,24 @@ export class EconomyAIExecution implements Execution {
         );
         return;
       }
-      if (investment.type === UnitType.CustomsOffice) {
+      if (
+        investment.type === UnitType.CustomsOffice ||
+        investment.type === UnitType.OilFactory
+      ) {
         // Limit expensive placement checks on large frontiers and give
         // different borders a turn through a deterministic sample window.
-        const border = [...this.player.borderTiles()];
+        const border = [...this.player.borderTiles()].filter(
+          (t) =>
+            investment.type !== UnitType.OilFactory || this.game.isShore(t),
+        );
         if (!border.length) continue;
         const start = this.random.nextInt(0, border.length);
         for (let i = 0; i < Math.min(128, border.length); i++) {
           const tile = border[(start + i) % border.length];
-          const spawn = this.player.canBuild(UnitType.CustomsOffice, tile);
+          const spawn = this.player.canBuild(investment.type, tile);
           if (spawn !== false) {
             this.game.addExecution(
-              new ConstructionExecution(
-                this.player,
-                UnitType.CustomsOffice,
-                spawn,
-              ),
+              new ConstructionExecution(this.player, investment.type, spawn),
             );
             return;
           }

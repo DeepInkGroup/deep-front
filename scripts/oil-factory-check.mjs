@@ -5,6 +5,10 @@ import fs from "node:fs";
 // Resource and logistics construction share the same real UI and lobby checks.
 const copper = process.argv.includes("--copper");
 const logistics = process.argv.includes("--logistics");
+if (!copper && !logistics) {
+  await import("./oil-tanker-check.mjs");
+  process.exit(0);
+}
 const RESOURCE = logistics
   ? "Logistics Center"
   : copper

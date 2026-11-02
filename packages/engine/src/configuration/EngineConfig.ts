@@ -441,6 +441,7 @@ export class EngineConfig extends Config {
       case UnitType.SAMMissile:
       case UnitType.MIRVWarhead:
       case UnitType.TradeShip:
+      case UnitType.OilTanker:
       case UnitType.Train:
         return () => 0n;
       default:

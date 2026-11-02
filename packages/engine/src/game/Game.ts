@@ -113,6 +113,7 @@ export interface UnitParamsMap {
     targetUnit: Unit;
     lastSetSafeFromPirates?: number;
   };
+  [UnitType.OilTanker]: { targetUnit: Unit };
 
   [UnitType.Train]: {
     trainType: TrainType;

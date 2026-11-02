@@ -26,6 +26,8 @@ import { ConstructionExecution } from "@openfront/engine/execution/ConstructionE
 import { PlayerExecution } from "@openfront/engine/execution/PlayerExecution";
 import { StraitControlExecution } from "@openfront/engine/execution/StraitControlExecution";
 import { TradeShipExecution } from "@openfront/engine/execution/TradeShipExecution";
+import { OilFactoryExecution } from "@openfront/engine/execution/OilFactoryExecution";
+import { oilShipmentGold } from "@openfront/engine-api/game/OilFactory";
 import { NukeExecution } from "@openfront/engine/execution/NukeExecution";
 import { WaterPathFinder } from "@openfront/engine/pathfinding/PathFinder";
 import { PathStatus } from "@openfront/engine/pathfinding/types";
@@ -314,6 +316,37 @@ describe("Strait Control Station", () => {
       );
       expect(before - f.sender.gold()).toBe(10_000n);
     });
+  it("blocks oil tankers until consent, then charges oil cargo tolls without taxing empty returns", () => {
+    const f = fixture();
+    const station = f.owner.buildUnit(S, f.game.ref(109, 120), {});
+    enable(f, station);
+    const factory = f.sender.buildUnit(
+      UnitType.OilFactory,
+      f.game.ref(109, 20),
+      {},
+    );
+    const port = f.receiver.buildUnit(UnitType.Port, f.game.ref(109, 220), {});
+    f.game.addExecution(new OilFactoryExecution(factory));
+    executeTicks(f.game, 40);
+    const before = f.sender.gold(),
+      received = f.receiver.gold(),
+      earned = f.owner.gold();
+    expect(
+      f.sender
+        .units(UnitType.OilTanker)
+        .every((s) => s.tile() === factory.tile()),
+    ).toBe(true);
+    reply(f, station, "accept");
+    executeTicks(f.game, 500);
+    const cargo = oilShipmentGold(
+      f.game.manhattanDist(factory.tile(), port.tile()),
+    );
+    expect(f.receiver.gold() - received).toBe((cargo / 4n) * 2n);
+    expect(f.sender.gold() - before).toBe(cargo * 2n - (cargo / 10n) * 2n);
+    expect(f.owner.gold() - earned).toBe((cargo / 10n) * 2n);
+    executeTicks(f.game, 300);
+    expect(f.owner.gold() - earned).toBe((cargo / 10n) * 2n);
+  });
   it("delivers the full fixed cargo payout to the destination after paying a toll", () => {
     const f = fixture();
     const station = f.owner.buildUnit(S, f.game.ref(109, 120), {});

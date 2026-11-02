@@ -441,6 +441,7 @@ export class UnitImpl implements Unit {
       switch (this._type) {
         case UnitType.TransportShip:
         case UnitType.TradeShip:
+        case UnitType.OilTanker:
           this.mg.stats().boatLose(this._owner, this._type);
           break;
       }
@@ -454,6 +455,7 @@ export class UnitImpl implements Unit {
             .boatDestroyTroops(destroyer, this._owner, this._troops);
           break;
         case UnitType.TradeShip:
+        case UnitType.OilTanker:
           this.mg.stats().boatDestroyTrade(destroyer, this._owner);
           break;
         case UnitType.City:
