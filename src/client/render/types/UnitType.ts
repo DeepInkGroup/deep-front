@@ -29,6 +29,7 @@ export const UT_CITY = "City" as const;
 export const UT_PORT = "Port" as const;
 export const UT_FACTORY = "Factory" as const;
 export const UT_OIL_FACTORY = "Oil Factory" as const;
+export const UT_POWER_PLANT = "Power Plant" as const;
 export const UT_COPPER_MINE = "Copper Mine" as const;
 export const UT_LOGISTICS_CENTER = "Logistics Center" as const;
 export const UT_STRAIT_CONTROL_STATION = "Strait Control Station" as const;
@@ -54,6 +55,7 @@ export const STRUCTURE_TYPES: ReadonlySet<string> = new Set([
   UT_CUSTOMS_OFFICE,
   UT_BUNKER_MISSILE_SITE,
   UT_OIL_FACTORY,
+  UT_POWER_PLANT,
   UT_CITY,
   UT_PORT,
   UT_FACTORY,
@@ -140,5 +142,6 @@ export const ALL_UNIT_TYPES = [
   UT_STRAIT_CONTROL_STATION,
   UT_EMP_MISSILE,
   UT_OIL_TANKER,
+  UT_POWER_PLANT,
 ] as const;
 // Append types to preserve indices in existing render streams/replays.

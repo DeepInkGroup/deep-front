@@ -17,10 +17,16 @@
 import type { GhostPreviewData, RendererConfig, UnitState } from "../../types";
 import { empSAMCapacity } from "@openfront/engine-api/game/AdvancedDefense";
 import {
+  allocatePower,
+  POWER_DEMAND,
+  type PowerBuilding,
+} from "@openfront/engine-api/game/Power";
+import {
   UT_CITY,
   UT_DEFENSE_POST,
   UT_FACTORY,
   UT_OIL_FACTORY,
+  UT_POWER_PLANT,
   UT_COPPER_MINE,
   UT_LOGISTICS_CENTER,
   UT_CUSTOMS_OFFICE,
@@ -68,6 +74,7 @@ const STRUCTURE_ORDER = [
   UT_BUNKER_MISSILE_SITE,
   UT_CIWS_DEFENSE,
   UT_STRAIT_CONTROL_STATION,
+  UT_POWER_PLANT,
 ] as const;
 
 const ATLAS_COLS = STRUCTURE_ORDER.length;
@@ -151,6 +158,7 @@ export class StructurePass {
     paletteTex: WebGLTexture,
     effectTex: WebGLTexture,
     settings: RenderSettings,
+    private powerEnabled = false,
   ) {
     this.gl = gl;
     this.settings = settings;
@@ -327,6 +335,33 @@ export class StructurePass {
     this.hasEMPStates = false;
     let count = 0;
 
+    const offline = new Set<number>();
+    if (this.powerEnabled) {
+      const groups = new Map<number, PowerBuilding[]>();
+      for (const u of units.values()) {
+        const group = groups.get(u.ownerID) ?? [];
+        group.push({
+          id: u.id,
+          unitType: u.unitType,
+          level: u.level,
+          active: u.isActive,
+          underConstruction: u.underConstruction,
+        });
+        groups.set(u.ownerID, group);
+      }
+      for (const group of groups.values()) {
+        const grid = allocatePower(group);
+        for (const u of group)
+          if (
+            u.active &&
+            !u.underConstruction &&
+            POWER_DEMAND[u.unitType] &&
+            !grid.powered.has(u.id)
+          )
+            offline.add(u.id);
+      }
+    }
+
     for (const unit of units.values()) {
       if (!unit.isActive) continue;
       const atlasIdx = this.typeToAtlasCol.get(unit.unitType);
@@ -352,7 +387,9 @@ export class StructurePass {
             this.currentTick,
           ) < unit.level);
       this.instanceBuf.float32[off + 5] =
-        (unit.markedForDeletion !== false ? 1 : 0) + (empActive ? 2 : 0);
+        (unit.markedForDeletion !== false ? 1 : 0) +
+        (empActive ? 2 : 0) +
+        (offline.has(unit.id) ? 4 : 0);
       this.hasEMPStates ||= empActive;
 
       count++;

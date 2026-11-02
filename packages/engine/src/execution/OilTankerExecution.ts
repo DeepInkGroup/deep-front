@@ -124,6 +124,7 @@ export class OilTankerExecution implements Execution {
     }
     if (this.path.rebuilt) this.planDestination = null;
     if (!this.destination) {
+      if (!this.game.config().isPowered(this.factory)) return;
       if (ticks < this.nextDeparture || ticks % 10 !== this.ship.id() % 10)
         return;
       const ports = this.ports();

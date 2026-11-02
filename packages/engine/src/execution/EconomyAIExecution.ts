@@ -5,6 +5,10 @@ import {
 } from "@openfront/engine-api/game/GameTypes";
 import { COPPER_MINE_INCOME } from "@openfront/engine-api/game/CopperMine";
 import { OIL_TANKERS_BY_LEVEL } from "@openfront/engine-api/game/OilFactory";
+import {
+  POWER_CONSUMERS,
+  POWER_DEMAND,
+} from "@openfront/engine-api/game/Power";
 import { PseudoRandom } from "@openfront/engine-lib/PseudoRandom";
 import {
   zInt,
@@ -25,6 +29,7 @@ import { randTerritoryTileArray } from "./nation/NationUtils";
 import { UpgradeStructureExecution } from "./UpgradeStructureExecution";
 
 export const ECONOMY_BUILDINGS: readonly UnitType[] = [
+  UnitType.PowerPlant,
   UnitType.OilFactory,
   UnitType.CopperMine,
   UnitType.LogisticsCenter,
@@ -59,10 +64,12 @@ export class EconomyAIExecution implements Execution {
     }
     if (ticks < this.nextCheckTick) return;
     this.nextCheckTick = ticks + CHECK_INTERVAL;
+    if (this.ensurePower()) return;
     if (this.player.gold() < 650_000n) return;
 
     const investments: Investment[] = [];
     for (const type of ECONOMY_BUILDINGS) {
+      if (type === UnitType.PowerPlant) continue;
       if (this.game.config().isUnitDisabled(type)) continue;
       const info = this.game.unitInfo(type);
       if (
@@ -161,6 +168,44 @@ export class EconomyAIExecution implements Execution {
 
   isActive(): boolean {
     return this.active;
+  }
+  private ensurePower(): boolean {
+    const config = this.game.config();
+    const grid = config.powerGrid(this.player);
+    if (!grid.enabled) return false;
+    const reserve = Math.max(
+      0,
+      ...POWER_CONSUMERS.filter((t) => !config.isUnitDisabled(t)).map(
+        (t) => POWER_DEMAND[t],
+      ),
+    );
+    if (grid.plannedSupply >= grid.plannedDemand + reserve) return false;
+    const type = UnitType.PowerPlant;
+    const cost = this.game.unitInfo(type).cost(this.game, this.player);
+    if (this.player.gold() < cost) return true;
+    for (const tile of randTerritoryTileArray(
+      this.random,
+      this.game,
+      this.player,
+      24,
+    )) {
+      const spawn = this.player.canBuild(type, tile);
+      if (spawn !== false) {
+        this.game.addExecution(
+          new ConstructionExecution(this.player, type, spawn),
+        );
+        return true;
+      }
+    }
+    const upgrade = this.player
+      .units(type)
+      .filter((u) => this.player.canUpgradeUnit(u))
+      .sort((a, b) => a.level() - b.level() || a.id() - b.id())[0];
+    if (upgrade)
+      this.game.addExecution(
+        new UpgradeStructureExecution(this.player, upgrade.id()),
+      );
+    return true;
   }
   activeDuringSpawnPhase(): boolean {
     return false;

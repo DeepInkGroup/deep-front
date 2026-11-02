@@ -1,5 +1,9 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
+  POWER_CONSUMERS,
+  POWER_DEMAND,
+} from "@openfront/engine-api/game/Power";
+import {
   Difficulty,
   GameMode,
   Gold,
@@ -618,6 +622,15 @@ export class NationStructureBehavior {
   }
 
   private doHandleStructures(): boolean {
+    const power = this.game.config().powerGrid(this.player);
+    const reserve = Math.max(
+      0,
+      ...POWER_CONSUMERS.filter(
+        (t) => !this.game.config().isUnitDisabled(t),
+      ).map((t) => POWER_DEMAND[t]),
+    );
+    if (power.enabled && power.plannedSupply < power.plannedDemand + reserve)
+      return false;
     this.reachableStationsCache = null;
     const config = this.game.config();
     const citiesDisabled = config.isUnitDisabled(UnitType.City);
@@ -964,13 +977,18 @@ export class NationStructureBehavior {
     if (structure === null) {
       return false;
     }
+    let amount = this.upgradeAmount(structure.type());
+    const demand = POWER_DEMAND[structure.type()] ?? 0;
+    const grid = this.game.config().powerGrid(this.player);
+    if (grid.enabled && demand)
+      amount = Math.min(
+        amount,
+        Math.floor((grid.plannedSupply - grid.plannedDemand) / demand),
+      );
+    if (amount < 1) return false;
     // canUpgradeUnit was already checked by the caller and is checked again in UpgradeStructureExecution
     this.game.addExecution(
-      new UpgradeStructureExecution(
-        this.player,
-        structure.id(),
-        this.upgradeAmount(structure.type()),
-      ),
+      new UpgradeStructureExecution(this.player, structure.id(), amount),
     );
     return true;
   }

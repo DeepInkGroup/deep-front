@@ -122,6 +122,7 @@ export interface UnitParamsMap {
   };
 
   [UnitType.Factory]: Record<string, never>;
+  [UnitType.PowerPlant]: Record<string, never>;
   [UnitType.OilFactory]: Record<string, never>;
   [UnitType.CopperMine]: Record<string, never>;
   [UnitType.LogisticsCenter]: Record<string, never>;

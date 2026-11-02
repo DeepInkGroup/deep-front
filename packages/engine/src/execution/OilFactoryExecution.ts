@@ -72,6 +72,7 @@ export class OilFactoryExecution implements Execution {
         slot.readyAt = ticks + OIL_TANKER_REPLACEMENT_TICKS;
       }
       if (slot.ship || ticks < slot.readyAt) continue;
+      if (!this.game.config().isPowered(this.factory)) continue;
       const ship = this.owner.buildUnit(
         UnitType.OilTanker,
         this.factory.tile(),

@@ -120,6 +120,15 @@ export class HelpModal extends BaseModal {
             </thead>
             <tbody>
               <tr>
+                <th>Power Plant</th>
+                <td>750K, then +250K per upgrade price</td>
+                <td>
+                  100 MW per level; Cities / Factories / Oil / Copper need 20 /
+                  30 / 40 / 25 MW per level
+                </td>
+                <td>Unlimited buildings and levels · 30 seconds to build</td>
+              </tr>
+              <tr>
                 <th>Oil Factory</th>
                 <td>1.2M / 1.3M / 1.5M</td>
                 <td>

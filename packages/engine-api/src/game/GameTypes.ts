@@ -221,6 +221,7 @@ export enum UnitType {
   StraitControlStation = "Strait Control Station",
   EMPMissile = "EMP Missile",
   OilTanker = "Oil Tanker",
+  PowerPlant = "Power Plant",
 }
 
 export enum TrainType {
@@ -250,6 +251,7 @@ export const BuildableAttacks = unitTypeGroup([
 ] as const);
 
 export const Structures = unitTypeGroup([
+  UnitType.PowerPlant,
   UnitType.StraitControlStation,
   UnitType.CIWSDefense,
   UnitType.BunkerMissileSite,
@@ -267,6 +269,7 @@ export const Structures = unitTypeGroup([
 
 /** Buildings that start a rail network and connect nearby economic structures. */
 export const RailHubs = unitTypeGroup([
+  UnitType.PowerPlant,
   UnitType.Factory,
   UnitType.OilFactory,
   UnitType.CopperMine,

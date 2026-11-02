@@ -1,5 +1,12 @@
 import { EMP_RADIUS } from "@openfront/engine-api/game/AdvancedDefense";
 import {
+  calculatePowerGrid,
+  POWER_DEMAND,
+  powerUnitId,
+  POWER_PLANT_BUILD_TICKS,
+  type PowerGrid,
+} from "@openfront/engine-api/game/Power";
+import {
   STEALTH_BLAST,
   CIWS_MAX_LEVEL,
 } from "@openfront/engine-api/game/AdvancedDefense";
@@ -22,7 +29,7 @@ import {
   UnitInfo,
   UnitType,
 } from "@openfront/engine-api/game/GameTypes";
-import { PlayerLike } from "@openfront/engine-api/game/ReadViews";
+import { PlayerLike, UnitLike } from "@openfront/engine-api/game/ReadViews";
 import { GameConfig } from "@openfront/engine-api/Schemas";
 import { pow } from "../DetMath";
 import { DoomsdayClockSpeed } from "../game/DoomsdayClock";
@@ -282,6 +289,14 @@ export class Config {
           upgradable: true,
         };
         break;
+      case UnitType.PowerPlant:
+        info = {
+          constructionDuration: this.instantBuild()
+            ? 0
+            : POWER_PLANT_BUILD_TICKS,
+          upgradable: true,
+        };
+        break;
       case UnitType.OilFactory:
         info = {
           constructionDuration: this.instantBuild() ? 0 : 2 * 10,
@@ -408,6 +423,17 @@ export class Config {
   maxTroops(player: PlayerLike): number {
     return this.troopCap(player, true);
   }
+  powerGrid(player: PlayerLike): PowerGrid {
+    return (
+      player.powerGrid?.() ??
+      calculatePowerGrid(player, this.isUnitDisabled(UnitType.PowerPlant))
+    );
+  }
+  isPowered(unit: UnitLike): boolean {
+    if (!POWER_DEMAND[unit.type()] || this.isUnitDisabled(UnitType.PowerPlant))
+      return true;
+    return this.powerGrid(unit.owner()).powered.has(powerUnitId(unit));
+  }
 
   /** maxTroops without what cities add */
   maxTroopsWithoutCities(player: PlayerLike): number {
@@ -418,7 +444,7 @@ export class Config {
     const cityTroops = withCities
       ? player
           .units(UnitType.City)
-          .filter((u) => !u.isUnderConstruction())
+          .filter((u) => !u.isUnderConstruction() && this.isPowered(u))
           .map((city) => city.level())
           .reduce((a, b) => a + b, 0) * this.cityTroopIncrease()
       : 0;

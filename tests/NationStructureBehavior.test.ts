@@ -1104,6 +1104,7 @@ describe("NationStructureBehavior.doHandleStructures — crowded-map exception",
   function makeCrowdedGame(opts: { difficulty?: Difficulty } = {}): any {
     return {
       config: () => ({
+        powerGrid: () => ({ enabled: false }),
         isUnitDisabled: () => false,
         gameConfig: () => ({
           difficulty: opts.difficulty ?? Difficulty.Medium,
@@ -1150,6 +1151,7 @@ describe("NationStructureBehavior.doHandleStructures — crowded-map exception",
   it("still gets its chance after the high-gold SAM-first branch has already placed the nation's literal first structure", () => {
     const game = makeCrowdedGame({ difficulty: Difficulty.Impossible });
     game.config = () => ({
+      powerGrid: () => ({ enabled: false }),
       isUnitDisabled: () => false,
       gameConfig: () => ({ difficulty: Difficulty.Impossible }),
       startingGold: () => 10_000_000n, // high starting gold

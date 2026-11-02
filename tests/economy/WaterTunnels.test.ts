@@ -59,6 +59,7 @@ function fixture(gameType = GameType.Singleplayer, narrow = false) {
       instantBuild: true,
       randomSpawn: false,
       disableNavMesh: true,
+      disabledUnits: [UnitType.PowerPlant],
     },
     false,
   );

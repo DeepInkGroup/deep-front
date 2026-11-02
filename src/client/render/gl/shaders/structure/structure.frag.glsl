@@ -276,10 +276,15 @@ void main() {
   }
 
   // Packed status bit 2 marks an EMP shutdown; recovery follows simulation ticks.
-  if (vMarkedForDeletion >= 2.0) {
+  if (mod(floor(vMarkedForDeletion / 2.0), 2.0) > 0.5) {
     float gray = dot(finalRGB, vec3(0.299, 0.587, 0.114));
     finalRGB = mix(vec3(gray * 0.5), vec3(0.15, 0.6, 0.7), 0.25);
     finalAlpha *= 0.6;
+  }
+  if (vMarkedForDeletion >= 4.0) {
+    float gray = dot(finalRGB, vec3(0.299, 0.587, 0.114));
+    finalRGB = mix(vec3(gray * 0.4), vec3(0.85, 0.45, 0.08), 0.25);
+    finalAlpha *= 0.65;
   }
   fragColor = vec4(finalRGB, finalAlpha);
 }

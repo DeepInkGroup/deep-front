@@ -1,4 +1,5 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
+import { POWER_DEMAND } from "@openfront/engine-api/game/Power";
 import {
   BuildableUnit,
   BuildMenus,
@@ -29,6 +30,7 @@ import { GameView } from "../../view";
 const warshipIcon = assetUrl("images/BattleshipIconWhite.svg");
 const cityIcon = assetUrl("images/CityIconWhite.svg");
 const factoryIcon = assetUrl("images/FactoryIconWhite.svg");
+const powerPlantIcon = assetUrl("images/PowerPlantIconWhite.svg");
 const oilFactoryIcon = assetUrl("images/OilFactoryIconWhite.svg");
 const copperMineIcon = assetUrl("images/CopperMineIconWhite.svg");
 const logisticsCenterIcon = assetUrl("images/LogisticsCenterIconWhite.svg");
@@ -155,6 +157,13 @@ export const buildTable: BuildItemDisplay[][] = [
       icon: factoryIcon,
       description: "build_menu.desc.factory",
       key: "unit_type.factory",
+      countable: true,
+    },
+    {
+      unitType: UnitType.PowerPlant,
+      icon: powerPlantIcon,
+      description: "build_menu.desc.power_plant",
+      key: "unit_type.power_plant",
       countable: true,
     },
     {
@@ -526,6 +535,14 @@ export class BuildMenu extends LitElement implements Controller {
                       >${item.description &&
                       translateText(item.description)}</span
                     >
+                    ${POWER_DEMAND[item.unitType] &&
+                    !this.game.config().isUnitDisabled(UnitType.PowerPlant)
+                      ? html`<span
+                          class="build-description power-requirement"
+                          title="Electricity demand increases with the building level"
+                          >⚡ ${POWER_DEMAND[item.unitType]} MW / level</span
+                        >`
+                      : null}
                     <span class="build-cost" translate="no">
                       ${renderNumber(
                         this.game && this.game.myPlayer() ? this.cost(item) : 0,

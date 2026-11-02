@@ -1,4 +1,5 @@
 import { GameMap, TileRef } from "./GameMap";
+import type { PowerGrid } from "./Power";
 import {
   Gold,
   PlayerID,
@@ -18,6 +19,7 @@ import {
  */
 
 export interface PlayerLike {
+  powerGrid?(): PowerGrid;
   id(): PlayerID;
   smallID(): number;
   isPlayer(): boolean;

@@ -194,6 +194,7 @@ export class ConstructionExecution implements Execution {
         this.mg.addExecution(new CopperMineExecution(this.structure!));
         break;
       case UnitType.LogisticsCenter:
+      case UnitType.PowerPlant:
       case UnitType.CustomsOffice:
         connectRailHub(this.mg, this.structure!);
         break;
@@ -220,6 +221,8 @@ export class ConstructionExecution implements Execution {
       case UnitType.CopperMine:
       case UnitType.LogisticsCenter:
       case UnitType.CustomsOffice:
+        return true;
+      case UnitType.PowerPlant:
         return true;
       default:
         return false;

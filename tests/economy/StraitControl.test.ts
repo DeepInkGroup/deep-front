@@ -97,6 +97,7 @@ function fixture(
       randomSpawn: false,
       instantBuild,
       disableNavMesh: true,
+      disabledUnits: [UnitType.PowerPlant],
     },
     false,
   );

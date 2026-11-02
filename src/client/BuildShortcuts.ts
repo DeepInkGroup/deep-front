@@ -2,6 +2,12 @@ import { UnitType } from "@openfront/engine-api/game/GameTypes";
 
 export const EXTRA_BUILD_SHORTCUTS = [
   {
+    key: "buildPowerPlant",
+    type: UnitType.PowerPlant,
+    code: "Shift+KeyP",
+    name: "power_plant",
+  },
+  {
     key: "buildEMPMissile",
     type: UnitType.EMPMissile,
     code: "Shift+Digit7",

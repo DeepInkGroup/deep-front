@@ -518,6 +518,7 @@ export class BuildPreviewController implements Controller {
         rangeRadius = this.game.config().nukeMagnitudes(u.type).outer;
         break;
       case UnitType.Factory:
+      case UnitType.PowerPlant:
       case UnitType.OilFactory:
       case UnitType.CopperMine:
       case UnitType.LogisticsCenter:

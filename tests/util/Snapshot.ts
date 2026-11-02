@@ -144,6 +144,7 @@ export const DERIVED_FIELDS = new Set<string>([
   // PlayerImpl
   "lastSentUpdate",
   "myUnitsMemo",
+  "powerMemo", // derived from units/version and rebuilt after restore
   "myUnitCountMemo",
   "myUnitsOwnedMemo",
   "nearbyMemo",

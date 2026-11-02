@@ -35,6 +35,10 @@ Development exposes the Vite source server and should be used for local developm
 
 ## Oil Factory
 
+Cities, Factories, Oil Factories and Copper Mines now need electricity when
+Power Plants are enabled. [Power Plant rules](docs/PowerPlants.md) describe
+supply, consumption, shortages and the lobby option to restore the old rules.
+
 Oil Factories use the same coastline placement as Ports. Each player may own three separate buildings, each upgradable to level three. Capturing an extra factory while at the limit destroys it. There is no passive oil income.
 
 | Level | Build / upgrade cost | Reusable oil tankers |

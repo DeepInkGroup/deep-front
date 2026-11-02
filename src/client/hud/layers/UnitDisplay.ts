@@ -27,6 +27,7 @@ import {
   cityIcon,
   defensePostIcon,
   factoryIcon,
+  powerPlantIcon,
   oilFactoryIcon,
   copperMineIcon,
   logisticsCenterIcon,
@@ -199,6 +200,13 @@ export class UnitDisplay extends LitElement implements Controller {
             this._oilFactories,
             UnitType.OilFactory,
             "oil_factory",
+            "",
+          )}
+          ${this.renderUnitItem(
+            powerPlantIcon,
+            myPlayer.units(UnitType.PowerPlant).length,
+            UnitType.PowerPlant,
+            "power_plant",
             "",
           )}
           ${this.renderUnitItem(

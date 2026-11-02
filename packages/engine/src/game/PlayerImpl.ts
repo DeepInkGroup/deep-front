@@ -1,4 +1,8 @@
 import { BunkerUpgradeExecution } from "../execution/BunkerUpgradeExecution";
+import {
+  calculatePowerGrid,
+  type PowerGrid,
+} from "@openfront/engine-api/game/Power";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
   AllianceInfo,
@@ -135,6 +139,20 @@ Object.freeze(EMPTY_ALLIANCE_VIEWS);
 Object.freeze(EMPTY_EMOJIS);
 
 export class PlayerImpl implements Player {
+  private powerMemo:
+    | { version: number; disabled: boolean; grid: PowerGrid }
+    | undefined;
+  powerGrid(): PowerGrid {
+    const disabled = this.mg.config().isUnitDisabled(UnitType.PowerPlant);
+    if (
+      this.powerMemo?.version === this._myUnitsVersion &&
+      this.powerMemo.disabled === disabled
+    )
+      return this.powerMemo.grid;
+    const grid = calculatePowerGrid(this, disabled);
+    this.powerMemo = { version: this._myUnitsVersion, disabled, grid };
+    return grid;
+  }
   public _lastTileChange: number = 0;
   // Bumped on every ownership change of one of this player's tiles (several
   // can happen within one tick, so the tick alone is not a cache key).
@@ -1716,6 +1734,7 @@ export class PlayerImpl implements Player {
         return this.landBasedUnitSpawn(targetTile);
       case UnitType.BunkerMissileSite:
       case UnitType.MissileSilo:
+      case UnitType.PowerPlant:
       case UnitType.DefensePost:
       case UnitType.CIWSDefense:
       case UnitType.SAMLauncher:
@@ -2182,6 +2201,7 @@ export class PlayerImpl implements Player {
     this._units = s.units.map((u) => r.unit(u));
     this._myUnitsVersion = s.unitsVersion;
     this.myUnitsMemo = new Map();
+    this.powerMemo = undefined;
     this.myUnitCountMemo = new Map();
     this.myUnitsOwnedMemo = new Map();
     this.pastOutgoingAllianceRequests = s.pastOutgoingAllianceRequests.map(

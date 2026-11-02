@@ -68,6 +68,7 @@ export function createTrainStopHandlers(
     [UnitType.City]: new TradeStationStopHandler(),
     [UnitType.Port]: new TradeStationStopHandler(),
     [UnitType.Factory]: new FactoryStopHandler(),
+    [UnitType.PowerPlant]: new FactoryStopHandler(),
     [UnitType.OilFactory]: new TradeStationStopHandler(),
     [UnitType.CopperMine]: new TradeStationStopHandler(),
     [UnitType.LogisticsCenter]: new TradeStationStopHandler(),
@@ -166,6 +167,7 @@ export class TrainStation {
   }
 
   onTrainStop(trainExecution: TrainExecution) {
+    if (!this.mg.config().isPowered(this.unit)) return;
     const type = this.unit.type();
     const handler = this.stopHandlers[type];
     if (handler) {

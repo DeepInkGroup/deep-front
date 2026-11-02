@@ -32,6 +32,7 @@ export class CopperMineExecution implements Execution {
     }
     if (
       this.factory.isUnderConstruction() ||
+      !this.game.config().isPowered(this.factory) ||
       this.factory.isMarkedForDeletion()
     ) {
       this.nextPayoutTick = ticks + COPPER_MINE_PAYOUT_TICKS;

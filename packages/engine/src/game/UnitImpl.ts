@@ -156,6 +156,7 @@ export class UnitImpl implements Unit {
       case UnitType.SAMLauncher:
       case UnitType.City:
       case UnitType.Factory:
+      case UnitType.PowerPlant:
       case UnitType.OilFactory:
       case UnitType.CopperMine:
       case UnitType.LogisticsCenter:
@@ -325,6 +326,7 @@ export class UnitImpl implements Unit {
       case UnitType.SAMLauncher:
       case UnitType.City:
       case UnitType.Factory:
+      case UnitType.PowerPlant:
       case UnitType.OilFactory:
       case UnitType.CopperMine:
       case UnitType.LogisticsCenter:
@@ -467,6 +469,7 @@ export class UnitImpl implements Unit {
         case UnitType.SAMLauncher:
         case UnitType.Warship:
         case UnitType.Factory:
+        case UnitType.PowerPlant:
         case UnitType.OilFactory:
         case UnitType.CopperMine:
         case UnitType.LogisticsCenter:

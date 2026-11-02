@@ -37,6 +37,8 @@ async function configure(page) {
     .fill(map.name);
   await page.getByRole("button", { name: map.name, exact: true }).click();
   await page.getByRole("button", { name: /^instant build$/i }).click();
+  // This fixture isolates shipping; electricity has its own integration check.
+  await page.getByRole("button", { name: "Power Plant", exact: true }).click();
   for (const key of ["bots", "nations"]) {
     const slider = page.locator(
       `fluent-slider[labelkey="game_settings.${key}"] input[type="range"]:visible`,

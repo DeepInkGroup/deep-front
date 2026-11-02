@@ -11,6 +11,7 @@
 
 import type { MapLayer } from "@openfront/engine-api/game/MapFiles";
 import type { Config } from "@openfront/engine-lib/configuration/Config";
+import { UnitType } from "@openfront/engine-api/game/GameTypes";
 import { translateText } from "../../Utils";
 import type { SpiralRibbon } from "../frame/SpiralTrails";
 import type {
@@ -581,6 +582,7 @@ export class GPURenderer {
       this.paletteTex,
       this.effectTex,
       this.settings,
+      !config.isUnitDisabled(UnitType.PowerPlant),
     );
     this.structureLevelPass = new StructureLevelPass(gl, header, this.settings);
     this.unitPass = new UnitPass(

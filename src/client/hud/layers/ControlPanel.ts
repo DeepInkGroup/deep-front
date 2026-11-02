@@ -1,5 +1,10 @@
 import { TileRef } from "@openfront/engine-api/game/GameMap";
-import { GameMode, GameType, Gold } from "@openfront/engine-api/game/GameTypes";
+import {
+  GameMode,
+  GameType,
+  Gold,
+  UnitType,
+} from "@openfront/engine-api/game/GameTypes";
 import { GameUpdateType } from "@openfront/engine-api/game/GameUpdates";
 import { ClientID } from "@openfront/engine-api/Schemas";
 import { Config } from "@openfront/engine-lib/configuration/Config";
@@ -665,6 +670,11 @@ export class ControlPanel extends LitElement implements Controller {
   }
 
   render() {
+    const player = this.game?.myPlayer();
+    const grid =
+      player && !this.game.config().isUnitDisabled(UnitType.PowerPlant)
+        ? this.game.config().powerGrid(player)
+        : null;
     return html`
       <style>
         @keyframes gold-gain-pop {
@@ -687,6 +697,17 @@ export class ControlPanel extends LitElement implements Controller {
           : "hidden"}"
         @contextmenu=${(e: MouseEvent) => e.preventDefault()}
       >
+        ${grid
+          ? html`<div
+              class="power-status text-center text-xs py-0.5"
+              role="status"
+              style="color:${grid.offline ? "#fbbf24" : "#86efac"}"
+              title="Older buildings receive electricity first. Build or upgrade Power Plants to restore offline buildings."
+            >
+              ⚡ Power ${grid.used} / ${grid.supply} MW · Demand ${grid.demand}
+              MW${grid.offline ? ` · ${grid.offline} offline` : ""}
+            </div>`
+          : null}
         <div class="lg:hidden">${this.renderMobile()}</div>
         <div class="hidden lg:block">${this.renderDesktop()}</div>
       </div>

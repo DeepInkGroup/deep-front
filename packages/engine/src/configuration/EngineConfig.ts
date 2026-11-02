@@ -1,6 +1,7 @@
 import { EMP_COST } from "@openfront/engine-api/game/AdvancedDefense";
 import { CIWS_COSTS } from "@openfront/engine-api/game/AdvancedDefense";
 import { OIL_FACTORY_COSTS } from "@openfront/engine-api/game/OilFactory";
+import { powerPlantCost } from "@openfront/engine-api/game/Power";
 import { COPPER_MINE_COSTS } from "@openfront/engine-api/game/CopperMine";
 import { LOGISTICS_CENTER_COST } from "@openfront/engine-api/game/LogisticsCenter";
 import { STRAIT_COSTS } from "@openfront/engine-api/game/StraitControl";
@@ -399,6 +400,11 @@ export class EngineConfig extends Config {
           UnitType.Factory,
           UnitType.Port,
         );
+      case UnitType.PowerPlant:
+        return (_game, player, extraLevels = 0, unitLevel = 0) =>
+          player.type() === PlayerType.Human && this.hasInfiniteGoldFor(player)
+            ? 0n
+            : powerPlantCost(unitLevel + extraLevels);
       case UnitType.LogisticsCenter:
         return this.costWrapper(
           () => Number(LOGISTICS_CENTER_COST),
