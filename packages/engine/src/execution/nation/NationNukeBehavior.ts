@@ -1,3 +1,4 @@
+import { missileStock } from "@openfront/engine-api/game/MissileProduction";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
   Difficulty,
@@ -828,6 +829,11 @@ export class NationNukeBehavior {
 
   // Each launch makes the next nuke of its type feel pricier, to save up for a MIRV and pace launches
   private getPerceivedNukeCost(type: NukeType): Gold {
+    if (
+      !this.game.config().isUnitDisabled(UnitType.MissileFactory) &&
+      missileStock(this.player.missileArsenal(), type) > 0
+    )
+      return 0n;
     if (this.paysRealNukePrice()) {
       return this.cost(type);
     }

@@ -92,7 +92,7 @@ export class OilTankerExecution implements Execution {
       kind: "grid",
       unitId: this.ship.id(),
       planId: ++this.planId,
-      startTick: ticks + OIL_TANKER_STEP_TICKS,
+      startTick: ticks + 1,
       ticksPerStep: OIL_TANKER_STEP_TICKS,
       path: [this.ship.tile()],
     });
@@ -217,7 +217,9 @@ export class OilTankerExecution implements Execution {
           kind: "grid",
           unitId: this.ship.id(),
           planId: ++this.planId,
-          startTick: ticks + OIL_TANKER_STEP_TICKS,
+          // Client updates describe the completed tick (+1), independently
+          // of the two-tick interval between subsequent tanker movements.
+          startTick: ticks + 1,
           ticksPerStep: OIL_TANKER_STEP_TICKS,
           path,
         });

@@ -387,6 +387,19 @@ export const PLAYER_FIELDS: readonly FieldDef<PlayerFields>[] = [
   field(["outgoingAllianceRequests", list(STRING)]),
   field(["alliances", list(ALLIANCE)]),
   field(["outgoingEmojis", list(EMOJI)]),
+  field([
+    "missileArsenal",
+    {
+      write: (w: BinaryWriter, v: PlayerState["missileArsenal"]) =>
+        w.writeLongString(JSON.stringify(v) ?? "null"),
+      read: (r: BinaryReader): PlayerState["missileArsenal"] =>
+        JSON.parse(r.readLongString()) ?? undefined,
+      eq: (
+        a: PlayerState["missileArsenal"],
+        b: PlayerState["missileArsenal"],
+      ) => a === b || JSON.stringify(a) === JSON.stringify(b),
+    },
+  ]),
 ];
 
 export const UNIT_FIELDS: readonly FieldDef<UnitFields>[] = [

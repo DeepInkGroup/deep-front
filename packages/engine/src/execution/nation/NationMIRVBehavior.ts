@@ -1,3 +1,4 @@
+import { missileStock } from "@openfront/engine-api/game/MissileProduction";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
   AllPlayers,
@@ -257,7 +258,11 @@ export class NationMIRVBehavior {
     if (this.player.units(UnitType.BunkerMissileSite).length === 0) {
       return false;
     }
-    if (this.player.gold() < this.cost(UnitType.MIRV)) {
+    if (
+      this.game.config().isUnitDisabled(UnitType.MissileFactory)
+        ? this.player.gold() < this.cost(UnitType.MIRV)
+        : missileStock(this.player.missileArsenal(), UnitType.MIRV) === 0
+    ) {
       return false;
     }
 

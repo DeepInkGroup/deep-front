@@ -1,3 +1,4 @@
+import { MissileProductionExecutionSnapshot } from "../execution/MissileProductionExecution";
 import { StraitControlExecutionSnapshot } from "../execution/StraitControlExecution";
 import { BunkerAIExecutionSnapshot } from "../execution/BunkerAIExecution";
 import { BunkerUpgradeExecutionSnapshot } from "../execution/BunkerUpgradeExecution";
@@ -60,6 +61,7 @@ import type { ExecutionSnapshotType } from "./ExecutionSnapshot";
  * replaced it.
  */
 export const EXECUTION_SNAPSHOT_TYPES = [
+  MissileProductionExecutionSnapshot,
   StraitControlExecutionSnapshot,
   AllianceExtensionExecutionSnapshot,
   AllianceRejectExecutionSnapshot,

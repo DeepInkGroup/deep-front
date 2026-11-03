@@ -29,6 +29,7 @@ import { randTerritoryTileArray } from "./nation/NationUtils";
 import { UpgradeStructureExecution } from "./UpgradeStructureExecution";
 
 export const ECONOMY_BUILDINGS: readonly UnitType[] = [
+  UnitType.MissileFactory,
   UnitType.PowerPlant,
   UnitType.OilFactory,
   UnitType.CopperMine,
@@ -69,7 +70,8 @@ export class EconomyAIExecution implements Execution {
 
     const investments: Investment[] = [];
     for (const type of ECONOMY_BUILDINGS) {
-      if (type === UnitType.PowerPlant) continue;
+      if (type === UnitType.PowerPlant || type === UnitType.MissileFactory)
+        continue;
       if (this.game.config().isUnitDisabled(type)) continue;
       const info = this.game.unitInfo(type);
       if (

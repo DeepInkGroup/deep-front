@@ -1,3 +1,7 @@
+import {
+  MISSILE_FACTORY_COST,
+  type ManufacturedMissile,
+} from "@openfront/engine-api/game/MissileProduction";
 import { EMP_COST } from "@openfront/engine-api/game/AdvancedDefense";
 import { CIWS_COSTS } from "@openfront/engine-api/game/AdvancedDefense";
 import { OIL_FACTORY_COSTS } from "@openfront/engine-api/game/OilFactory";
@@ -344,6 +348,16 @@ export class EngineConfig extends Config {
     return info;
   }
 
+  missileProductionCost(
+    game: Game,
+    player: Player,
+    type: ManufacturedMissile,
+  ): Gold {
+    if (type === UnitType.SAMMissile)
+      return this.costWrapper(() => 25_000, type)(game, player);
+    return this.unitInfo(type).cost(game, player);
+  }
+
   private unitCost(type: UnitType): EngineUnitInfo["cost"] {
     switch (type) {
       case UnitType.Warship:
@@ -399,6 +413,11 @@ export class EngineConfig extends Config {
           (numUnits: number) => Math.min(1_000_000, pow2(numUnits) * 125_000),
           UnitType.Factory,
           UnitType.Port,
+        );
+      case UnitType.MissileFactory:
+        return this.costWrapper(
+          () => MISSILE_FACTORY_COST,
+          UnitType.MissileFactory,
         );
       case UnitType.PowerPlant:
         return (_game, player, extraLevels = 0, unitLevel = 0) =>

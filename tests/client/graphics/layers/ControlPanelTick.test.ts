@@ -26,6 +26,8 @@ describe("control-panel keybind attack ratio and tick visibility", () => {
     panel.eventBus = new EventBus();
     panel.game = {
       inSpawnPhase: () => false,
+      ticks: () => 0,
+      config: () => ({ isUnitDisabled: () => true }),
       myPlayer: () => null,
     } as unknown as GameView;
     document.body.appendChild(panel);
@@ -59,6 +61,8 @@ describe("control-panel keybind attack ratio and tick visibility", () => {
   it("tick() hides the panel once the local player is dead", () => {
     panel.game = {
       inSpawnPhase: () => false,
+      ticks: () => 0,
+      config: () => ({ isUnitDisabled: () => true }),
       myPlayer: () => ({ isAlive: () => false, troops: () => 0 }),
     } as unknown as GameView;
     panel.setVisibile(true);

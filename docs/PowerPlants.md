@@ -10,12 +10,13 @@ Construction takes **30 seconds**; Instant Build still works. Plants supply
 **100 MW per level** to their owner's national grid, regardless of distance.
 They also connect to the existing rail network without earning station income.
 
-| Building    | Demand per level | What pauses without electricity                      |
-| ----------- | ---------------- | ---------------------------------------------------- |
-| City        | 20 MW            | Extra troop capacity and train-stop income           |
-| Factory     | 30 MW            | New train production                                 |
-| Oil Factory | 40 MW            | Tanker production/replacement and new oil departures |
-| Copper Mine | 25 MW            | Periodic copper income and train-stop income         |
+| Building        | Demand per level  | What pauses without electricity                      |
+| --------------- | ----------------- | ---------------------------------------------------- |
+| City            | 20 MW             | Extra troop capacity and train-stop income           |
+| Factory         | 30 MW             | New train production                                 |
+| Oil Factory     | 40 MW             | Tanker production/replacement and new oil departures |
+| Copper Mine     | 25 MW             | Periodic copper income and train-stop income         |
+| Missile Factory | 30 MW (one level) | Missile manufacturing progress                       |
 
 Only completed buildings consume or supply electricity. During a shortage,
 completed buildings are allocated their full load in creation order. A building

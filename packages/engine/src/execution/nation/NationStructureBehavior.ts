@@ -119,6 +119,7 @@ const FACTORY_COASTAL_RATIO_MULTIPLIER: Record<Difficulty, number> = {
 
 /** Structures a nation wants under SAM cover */
 const SAM_PROTECTED_TYPES: readonly UnitType[] = [
+  UnitType.MissileFactory,
   UnitType.OilFactory,
   UnitType.CopperMine,
   UnitType.LogisticsCenter,

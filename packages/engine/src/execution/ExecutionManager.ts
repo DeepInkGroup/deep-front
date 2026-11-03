@@ -1,3 +1,4 @@
+import { MissileProductionExecution } from "./MissileProductionExecution";
 import {
   ClientID,
   GameID,
@@ -114,6 +115,13 @@ export class Executor {
         return new EmbargoExecution(player, intent.targetID, intent.action);
       case "embargo_all":
         return new EmbargoAllExecution(player, intent.action);
+      case "produce_missiles":
+        return new MissileProductionExecution(
+          player,
+          intent.factoryId,
+          intent.missile,
+          intent.amount,
+        );
       case "strait_toll":
         return new StraitControlExecution(player, intent.stationId, intent);
       case "build_unit":

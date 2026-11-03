@@ -120,6 +120,17 @@ export class HelpModal extends BaseModal {
             </thead>
             <tbody>
               <tr>
+                <th>Missile Factory</th>
+                <td>1M · 40 seconds · 30 MW</td>
+                <td>
+                  Manufactures all offensive missiles and SAM/CIWS interceptors.
+                  Open Missiles to order, track production and see inventory. Up
+                  to 20 simultaneous orders per player; shortages pause
+                  progress.
+                </td>
+                <td>Unlimited buildings · level 1 · Shift+M</td>
+              </tr>
+              <tr>
                 <th>Power Plant</th>
                 <td>750K, then +250K per upgrade price</td>
                 <td>

@@ -1,4 +1,5 @@
 import { UnitType } from "@openfront/engine-api/game/GameTypes";
+import { emptyMissileArsenal } from "@openfront/engine-api/game/MissileProduction";
 import { Config } from "@openfront/engine-lib/configuration/Config";
 import { EventBus } from "@openfront/shared/EventBus";
 import { UnitDisplay } from "../../src/client/hud/layers/UnitDisplay";
@@ -21,6 +22,7 @@ describe("Bunker controls and concealed missiles", () => {
     }));
     const config = new Config({} as never, false);
     const player = {
+      state: { missileArsenal: emptyMissileArsenal() },
       gold: () => 10_000_000n,
       isAlive: () => true,
       units: (t: UnitType) => (t === UnitType.CopperMine ? units : []),
@@ -120,6 +122,7 @@ describe("Bunker controls and concealed missiles", () => {
     let capped = true;
     const config = new Config({} as never, false);
     const player = {
+      state: { missileArsenal: emptyMissileArsenal() },
       gold: () => 100_000_000n,
       isAlive: () => true,
       units: (type: UnitType) =>

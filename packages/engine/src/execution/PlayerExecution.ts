@@ -84,6 +84,7 @@ export class PlayerExecution implements Execution {
   }
 
   tick(ticks: number) {
+    this.player.advanceMissileProduction();
     this.player.decayRelations();
     for (const u of this.player.units()) {
       if (!Structures.has(u.type())) {

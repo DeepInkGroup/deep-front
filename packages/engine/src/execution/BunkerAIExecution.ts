@@ -21,6 +21,10 @@ import type {
 import { ConstructionExecution } from "./ConstructionExecution";
 import { randTerritoryTileArray } from "./nation/NationUtils";
 import { UpgradeStructureExecution } from "./UpgradeStructureExecution";
+import {
+  missileStock,
+  type ManufacturedMissile,
+} from "@openfront/engine-api/game/MissileProduction";
 
 export class BunkerAIExecution implements Execution {
   private active = true;
@@ -43,6 +47,7 @@ export class BunkerAIExecution implements Execution {
     if (ticks < this.nextCheckTick) return;
     this.nextCheckTick = ticks + 100;
     const config = this.game.config();
+    if (this.maintainMunitions()) return;
     if (config.isUnitDisabled(UnitType.BunkerMissileSite)) return;
     const sites = this.player.units(UnitType.BunkerMissileSite);
     if (!sites.length) {
@@ -79,8 +84,10 @@ export class BunkerAIExecution implements Execution {
     const missile = [UnitType.HypersonicMissile, UnitType.StealthMissile].find(
       (type) =>
         !config.isUnitDisabled(type) &&
-        this.game.unitInfo(type).cost(this.game, this.player) <=
-          this.player.gold(),
+        (config.isUnitDisabled(UnitType.MissileFactory)
+          ? this.game.unitInfo(type).cost(this.game, this.player) <=
+            this.player.gold()
+          : missileStock(this.player.missileArsenal(), type) > 0),
     );
     if (ready && missile && enemies.length) {
       const enemy = enemies[this.random.nextInt(0, enemies.length)];
@@ -97,7 +104,9 @@ export class BunkerAIExecution implements Execution {
             new ConstructionExecution(this.player, missile, tile),
           );
           this.investInDefense(
-            this.game.unitInfo(missile).cost(this.game, this.player),
+            config.isUnitDisabled(UnitType.MissileFactory)
+              ? this.game.unitInfo(missile).cost(this.game, this.player)
+              : 0n,
           );
           return;
         }
@@ -110,6 +119,76 @@ export class BunkerAIExecution implements Execution {
       this.game.addExecution(
         new UpgradeStructureExecution(this.player, upgrade.id()),
       );
+  }
+  private maintainMunitions(): boolean {
+    const config = this.game.config();
+    if (config.isUnitDisabled(UnitType.MissileFactory)) return false;
+    const hasOffense = this.player.units(UnitType.BunkerMissileSite).length > 0;
+    const hasDefense =
+      this.player.units(UnitType.SAMLauncher).length > 0 ||
+      this.player.units(UnitType.CIWSDefense).length > 0;
+    if (!hasOffense && !hasDefense) return false;
+    const factories = this.player.units(UnitType.MissileFactory);
+    if (!factories.length) {
+      const cost = this.game
+        .unitInfo(UnitType.MissileFactory)
+        .cost(this.game, this.player);
+      if (this.player.gold() < cost + 750_000n) return false;
+      for (const tile of randTerritoryTileArray(
+        this.random,
+        this.game,
+        this.player,
+        24,
+      )) {
+        const spawn = this.player.canBuild(UnitType.MissileFactory, tile);
+        if (spawn !== false) {
+          this.game.addExecution(
+            new ConstructionExecution(
+              this.player,
+              UnitType.MissileFactory,
+              spawn,
+            ),
+          );
+          return true;
+        }
+      }
+      return false;
+    }
+    const factory = factories.find(
+      (f) => f.isActive() && !f.isUnderConstruction() && config.isPowered(f),
+    );
+    if (!factory) return false;
+    const orders: [ManufacturedMissile, number][] = [
+      ...(hasDefense
+        ? [[UnitType.SAMMissile, 20] as [ManufacturedMissile, number]]
+        : []),
+      ...(hasOffense
+        ? ([
+            [UnitType.HypersonicMissile, 2],
+            [UnitType.StealthMissile, 2],
+            [UnitType.AtomBomb, 2],
+            [UnitType.HydrogenBomb, 1],
+            [UnitType.MIRV, 1],
+          ] as [ManufacturedMissile, number][])
+        : []),
+    ];
+    for (const [type, target] of orders) {
+      if (config.isUnitDisabled(type)) continue;
+      const arsenal = this.player.missileArsenal();
+      const pending = arsenal.jobs.filter((j) => j.missile === type).length;
+      const amount = Math.min(
+        type === UnitType.SAMMissile ? 5 : 1,
+        target - missileStock(arsenal, type) - pending,
+        20 - arsenal.jobs.length,
+      );
+      if (amount <= 0) continue;
+      const cost =
+        config.missileProductionCost(this.game, this.player, type) *
+        BigInt(amount);
+      if (this.player.gold() >= cost + 500_000n)
+        this.player.queueMissiles(factory.id(), type, amount);
+    }
+    return false;
   }
   private investInDefense(reserved: bigint): void {
     if (this.game.config().isUnitDisabled(UnitType.CIWSDefense)) return;

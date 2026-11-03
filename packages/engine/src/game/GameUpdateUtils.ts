@@ -50,6 +50,7 @@ export function diffPlayerUpdate(
     prev.isDisconnected === next.isDisconnected &&
     prev.killedBy === next.killedBy &&
     prev.deathPosition === next.deathPosition &&
+    prev.missileArsenal === next.missileArsenal &&
     prev.tradeGold === next.tradeGold &&
     prev.trainGold === next.trainGold &&
     prev.piracyGold === next.piracyGold &&
@@ -91,6 +92,7 @@ export function diffPlayerUpdate(
     }
   };
 
+  setIfDifferent("missileArsenal", prev.missileArsenal === next.missileArsenal);
   setIfDifferent("clientID", prev.clientID === next.clientID);
   setIfDifferent("name", prev.name === next.name);
   setIfDifferent("displayName", prev.displayName === next.displayName);

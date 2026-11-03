@@ -1,3 +1,4 @@
+import { MISSILE_TYPES } from "./game/MissileProduction";
 import { zb } from "@openfront/zbin";
 import quickChatData from "resources/QuickChat.json";
 import { z } from "zod";
@@ -23,6 +24,7 @@ export type GameID = string;
 export type ClientID = string;
 
 export type Intent =
+  | ProduceMissilesIntent
   | StraitTollIntent
   | SpawnIntent
   | AttackIntent
@@ -568,6 +570,14 @@ export const StraitTollIntentSchema = z.object({
 });
 export type StraitTollIntent = z.infer<typeof StraitTollIntentSchema>;
 
+export const ProduceMissilesIntentSchema = z.object({
+  type: z.literal("produce_missiles"),
+  factoryId: zb.uint(),
+  missile: z.enum(MISSILE_TYPES),
+  amount: zb.uint({ min: 1, max: 20 }),
+});
+export type ProduceMissilesIntent = z.infer<typeof ProduceMissilesIntentSchema>;
+
 export const IntentSchema = z.discriminatedUnion("type", [
   AttackIntentSchema,
   CancelAttackIntentSchema,
@@ -595,6 +605,7 @@ export const IntentSchema = z.discriminatedUnion("type", [
   UpdateGameConfigIntentSchema,
   ToggleGameStartTimerIntentSchema,
   StraitTollIntentSchema,
+  ProduceMissilesIntentSchema,
 ]);
 
 // StampedIntent = Intent with server-stamped clientID (used in turns and execution)

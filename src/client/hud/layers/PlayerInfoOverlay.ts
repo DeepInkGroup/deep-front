@@ -59,6 +59,7 @@ const cityIcon = assetUrl("images/CityIconWhite.svg");
 const factoryIcon = assetUrl("images/FactoryIconWhite.svg");
 const oilFactoryIcon = assetUrl("images/OilFactoryIconWhite.svg");
 const powerPlantIcon = assetUrl("images/PowerPlantIconWhite.svg");
+const missileFactoryIcon = assetUrl("images/MissileFactoryIconWhite.svg");
 const copperMineIcon = assetUrl("images/CopperMineIconWhite.svg");
 const logisticsCenterIcon = assetUrl("images/LogisticsCenterIconWhite.svg");
 const straitControlStationIcon = assetUrl(
@@ -735,6 +736,11 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
           <div class="flex gap-0.5 lg:gap-1 items-center mt-0.5">
             ${this.displayUnitCount(player, UnitType.City, cityIcon)}
             ${this.displayUnitCount(player, UnitType.Factory, factoryIcon)}
+            ${this.displayUnitCount(
+              player,
+              UnitType.MissileFactory,
+              missileFactoryIcon,
+            )}
             ${this.displayUnitCount(
               player,
               UnitType.OilFactory,

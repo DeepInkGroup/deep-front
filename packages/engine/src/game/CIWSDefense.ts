@@ -54,6 +54,7 @@ export function interceptWithCIWS(
       ey = sy - t * dy;
     const range = game.config().dynamicSamRange(site, game.ticks());
     if (ex * ex + ey * ey > range * range) continue;
+    if (!site.owner().consumeMissile(UnitType.SAMMissile)) continue;
     missile.move(game.ref(Math.round(x + t * dx), Math.round(y + t * dy)));
     missile.delete(true, site.owner());
     game.stats().bombIntercept(site.owner(), missile.type() as NukeType, 1);

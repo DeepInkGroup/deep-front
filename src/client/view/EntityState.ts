@@ -171,6 +171,9 @@ export function playerStateFromUpdate(pu: PlayerUpdate): PlayerState {
     trainGold: Number(pu.trainGold ?? 0n),
     piracyGold: Number(pu.piracyGold ?? 0n),
     goldEarned: Number(pu.goldEarned ?? 0n),
+    missileArsenal: pu.missileArsenal
+      ? structuredClone(pu.missileArsenal)
+      : undefined,
     troops: pu.troops!,
     isTraitor: pu.isTraitor!,
     traitorRemainingTicks: Math.max(0, pu.traitorRemainingTicks ?? 0),

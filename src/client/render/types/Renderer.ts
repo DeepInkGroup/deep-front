@@ -1,3 +1,4 @@
+import type { MissileArsenalState } from "@openfront/engine-api/game/MissileProduction";
 import type { TileRef } from "@openfront/engine-api/game/GameMap";
 
 /** TrainType enum — numeric values matching UnitState.trainType. */
@@ -59,6 +60,7 @@ export interface EmojiData {
 }
 
 export interface PlayerState {
+  missileArsenal?: MissileArsenalState;
   smallID: number;
   isAlive: boolean;
   isDisconnected: boolean;

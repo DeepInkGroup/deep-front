@@ -419,6 +419,7 @@ export class SAMLauncherExecution implements Execution {
       if (this.sam.isInCooldown()) {
         break;
       }
+      if (!this.player.consumeMissile(UnitType.SAMMissile)) break;
       this.sam.launch();
       target.unit.setTargetedBySAM(true);
       this.mg.addExecution(

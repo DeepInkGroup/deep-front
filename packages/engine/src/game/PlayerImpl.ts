@@ -1,3 +1,11 @@
+import { MissileArsenal, MissileArsenalSchema } from "./MissileArsenal";
+import {
+  emptyMissileArsenal,
+  isManufacturedMissile,
+  missileStock,
+  type ManufacturedMissile,
+  type MissileArsenalState,
+} from "@openfront/engine-api/game/MissileProduction";
 import { BunkerUpgradeExecution } from "../execution/BunkerUpgradeExecution";
 import {
   calculatePowerGrid,
@@ -139,6 +147,36 @@ Object.freeze(EMPTY_ALLIANCE_VIEWS);
 Object.freeze(EMPTY_EMOJIS);
 
 export class PlayerImpl implements Player {
+  private arsenal = new MissileArsenal();
+  missileArsenal(): MissileArsenalState {
+    return this.arsenal.state;
+  }
+  queueMissiles(
+    factoryId: number,
+    missile: ManufacturedMissile,
+    amount: number,
+  ): boolean {
+    return this.arsenal.queue(this.mg, this, factoryId, missile, amount);
+  }
+  consumeMissile(type: ManufacturedMissile): boolean {
+    return this.arsenal.consume(this.mg, type);
+  }
+  advanceMissileProduction(): void {
+    this.arsenal.tick(this.mg, this);
+  }
+  private usesMissileInventory(type: UnitType): boolean {
+    return (
+      type !== UnitType.SAMMissile &&
+      isManufacturedMissile(type) &&
+      !this.mg.config().isUnitDisabled(UnitType.MissileFactory)
+    );
+  }
+  private launchCost(type: UnitType): Gold {
+    return this.usesMissileInventory(type)
+      ? 0n
+      : this.mg.unitInfo(type).cost(this.mg, this);
+  }
+
   private powerMemo:
     | { version: number; disabled: boolean; grid: PowerGrid }
     | undefined;
@@ -418,6 +456,7 @@ export class PlayerImpl implements Player {
       trainGold: this._trainGold,
       piracyGold: this._piracyGold,
       goldEarned: this._goldEarned,
+      missileArsenal: this.arsenal.state,
       troops: this.troops(),
       allies: allies,
       embargoes: embargoes,
@@ -1451,7 +1490,12 @@ export class PlayerImpl implements Player {
       params = { ...params, targetPlayer: partner } as UnitParams<T>;
     }
 
-    const cost = this.mg.unitInfo(type).cost(this.mg, this);
+    const cost = this.launchCost(type);
+    if (
+      this.usesMissileInventory(type) &&
+      !this.consumeMissile(type as ManufacturedMissile)
+    )
+      throw new Error("No manufactured missile available");
     const b = new UnitImpl(
       type,
       this.mg,
@@ -1504,7 +1548,12 @@ export class PlayerImpl implements Player {
     if (this.mg.config().isUnitDisabled(unitType)) {
       return false;
     }
-    const cost = knownCost ?? this.mg.unitInfo(unitType).cost(this.mg, this);
+    if (
+      this.usesMissileInventory(unitType) &&
+      missileStock(this.arsenal.state, unitType) < 1
+    )
+      return false;
+    const cost = knownCost ?? this.launchCost(unitType);
     if (this._gold < cost) {
       return false;
     }
@@ -1588,7 +1637,7 @@ export class PlayerImpl implements Player {
       const u = units[i];
 
       const info = config.unitInfo(u);
-      let cost = info.cost(mg, this);
+      let cost = this.launchCost(u);
       let canUpgrade: number | false = false;
       let canBuild: TileRef | false = false;
       let upgradeLevel = 0;
@@ -1652,9 +1701,15 @@ export class PlayerImpl implements Player {
             }
           : {}),
         type: u,
+        ...(this.usesMissileInventory(u)
+          ? { inventory: missileStock(this.arsenal.state, u) }
+          : {}),
         canBuild,
         canUpgrade,
         cost,
+        ...(isManufacturedMissile(u)
+          ? { productionCost: config.missileProductionCost(mg, this, u) }
+          : {}),
         upgradeCosts,
         overlappingRailroads: buildNew
           ? rail.overlappingRailroads(u, canBuild as TileRef)
@@ -1734,6 +1789,7 @@ export class PlayerImpl implements Player {
         return this.landBasedUnitSpawn(targetTile);
       case UnitType.BunkerMissileSite:
       case UnitType.MissileSilo:
+      case UnitType.MissileFactory:
       case UnitType.PowerPlant:
       case UnitType.DefensePost:
       case UnitType.CIWSDefense:
@@ -1987,6 +2043,19 @@ export class PlayerImpl implements Player {
   hash(): number {
     return (
       simpleHash(this.id()) * (this.troops() + this.numTilesOwned()) +
+      this.arsenal.state.nextId +
+      this.arsenal.state.stock.reduce(
+        (sum, count, i) => sum + count * (i + 31),
+        0,
+      ) +
+      this.arsenal.state.jobs.reduce(
+        (sum, j) =>
+          sum +
+          j.id * 17 +
+          j.factoryId * 13 +
+          j.remainingTicks * (simpleHash(j.missile) % 997),
+        0,
+      ) +
       this._units.reduce((acc, unit) => acc + unit.hash(), 0)
     );
   }
@@ -2107,6 +2176,7 @@ export class PlayerImpl implements Player {
       tileChangeVersion: this._tileChangeVersion,
       random: w.random(this._pseudo_random),
       gold: this._gold,
+      missileArsenal: this.arsenal.state,
       troops: this._troops,
       tradeGold: this._tradeGold,
       trainGold: this._trainGold,
@@ -2179,6 +2249,7 @@ export class PlayerImpl implements Player {
     this._tileChangeVersion = s.tileChangeVersion;
     this._pseudo_random = r.random(s.random);
     this._gold = s.gold;
+    this.arsenal = new MissileArsenal(s.missileArsenal);
     this._troops = s.troops;
     this._tradeGold = s.tradeGold;
     this._trainGold = s.trainGold;
@@ -2246,7 +2317,8 @@ export class PlayerImpl implements Player {
 
 export const PlayerSnapshot = snapshotType({
   name: "Player",
-  version: 1,
+  version: 2,
+  migrations: { 1: (s) => ({ ...s, missileArsenal: emptyMissileArsenal() }) },
   schema: z.object({
     smallID: zInt(),
     info: PlayerInfoSchema,
@@ -2255,6 +2327,7 @@ export const PlayerSnapshot = snapshotType({
     tileChangeVersion: zInt(),
     random: zRandom(),
     gold: z.bigint(),
+    missileArsenal: MissileArsenalSchema,
     troops: z.bigint(),
     tradeGold: z.bigint(),
     trainGold: z.bigint(),

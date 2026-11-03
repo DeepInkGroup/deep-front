@@ -222,6 +222,7 @@ export enum UnitType {
   EMPMissile = "EMP Missile",
   OilTanker = "Oil Tanker",
   PowerPlant = "Power Plant",
+  MissileFactory = "Missile Factory",
 }
 
 export enum TrainType {
@@ -252,6 +253,7 @@ export const BuildableAttacks = unitTypeGroup([
 
 export const Structures = unitTypeGroup([
   UnitType.PowerPlant,
+  UnitType.MissileFactory,
   UnitType.StraitControlStation,
   UnitType.CIWSDefense,
   UnitType.BunkerMissileSite,
@@ -270,6 +272,7 @@ export const Structures = unitTypeGroup([
 /** Buildings that start a rail network and connect nearby economic structures. */
 export const RailHubs = unitTypeGroup([
   UnitType.PowerPlant,
+  UnitType.MissileFactory,
   UnitType.Factory,
   UnitType.OilFactory,
   UnitType.CopperMine,
@@ -403,6 +406,8 @@ export interface BuildableUnit {
   canUpgrade: number | false;
   type: PlayerBuildableUnitType;
   cost: Gold;
+  inventory?: number;
+  productionCost?: Gold;
   // Cumulative cost of upgrading 1..MAX_UPGRADE_AMOUNT times (upgrade costs
   // escalate per level, so a bulk total is NOT cost * amount). Only set when
   // canUpgrade is not false.
@@ -424,7 +429,11 @@ export function bulkCost(bu: BuildableUnit, amount: number): Gold {
 // 0 when not even a single purchase is affordable.
 export function maxBulkAmount(bu: BuildableUnit, gold: Gold): number {
   let max = 0;
-  for (let n = 1; n <= MAX_UPGRADE_AMOUNT; n++) {
+  for (
+    let n = 1;
+    n <= Math.min(MAX_UPGRADE_AMOUNT, bu.inventory ?? MAX_UPGRADE_AMOUNT);
+    n++
+  ) {
     // Never price upgrades past the shipped totals — beyond the array,
     // bulkCost would silently fall back to linear pricing.
     if (bu.upgradeCosts !== undefined && n > bu.upgradeCosts.length) {

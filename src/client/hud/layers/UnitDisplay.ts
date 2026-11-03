@@ -1,3 +1,7 @@
+import {
+  isManufacturedMissile,
+  missileStock,
+} from "@openfront/engine-api/game/MissileProduction";
 import "./StraitTollPanel";
 import { EXTRA_BUILD_SHORTCUTS } from "../../BuildShortcuts";
 import { hasBuildOrUpgradeCapacity } from "../../utilities/BuildingLimits";
@@ -28,6 +32,7 @@ import {
   defensePostIcon,
   factoryIcon,
   powerPlantIcon,
+  missileFactoryIcon,
   oilFactoryIcon,
   copperMineIcon,
   logisticsCenterIcon,
@@ -113,6 +118,13 @@ export class UnitDisplay extends LitElement implements Controller {
     const info = this.game.config().unitInfo(item);
     if (!hasBuildOrUpgradeCapacity(info, player?.units(item) ?? []))
       return false;
+    if (
+      item !== UnitType.SAMMissile &&
+      isManufacturedMissile(item) &&
+      !this.game.config().isUnitDisabled(UnitType.MissileFactory) &&
+      missileStock(player?.state.missileArsenal, item) < 1
+    )
+      return false;
     switch (item) {
       case UnitType.EMPMissile:
       case UnitType.AtomBomb:
@@ -178,7 +190,7 @@ export class UnitDisplay extends LitElement implements Controller {
     return html`
       <div class="border-t border-white/10 p-0.5 w-full">
         <div class="text-right text-[9px] leading-none text-gray-500">
-          S = hold Shift + number
+          S = hold Shift + key
         </div>
         <div class="flex flex-wrap justify-center gap-0.5 w-full">
           ${this.renderUnitItem(
@@ -200,6 +212,13 @@ export class UnitDisplay extends LitElement implements Controller {
             this._oilFactories,
             UnitType.OilFactory,
             "oil_factory",
+            "",
+          )}
+          ${this.renderUnitItem(
+            missileFactoryIcon,
+            myPlayer.units(UnitType.MissileFactory).length,
+            UnitType.MissileFactory,
+            "missile_factory",
             "",
           )}
           ${this.renderUnitItem(
@@ -341,6 +360,12 @@ export class UnitDisplay extends LitElement implements Controller {
     if (this.game.config().isUnitDisabled(unitType)) {
       return html``;
     }
+    const stored =
+      isManufacturedMissile(unitType) &&
+      !this.game.config().isUnitDisabled(UnitType.MissileFactory)
+        ? missileStock(this.game.myPlayer()?.state.missileArsenal, unitType)
+        : undefined;
+    if (stored !== undefined) number = stored;
     const selected = this.uiState.ghostStructure === unitType;
     const hovered = this._hoveredUnit === unitType;
     const shortcut = EXTRA_BUILD_SHORTCUTS.find((s) => s.type === unitType);
@@ -398,7 +423,9 @@ export class UnitDisplay extends LitElement implements Controller {
                 <div class="flex items-center justify-center gap-1">
                   <img src=${goldCoinIcon} width="13" height="13" />
                   <span class="text-yellow-300"
-                    >${renderNumber(this.cost(unitType))}</span
+                    >${stored !== undefined
+                      ? `In stock: ${stored}`
+                      : renderNumber(this.cost(unitType))}</span
                   >
                 </div>
               </div>

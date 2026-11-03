@@ -28,6 +28,8 @@ describe("control-panel attack ratio", () => {
     panel.eventBus = new EventBus();
     panel.game = {
       inSpawnPhase: () => false,
+      ticks: () => 0,
+      config: () => ({ isUnitDisabled: () => true }),
       myPlayer: () => null,
     } as unknown as GameView;
     document.body.appendChild(panel);
@@ -57,6 +59,8 @@ describe("control-panel attack ratio", () => {
   it("renders the calculated troop count alongside percentage in mobile view", async () => {
     panel.game = {
       inSpawnPhase: () => false,
+      ticks: () => 0,
+      config: () => ({ isUnitDisabled: () => true }),
       myPlayer: () => ({ isAlive: () => true, troops: () => 100_000 }),
     } as unknown as GameView;
 

@@ -289,6 +289,13 @@ export class Config {
           upgradable: true,
         };
         break;
+      case UnitType.MissileFactory:
+        info = {
+          constructionDuration: this.instantBuild() ? 0 : 400,
+          upgradable: false,
+          maxLevel: 1,
+        };
+        break;
       case UnitType.PowerPlant:
         info = {
           constructionDuration: this.instantBuild()

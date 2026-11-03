@@ -62,6 +62,12 @@ import { describeSocketClose } from "./SocketClose";
 import { homeHref, translateText } from "./Utils";
 import { PlayerView } from "./view";
 
+export class SendProduceMissilesIntentEvent implements GameEvent {
+  constructor(
+    public readonly intent: import("@openfront/engine-api/Schemas").ProduceMissilesIntent,
+  ) {}
+}
+
 export class SendStraitTollIntentEvent implements GameEvent {
   constructor(
     public readonly intent: import("@openfront/engine-api/Schemas").StraitTollIntent,
@@ -301,6 +307,9 @@ export class Transport {
       this.lobbyConfig.gameRecord !== undefined ||
       this.lobbyConfig.gameStartInfo?.config.gameType === GameType.Singleplayer;
 
+    this.subscribe(SendProduceMissilesIntentEvent, (e) =>
+      this.sendIntent(e.intent),
+    );
     this.subscribe(SendStraitTollIntentEvent, (e) => this.sendIntent(e.intent));
     this.subscribe(SendAllianceRequestIntentEvent, (e) =>
       this.onSendAllianceRequest(e),

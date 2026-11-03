@@ -9,6 +9,8 @@ import type { PlayerState } from "../render/types";
  * target state is fully populated after one merge of the initial update.
  */
 export function applyStateUpdate(target: PlayerState, pu: PlayerUpdate): void {
+  if (pu.missileArsenal !== undefined)
+    target.missileArsenal = structuredClone(pu.missileArsenal);
   // smallID is identity — never changes for a given player.
   if (pu.isAlive !== undefined) target.isAlive = pu.isAlive;
   if (pu.isDisconnected !== undefined)

@@ -1,3 +1,4 @@
+import "./MissileProductionPanel";
 import { TileRef } from "@openfront/engine-api/game/GameMap";
 import {
   GameMode,
@@ -710,6 +711,11 @@ export class ControlPanel extends LitElement implements Controller {
           : null}
         <div class="lg:hidden">${this.renderMobile()}</div>
         <div class="hidden lg:block">${this.renderDesktop()}</div>
+        <missile-production-panel
+          .game=${this.game}
+          .eventBus=${this.eventBus}
+          .tick=${this.game?.ticks() ?? 0}
+        ></missile-production-panel>
       </div>
     `;
   }

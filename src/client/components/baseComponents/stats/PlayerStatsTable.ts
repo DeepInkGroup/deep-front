@@ -29,6 +29,7 @@ const BUILDING_ORDER = {
   ciws: 12,
   strait: 13,
   powr: 14,
+  mslf: 15,
 } as const satisfies Record<
   Exclude<(typeof otherUnits)[number], "wshp" | "silo">,
   number
@@ -55,6 +56,7 @@ const UNIT_LABEL_KEYS = {
   ciws: "unit_type.ciws_defense",
   strait: "unit_type.strait_control_station",
   powr: "unit_type.power_plant",
+  mslf: "unit_type.missile_factory",
   emp: "unit_type.emp_missile",
   stealth: "unit_type.stealth_missile",
   hyper: "unit_type.hypersonic_missile",

@@ -89,6 +89,9 @@ export function scriptedGameStart(
       infiniteTroops: false,
       instantBuild: false,
       randomSpawn: false,
+      // This legacy broad match exercises direct-purchase combat and train
+      // generation. Powered manufacturing is covered by MissileProduction.test.
+      disabledUnits: [UnitType.PowerPlant, UnitType.MissileFactory],
       doomsdayClock: { enabled: true, speed: "veryfast" },
       ...overrides,
     },
@@ -231,6 +234,19 @@ function queuedIntent(game: Game, p: Player, tick: number): Intent | null {
     },
     { type: "mark_disconnected", isDisconnected: false },
     { type: "toggle_pause", paused: false },
+    {
+      type: "produce_missiles",
+      factoryId: 0,
+      missile: UnitType.EMPMissile,
+      amount: 1,
+    },
+    {
+      type: "strait_toll",
+      stationId: 0,
+      revision: 0,
+      action: "configure",
+      enabled: false,
+    },
   ];
   return queued[(tick - 20) / 2] ?? null;
 }

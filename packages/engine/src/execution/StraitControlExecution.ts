@@ -30,7 +30,11 @@ export class StraitControlExecution implements Execution {
     private player: Player,
     private stationId: number,
     private intent?: StraitTollIntent,
-  ) {}
+  ) {
+    // Stamped wire intents also contain clientID. Store the same canonical
+    // payload the snapshot schema restores, so pending orders round-trip.
+    if (intent) this.intent = StraitTollIntentSchema.parse(intent);
+  }
   init(game: Game): void {
     this.mg = game;
     if (this.intent) {

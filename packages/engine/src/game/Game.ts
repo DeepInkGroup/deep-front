@@ -1,3 +1,7 @@
+import type {
+  MissileArsenalState,
+  ManufacturedMissile,
+} from "@openfront/engine-api/game/MissileProduction";
 import { GameMap, TileRef } from "@openfront/engine-api/game/GameMap";
 import {
   AllianceInfo,
@@ -123,6 +127,7 @@ export interface UnitParamsMap {
 
   [UnitType.Factory]: Record<string, never>;
   [UnitType.PowerPlant]: Record<string, never>;
+  [UnitType.MissileFactory]: Record<string, never>;
   [UnitType.OilFactory]: Record<string, never>;
   [UnitType.CopperMine]: Record<string, never>;
   [UnitType.LogisticsCenter]: Record<string, never>;
@@ -396,6 +401,15 @@ export interface Player extends PlayerLike {
   numTilesOwned(): number;
   conquer(tile: TileRef): void;
   relinquish(tile: TileRef): void;
+
+  missileArsenal(): MissileArsenalState;
+  queueMissiles(
+    factoryId: number,
+    missile: ManufacturedMissile,
+    amount: number,
+  ): boolean;
+  consumeMissile(type: ManufacturedMissile): boolean;
+  advanceMissileProduction(): void;
 
   // Resources & Troops
   gold(): Gold;

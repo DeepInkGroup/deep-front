@@ -92,7 +92,8 @@ export class ConstructionExecution implements Execution {
         // established countdown of older structures for existing replays.
         this.ticksUntilComplete =
           duration -
-          (this.constructionType === UnitType.StraitControlStation ||
+          (this.constructionType === UnitType.MissileFactory ||
+          this.constructionType === UnitType.StraitControlStation ||
           this.constructionType === UnitType.LogisticsCenter ||
           this.constructionType === UnitType.CustomsOffice ||
           this.constructionType === UnitType.BunkerMissileSite
@@ -194,6 +195,7 @@ export class ConstructionExecution implements Execution {
         this.mg.addExecution(new CopperMineExecution(this.structure!));
         break;
       case UnitType.LogisticsCenter:
+      case UnitType.MissileFactory:
       case UnitType.PowerPlant:
       case UnitType.CustomsOffice:
         connectRailHub(this.mg, this.structure!);
@@ -222,6 +224,7 @@ export class ConstructionExecution implements Execution {
       case UnitType.LogisticsCenter:
       case UnitType.CustomsOffice:
         return true;
+      case UnitType.MissileFactory:
       case UnitType.PowerPlant:
         return true;
       default:

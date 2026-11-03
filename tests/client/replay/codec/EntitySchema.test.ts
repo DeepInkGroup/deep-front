@@ -1,3 +1,4 @@
+import { UnitType } from "@openfront/engine-api/game/GameTypes";
 /**
  * Field-level schema tests: every PlayerState / UnitState key must be
  * encoded, detected as changed on its own bit, and round-trip exactly in
@@ -34,6 +35,7 @@ const decodeCtx: DecodeCtx = { unitTypes };
 // Typed as the full renderer records: a new required field fails to
 // compile here, and the completeness test below then demands a schema entry.
 const basePlayer: PlayerState = {
+  missileArsenal: undefined,
   smallID: 7,
   isAlive: true,
   isDisconnected: false,
@@ -66,6 +68,16 @@ const basePlayer: PlayerState = {
 };
 
 const playerAlternatives: { [K in keyof PlayerFields]: PlayerFields[K] } = {
+  missileArsenal: {
+    stock: [1, 2, 3, 4, 5, 6, 7],
+    nextId: 21,
+    jobs: Array.from({ length: 20 }, (_, i) => ({
+      id: i + 1,
+      factoryId: 99,
+      missile: UnitType.AtomBomb,
+      remainingTicks: 123,
+    })),
+  },
   isAlive: false,
   isDisconnected: true,
   killedBy: "client_abc",

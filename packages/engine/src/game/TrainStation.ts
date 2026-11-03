@@ -69,6 +69,7 @@ export function createTrainStopHandlers(
     [UnitType.Port]: new TradeStationStopHandler(),
     [UnitType.Factory]: new FactoryStopHandler(),
     [UnitType.PowerPlant]: new FactoryStopHandler(),
+    [UnitType.MissileFactory]: new FactoryStopHandler(),
     [UnitType.OilFactory]: new TradeStationStopHandler(),
     [UnitType.CopperMine]: new TradeStationStopHandler(),
     [UnitType.LogisticsCenter]: new TradeStationStopHandler(),

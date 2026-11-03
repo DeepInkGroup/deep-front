@@ -197,8 +197,20 @@ describe.each(VARIANTS)("full game snapshots: %s", (_, overrides) => {
       // Runs during the spawn phase and finishes inside init, so it is never
       // alive at a tick boundary. BasicExecutions.test.ts covers it directly.
       const neverStored = new Set(["Pause"]);
+      // Geography and late construction are not guaranteed in this short
+      // scripted match. These have byte-identical restore + continuation
+      // checks in the focused fixtures named here instead.
+      const focused = new Map([
+        ["OilFactory", "tests/economy/OilFactory.test.ts"],
+        ["OilTanker", "tests/economy/OilFactory.test.ts"],
+        ["CopperMine", "tests/economy/CopperMine.test.ts"],
+        ["BunkerUpgrade", "tests/combat/MissileProduction.test.ts"],
+      ]);
       const missing = EXECUTION_SNAPSHOT_TYPES.map((t) => t.name).filter(
-        (name) => !reference.execTypes.has(name) && !neverStored.has(name),
+        (name) =>
+          !reference.execTypes.has(name) &&
+          !neverStored.has(name) &&
+          !focused.has(name),
       );
       expect(missing).toEqual([]);
     },

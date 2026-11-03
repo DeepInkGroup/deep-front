@@ -6,12 +6,14 @@ export const POWER_PER_LEVEL = 100; // MW
 export const POWER_DEMAND: Readonly<Record<string, number>> = {
   [UnitType.City]: 20,
   [UnitType.Factory]: 30,
+  [UnitType.MissileFactory]: 30,
   [UnitType.OilFactory]: 40,
   [UnitType.CopperMine]: 25,
 };
 export const POWER_CONSUMERS = [
   UnitType.City,
   UnitType.Factory,
+  UnitType.MissileFactory,
   UnitType.OilFactory,
   UnitType.CopperMine,
 ] as const;

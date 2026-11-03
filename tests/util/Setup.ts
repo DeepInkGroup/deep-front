@@ -24,7 +24,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export async function setup(
   mapName: string,
-  _gameConfig: Partial<GameConfig> & { electricity?: boolean } = {},
+  _gameConfig: Partial<GameConfig> & {
+    electricity?: boolean;
+    missileProduction?: boolean;
+  } = {},
   humans: PlayerInfo[] = [],
   currentDir: string = __dirname,
   ConfigClass: typeof EngineConfig = TestConfig,
@@ -57,7 +60,11 @@ export async function setup(
   const gameMap = await genTerrainFromBin(manifest.map, mapBinBuffer);
   const miniGameMap = await genTerrainFromBin(manifest.map4x, miniMapBinBuffer);
 
-  const { electricity = false, ...overrides } = _gameConfig;
+  const {
+    electricity = false,
+    missileProduction = false,
+    ...overrides
+  } = _gameConfig;
   const gameConfig: GameConfig = {
     gameMap: GameMapType.Asia,
     gameMapSize: GameMapSize.Normal,
@@ -75,9 +82,13 @@ export async function setup(
     ...overrides,
     // Existing combat/economy fixtures exercise the no-electricity lobby mode.
     // Power-system scenarios opt in explicitly; production defaults stay on.
-    disabledUnits: electricity
-      ? overrides.disabledUnits
-      : [...new Set([...(overrides.disabledUnits ?? []), UnitType.PowerPlant])],
+    disabledUnits: [
+      ...new Set([
+        ...(overrides.disabledUnits ?? []),
+        ...(!electricity ? [UnitType.PowerPlant] : []),
+        ...(!missileProduction ? [UnitType.MissileFactory] : []),
+      ]),
+    ],
   };
   const config = new ConfigClass(gameConfig, false);
 

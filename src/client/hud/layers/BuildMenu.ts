@@ -30,6 +30,7 @@ import { GameView } from "../../view";
 const warshipIcon = assetUrl("images/BattleshipIconWhite.svg");
 const cityIcon = assetUrl("images/CityIconWhite.svg");
 const factoryIcon = assetUrl("images/FactoryIconWhite.svg");
+const missileFactoryIcon = assetUrl("images/MissileFactoryIconWhite.svg");
 const powerPlantIcon = assetUrl("images/PowerPlantIconWhite.svg");
 const oilFactoryIcon = assetUrl("images/OilFactoryIconWhite.svg");
 const copperMineIcon = assetUrl("images/CopperMineIconWhite.svg");
@@ -157,6 +158,13 @@ export const buildTable: BuildItemDisplay[][] = [
       icon: factoryIcon,
       description: "build_menu.desc.factory",
       key: "unit_type.factory",
+      countable: true,
+    },
+    {
+      unitType: UnitType.MissileFactory,
+      icon: missileFactoryIcon,
+      description: "build_menu.desc.missile_factory",
+      key: "unit_type.missile_factory",
       countable: true,
     },
     {
@@ -544,16 +552,22 @@ export class BuildMenu extends LitElement implements Controller {
                         >`
                       : null}
                     <span class="build-cost" translate="no">
-                      ${renderNumber(
-                        this.game && this.game.myPlayer() ? this.cost(item) : 0,
-                      )}
-                      <img
-                        src=${goldCoinIcon}
-                        alt="gold"
-                        width="12"
-                        height="12"
-                        class="align-middle"
-                      />
+                      ${buildableUnit.inventory !== undefined
+                        ? html`In stock: ${buildableUnit.inventory}`
+                        : html`
+                            ${renderNumber(
+                              this.game && this.game.myPlayer()
+                                ? this.cost(item)
+                                : 0,
+                            )}
+                            <img
+                              src=${goldCoinIcon}
+                              alt="gold"
+                              width="12"
+                              height="12"
+                              class="align-middle"
+                            />
+                          `}
                     </span>
                     ${item.countable
                       ? html`<div class="build-count-chip">

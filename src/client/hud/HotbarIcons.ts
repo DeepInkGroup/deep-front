@@ -3,6 +3,9 @@ import { assetUrl } from "@openfront/shared/AssetUrls";
 export const warshipIcon = assetUrl("images/BattleshipIconWhite.svg");
 export const cityIcon = assetUrl("images/CityIconWhite.svg");
 export const factoryIcon = assetUrl("images/FactoryIconWhite.svg");
+export const missileFactoryIcon = assetUrl(
+  "images/MissileFactoryIconWhite.svg",
+);
 export const powerPlantIcon = assetUrl("images/PowerPlantIconWhite.svg");
 export const oilFactoryIcon = assetUrl("images/OilFactoryIconWhite.svg");
 export const copperMineIcon = assetUrl("images/CopperMineIconWhite.svg");

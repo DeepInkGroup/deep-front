@@ -1,3 +1,4 @@
+import type { MissileArsenalState } from "./MissileProduction";
 import { AllPlayersStats, ClientID, Winner } from "../Schemas";
 import { TileRef } from "./GameMap";
 import {
@@ -266,6 +267,7 @@ export interface PlayerUpdate {
   piracyGold?: Gold;
   /** Cumulative gold received from all sources (workers, trade, ...). */
   goldEarned?: Gold;
+  missileArsenal?: MissileArsenalState;
   troops?: number;
   allies?: number[];
   embargoes?: Set<PlayerID>;
