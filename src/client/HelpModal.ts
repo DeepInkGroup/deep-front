@@ -125,8 +125,7 @@ export class HelpModal extends BaseModal {
                 <td>
                   Manufactures all offensive missiles and SAM/CIWS interceptors.
                   Open Missiles to order, track production and see inventory. Up
-                  to 20 simultaneous orders per player; shortages pause
-                  progress.
+                  to 20 queued orders per player; shortages pause progress.
                 </td>
                 <td>Unlimited buildings · level 1 · Shift+M</td>
               </tr>

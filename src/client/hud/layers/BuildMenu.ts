@@ -10,7 +10,7 @@ import {
 import { renderNumber } from "@openfront/engine-lib/Format";
 import { assetUrl } from "@openfront/shared/AssetUrls";
 import { EventBus } from "@openfront/shared/EventBus";
-import { css, html, LitElement } from "lit";
+import { css, html, LitElement, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { translateText } from "../../../client/Utils";
 import { Controller } from "../../Controller";
@@ -279,6 +279,36 @@ export class BuildMenu extends LitElement implements Controller {
     .build-description {
       font-size: 0.6rem;
     }
+    .build-button.missile-factory-build:not(:disabled) {
+      background: linear-gradient(155deg, #293524, #161e17);
+      border-color: #8da878;
+    }
+    .factory-specs {
+      color: #c4d3ae;
+      font-size: 9px;
+    }
+    .build-button.missile-factory-build {
+      gap: 3px;
+    }
+    .missile-factory-build > img {
+      width: 30px;
+      height: 30px;
+    }
+    .missile-factory-build .build-name {
+      font-size: 12px;
+      margin-bottom: 0;
+    }
+    @media (max-width: 768px) {
+      .missile-factory-build .build-description:not(.power-requirement) {
+        display: none;
+      }
+      .missile-factory-build .build-name {
+        font-size: 10px;
+      }
+      .factory-specs {
+        font-size: 8px;
+      }
+    }
     .build-row {
       display: flex;
       justify-content: center;
@@ -522,7 +552,10 @@ export class BuildMenu extends LitElement implements Controller {
                   buildableUnit.canUpgrade !== false;
                 return html`
                   <button
-                    class="build-button"
+                    class="build-button ${item.unitType ===
+                    UnitType.MissileFactory
+                      ? "missile-factory-build"
+                      : ""}"
                     @click=${() =>
                       this.sendBuildOrUpgrade(buildableUnit, this.clickedTile)}
                     ?disabled=${!enabled}
@@ -540,9 +573,16 @@ export class BuildMenu extends LitElement implements Controller {
                       ${item.key && translateText(item.key)}
                     </span>
                     <span class="build-description"
-                      >${item.description &&
-                      translateText(item.description)}</span
+                      >${item.unitType === UnitType.MissileFactory
+                        ? "A production line for your missile arsenal"
+                        : item.description &&
+                          translateText(item.description)}</span
                     >
+                    ${item.unitType === UnitType.MissileFactory
+                      ? html`<span class="factory-specs"
+                          >40s build · Level 1 · No building limit</span
+                        >`
+                      : nothing}
                     ${POWER_DEMAND[item.unitType] &&
                     !this.game.config().isUnitDisabled(UnitType.PowerPlant)
                       ? html`<span

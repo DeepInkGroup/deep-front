@@ -48,7 +48,7 @@ function manufacture(
   amount = 1,
 ): void {
   expect(player.queueMissiles(factory.id(), missile, amount)).toBe(true);
-  for (let i = 0; i < MISSILE_PRODUCTION_TICKS[missile]; i++)
+  for (let i = 0; i < MISSILE_PRODUCTION_TICKS[missile] * amount; i++)
     player.advanceMissileProduction();
 }
 describe.each([GameType.Singleplayer, GameType.Private])(
@@ -140,7 +140,7 @@ describe.each([GameType.Singleplayer, GameType.Private])(
         }),
       ).not.toThrow();
     });
-    it("limits simultaneous jobs across factories to 20 and completes all parallel slots at the exact duration", () => {
+    it("limits orders across factories to 20 and runs one production line per factory", () => {
       const a = build(F, 20),
         b = build(F, 50);
       build(UnitType.PowerPlant, 80);
@@ -153,10 +153,32 @@ describe.each([GameType.Singleplayer, GameType.Private])(
       expect(missileStock(alice.missileArsenal(), UnitType.SAMMissile)).toBe(0);
       expect(alice.missileArsenal().jobs).toHaveLength(20);
       alice.advanceMissileProduction();
+      expect(missileStock(alice.missileArsenal(), UnitType.SAMMissile)).toBe(2);
+      expect(alice.missileArsenal().jobs).toHaveLength(18);
+      expect(
+        alice.missileArsenal().jobs.every((j) => j.remainingTicks === 50),
+      ).toBe(true);
+      for (let i = 0; i < 550; i++) alice.advanceMissileProduction();
       expect(missileStock(alice.missileArsenal(), UnitType.SAMMissile)).toBe(
         20,
       );
       expect(alice.missileArsenal().jobs).toHaveLength(0);
+    });
+    it("keeps a newly added missile waiting until the current missile's last 10 seconds finish", () => {
+      const f = build(F, 20);
+      build(UnitType.PowerPlant, 50);
+      expect(alice.queueMissiles(f.id(), UnitType.EMPMissile, 1)).toBe(true);
+      for (let i = 0; i < 100; i++) alice.advanceMissileProduction();
+      expect(alice.missileArsenal().jobs[0].remainingTicks).toBe(100);
+      expect(alice.queueMissiles(f.id(), UnitType.SAMMissile, 1)).toBe(true);
+      for (let i = 0; i < 100; i++) alice.advanceMissileProduction();
+      expect(missileStock(alice.missileArsenal(), UnitType.EMPMissile)).toBe(1);
+      expect(missileStock(alice.missileArsenal(), UnitType.SAMMissile)).toBe(0);
+      expect(alice.missileArsenal().jobs[0].remainingTicks).toBe(50);
+      for (let i = 0; i < 49; i++) alice.advanceMissileProduction();
+      expect(missileStock(alice.missileArsenal(), UnitType.SAMMissile)).toBe(0);
+      alice.advanceMissileProduction();
+      expect(missileStock(alice.missileArsenal(), UnitType.SAMMissile)).toBe(1);
     });
     it("pauses during a shortage without resetting progress or catching up", () => {
       const f = build(F, 20);
@@ -166,12 +188,15 @@ describe.each([GameType.Singleplayer, GameType.Private])(
       const plant = build(UnitType.PowerPlant, 50);
       for (let i = 0; i < 100; i++) alice.advanceMissileProduction();
       expect(alice.missileArsenal().jobs[0].remainingTicks).toBe(100);
+      expect(alice.queueMissiles(f.id(), UnitType.SAMMissile, 1)).toBe(true);
       plant.setUnderConstruction(true);
       for (let i = 0; i < 500; i++) alice.advanceMissileProduction();
       expect(alice.missileArsenal().jobs[0].remainingTicks).toBe(100);
+      expect(alice.missileArsenal().jobs[1].remainingTicks).toBe(50);
       plant.setUnderConstruction(false);
       for (let i = 0; i < 100; i++) alice.advanceMissileProduction();
       expect(missileStock(alice.missileArsenal(), UnitType.EMPMissile)).toBe(1);
+      expect(alice.missileArsenal().jobs[0].remainingTicks).toBe(50);
     });
     it("loses unfinished orders on capture/destruction while retaining completed inventory", () => {
       const f = build(F, 20),

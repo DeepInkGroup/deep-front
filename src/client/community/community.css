@@ -1252,3 +1252,316 @@ profile-page {
     flex: 1 1 100%;
   }
 }
+/* Map Studio: keep the canvas central and the supporting controls compact. */
+.map-editor-shell .studio-steps {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin: 0 0 18px;
+  padding: 12px 0;
+  border-block: 1px solid #343c33;
+  color: #9ba897;
+  font-size: 11px;
+}
+.studio-steps b {
+  color: #d9e4c8;
+  font-size: 10px;
+  margin-right: 7px;
+}
+.map-editor-shell .map-workspace {
+  grid-template-columns: 248px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.map-editor-shell .community-panel {
+  border-color: #363f34;
+  background: #131914;
+  border-radius: 14px;
+}
+.map-editor-shell .map-details {
+  gap: 14px;
+  padding: 18px;
+  background: #161c16;
+  border-color: #363f34;
+}
+.studio-sidebar-title h2 {
+  margin: 5px 0 2px;
+  font-size: 18px;
+}
+.map-editor-shell .studio-eyebrow {
+  color: #b6c4a2;
+}
+.map-editor-shell .map-details label {
+  font-size: 11px;
+  color: #acb7a6;
+  gap: 6px;
+}
+.map-editor-shell input,
+.map-editor-shell textarea,
+.map-editor-shell select {
+  background: #0d130e;
+  border-color: #3e4939;
+  border-radius: 7px;
+  color: #e1e8d7;
+}
+.map-editor-shell input:focus,
+.map-editor-shell textarea:focus,
+.map-editor-shell select:focus {
+  outline-color: #b6c4a2;
+}
+.map-editor-shell .community-button {
+  background: #222d20;
+  border-color: #4b5c40;
+  color: #dce7d0;
+}
+.map-editor-shell .community-button.primary {
+  background: #c0cfa9;
+  border-color: #c0cfa9;
+  color: #161e12;
+}
+.studio-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0;
+  border-block: 1px solid #333d2e;
+  color: #8d9c84;
+  font-size: 11px;
+}
+.studio-checklist .ready {
+  color: #bed3a6;
+}
+.studio-checklist span:last-child {
+  font-size: 10px;
+  line-height: 1.5;
+}
+.map-editor-shell .terrain-panel {
+  padding: 18px;
+  background: #101611;
+  border-color: #394334;
+}
+.map-editor-shell .studio-canvas-heading {
+  margin-bottom: 14px;
+}
+.map-editor-shell .studio-live-badge {
+  color: #bdd0a9;
+  border-color: #425439;
+  background: #1b2518;
+}
+.map-editor-shell .editor-toolbar {
+  background: #1b231b;
+  border-color: #354030;
+  margin-bottom: 9px;
+}
+.map-editor-shell .editor-toolbar button {
+  min-height: 36px;
+  color: #aebca7;
+}
+.map-editor-shell .editor-toolbar button[aria-pressed="true"] {
+  background: #34442c;
+  border-color: #b6c4a2;
+  color: #eff5e8;
+  box-shadow: none;
+}
+.map-editor-shell .editor-view-controls {
+  padding: 10px 0;
+  border-bottom: 1px solid #303b2c;
+}
+.map-editor-shell .editor-view-controls label {
+  font-size: 10px;
+}
+.map-editor-shell .editor-view-controls input[type="range"] {
+  accent-color: #c0cfa9;
+}
+.map-editor-shell .spawn-randomizer {
+  margin: 5px 0 12px;
+  gap: 8px;
+}
+.map-editor-shell .spawn-randomizer > span {
+  flex: 1;
+  min-width: 120px;
+  font-size: 10px;
+}
+.canvas-stage {
+  position: relative;
+  min-width: 0;
+}
+.map-editor-shell .terrain-viewport {
+  height: clamp(360px, 60vh, 820px);
+  max-height: none;
+  border-color: #4b5d44;
+  border-radius: 9px;
+  background: #0c1715;
+}
+.map-editor-shell .terrain-editor {
+  flex-shrink: 0;
+}
+.map-overview {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 150px;
+  padding: 7px;
+  background: #111a13ee;
+  border: 1px solid #687c57;
+  border-radius: 8px;
+  box-shadow: 0 5px 20px #0007;
+}
+.map-overview > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
+  font: 8px system-ui;
+  color: #d3debe;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.map-overview small {
+  letter-spacing: 0;
+  color: #a5b392;
+  font-size: 8px;
+}
+.terrain-overview {
+  width: 100%;
+  aspect-ratio: 4/3;
+  display: block;
+  image-rendering: pixelated;
+  cursor: crosshair;
+  touch-action: none;
+}
+.canvas-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 9px 0;
+  color: #b0bba4;
+  font-size: 10px;
+  border-bottom: 1px solid #303b2c;
+}
+.canvas-coordinates {
+  font-variant-numeric: tabular-nums;
+  color: #d0ddbb;
+  min-width: 100px;
+}
+.canvas-status button {
+  font: inherit;
+  border: 1px solid #46513b;
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: #1e281a;
+  cursor: pointer;
+}
+.canvas-status button[aria-pressed="false"] {
+  opacity: 0.6;
+}
+.terrain-panel:fullscreen .canvas-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.map-editor-shell .terrain-panel:fullscreen .terrain-viewport {
+  height: 100%;
+  max-height: none;
+}
+.terrain-panel:fullscreen .image-map-import {
+  display: none;
+}
+.terrain-panel:fullscreen .editor-bottom {
+  margin-top: 0;
+}
+@media (max-width: 1100px) {
+  .map-editor-shell .map-workspace {
+    grid-template-columns: 1fr;
+  }
+  .map-editor-shell .terrain-panel {
+    order: 1;
+  }
+  .map-editor-shell .map-details {
+    order: 2;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    position: static;
+  }
+  .studio-sidebar-title,
+  .studio-checklist {
+    grid-column: 1/-1;
+  }
+}
+@media (max-width: 600px) {
+  .community-shell.map-editor-shell {
+    padding: 12px 10px 32px;
+  }
+  .map-editor-shell .map-details {
+    display: flex;
+  }
+  .map-editor-shell .terrain-panel {
+    padding: 12px;
+  }
+  .map-editor-shell .studio-steps {
+    gap: 9px 15px;
+    font-size: 10px;
+  }
+  .studio-canvas-heading {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .map-editor-shell .studio-live-badge {
+    font-size: 9px;
+  }
+  .map-editor-shell .editor-toolbar {
+    padding: 8px;
+    gap: 8px;
+  }
+  .map-editor-shell .editor-toolbar button {
+    font-size: 10px;
+    padding: 7px;
+  }
+  .map-editor-shell .terrain-viewport {
+    height: 58vh;
+    min-height: 320px;
+  }
+  .map-overview {
+    width: 110px;
+    bottom: 8px;
+    right: 8px;
+    padding: 5px;
+  }
+  .map-overview small {
+    display: none;
+  }
+  .map-editor-shell .terrain-panel:fullscreen {
+    padding: 8px;
+  }
+  .map-editor-shell .terrain-panel:fullscreen .terrain-viewport {
+    min-height: 0;
+  }
+}
+.fullscreen-focusbar {
+  display: none;
+}
+.fullscreen-focusbar .studio-eyebrow {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  flex: 1 1 160px;
+}
+.terrain-panel:fullscreen .fullscreen-focusbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 10px;
+  flex: 0 0 auto;
+}
+.terrain-panel:fullscreen .editor-view-controls .fullscreen-map-button {
+  display: none;
+}
+.terrain-panel:fullscreen.canvas-focus .editor-toolbar,
+.terrain-panel:fullscreen.canvas-focus .editor-view-controls,
+.terrain-panel:fullscreen.canvas-focus .map-metrics {
+  display: none;
+}
+.terrain-panel:fullscreen.canvas-focus .terrain-viewport {
+  align-items: safe center;
+}

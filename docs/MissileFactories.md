@@ -2,7 +2,7 @@
 
 Missile Factories cost **1M gold**, take **40 seconds** to construct, and consume **30 MW**. Players may build any number; each stays at level 1. Build with **Shift+M** and open **Missiles** above the hotbar to manufacture ammunition.
 
-Production uses **20 simultaneous slots per player**, shared across all factories. Select a completed factory, then order one or five missiles. Orders run in parallel and cost gold immediately. Power shortages pause the factory's progress without losing it. Production resumes when electricity returns; there is no offline catch-up. Disabling Power Plants removes the electricity requirement.
+Production uses **20 queued orders per player**, shared across all factories. Select a completed factory, then order one or five missiles. Each factory processes one missile at a time, in order. The next missile starts after the current missile finishes; separate factories can work independently. Orders cost gold immediately. Power shortages pause the factory's progress without losing it. Production resumes when electricity returns; there is no offline catch-up. Disabling Power Plants removes the electricity requirement.
 
 | Missile                 | Manufacturing cost                                  | Powered production time |
 | ----------------------- | --------------------------------------------------- | ----------------------- |

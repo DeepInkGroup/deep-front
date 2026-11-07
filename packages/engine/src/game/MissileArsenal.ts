@@ -92,6 +92,7 @@ export class MissileArsenal {
     );
     const stock = [...this.state.stock];
     let changed = false;
+    const productionLines = new Set<number>();
     const jobs = this.state.jobs.flatMap((job) => {
       const factory = factories.get(job.factoryId);
       // Unfinished munitions are lost when their factory is destroyed or captured.
@@ -99,6 +100,10 @@ export class MissileArsenal {
         changed = true;
         return [];
       }
+      // One production line per factory. The first surviving order owns the
+      // whole tick, including its completion tick; later orders keep waiting.
+      if (productionLines.has(job.factoryId)) return [job];
+      productionLines.add(job.factoryId);
       if (
         factory.isUnderConstruction() ||
         !game.config().isPowered(factory) ||

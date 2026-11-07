@@ -41,7 +41,7 @@ supply, consumption, shortages and the lobby option to restore the old rules.
 
 [Missile Factories](docs/MissileFactories.md) consume 30 MW and manufacture all
 offensive missiles and SAM/CIWS interceptors. Build with Shift+M and open
-**Missiles** to order, track up to 20 simultaneous jobs and manage inventory.
+**Missiles** to order, track up to 20 queued orders and manage inventory.
 
 Oil Factories use the same coastline placement as Ports. Each player may own three separate buildings, each upgradable to level three. Capturing an extra factory while at the limit destroys it. There is no passive oil income.
 

@@ -78,6 +78,75 @@ try {
   await expect(studio.locator(".terrain-editor")).toBeVisible({
     timeout: 20000,
   });
+  await expect(studio.locator(".terrain-overview")).toBeVisible();
+  await owner
+    .getByRole("combobox", { name: "Map size", exact: true })
+    .selectOption("40");
+  await owner.getByRole("button", { name: "Fit canvas", exact: true }).click();
+  await expect
+    .poll(() => studio.evaluate((p) => p.zoom))
+    .toBeLessThanOrEqual(0.4);
+  const zoom = owner.getByRole("slider", { name: "Editor zoom", exact: true });
+  await zoom.evaluate((input) => {
+    input.value = "2";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  const mini = studio.locator(".terrain-overview"),
+    miniBox = await mini.boundingBox();
+  await mini.click({
+    position: { x: miniBox.width * 0.8, y: miniBox.height * 0.8 },
+  });
+  assert.ok(
+    await studio
+      .locator(".terrain-viewport")
+      .evaluate((v) => v.scrollLeft > 0 && v.scrollTop > 0),
+  );
+  await owner.getByRole("button", { name: "Fit canvas", exact: true }).click();
+  assert.ok(
+    await studio
+      .locator(".terrain-viewport")
+      .evaluate((v) => v.scrollLeft === 0 && v.scrollTop === 0),
+  );
+  await studio.locator(".terrain-viewport").focus();
+  await owner.keyboard.press("]");
+  assert.equal(await studio.evaluate((p) => p.brush), 5);
+  await owner.keyboard.press("[");
+  assert.equal(await studio.evaluate((p) => p.brush), 4);
+  await owner.setViewportSize({ width: 390, height: 1000 });
+  await owner
+    .getByRole("button", { name: "Show map full screen", exact: true })
+    .click();
+  await expect
+    .poll(() => owner.evaluate(() => !!document.fullscreenElement))
+    .toBe(true);
+  await expect(studio.locator(".editor-toolbar")).toBeHidden();
+  await owner.getByRole("button",{name:"Show drawing tools",exact:true}).click();
+  await expect(studio.locator(".editor-toolbar")).toBeVisible();
+  await owner.getByRole("button",{name:"Hide drawing tools",exact:true}).click();
+  await expect(studio.locator(".editor-toolbar")).toBeHidden();
+  await expect
+    .poll(() =>
+      studio.evaluate((p) => {
+        const c = p.querySelector(".terrain-editor").getBoundingClientRect();
+        const v = p.querySelector(".terrain-viewport").getBoundingClientRect();
+        return c.width <= v.width + 3 && c.height <= v.height + 3;
+      }),
+    )
+    .toBe(true);
+  await owner.screenshot({
+    path: "artifacts/map-studio-portrait-fullscreen.png",
+  });
+  await owner
+    .getByRole("button", { name: "Exit full screen map", exact: true })
+    .click();
+  await expect
+    .poll(() => owner.evaluate(() => !!document.fullscreenElement))
+    .toBe(false);
+  await owner.setViewportSize({ width: 1440, height: 1100 });
+  await owner
+    .getByRole("combobox", { name: "Map size", exact: true })
+    .selectOption("16");
+  await owner.getByRole("button", { name: "Fit canvas", exact: true }).click();
   await studio.locator(".image-map-import summary").click();
   const upload = owner.getByLabel("Upload map image", { exact: true });
   await upload.setInputFiles({
@@ -197,6 +266,18 @@ try {
     .poll(() => owner.evaluate(() => !!document.fullscreenElement))
     .toBe(true);
   await owner.screenshot({ path: "artifacts/image-import-fullscreen.png" });
+  assert.ok(
+    await studio.evaluate((p) => {
+      const canvas = p.querySelector(".terrain-editor").getBoundingClientRect();
+      const viewport = p
+        .querySelector(".terrain-viewport")
+        .getBoundingClientRect();
+      return (
+        canvas.width <= viewport.width + 3 &&
+        canvas.height <= viewport.height + 3
+      );
+    }),
+  );
   await owner
     .getByRole("button", { name: "Exit full screen map", exact: true })
     .click();

@@ -199,7 +199,7 @@
       "mirv": "Huge explosion, only targets selected player",
       "missile_silo": "Used to launch nukes",
       "oil_factory": "Coastal oil shipping · max 3 factories · 2 / 3 / 5 tankers (L1–3). Deliveries earn 100K–250K; lost tankers rebuild in 150s.",
-      "missile_factory": "Manufactures offensive missiles and air-defense interceptors. 30 MW, level 1, unlimited buildings. Up to 20 simultaneous orders per player; production pauses without electricity. Open the Missiles panel to manage stock.",
+      "missile_factory": "Manufactures offensive missiles and air-defense interceptors. 30 MW, level 1, unlimited buildings. Up to 20 queued orders per player; each factory produces one missile at a time and pauses without electricity. Open the Missiles panel to manage stock.",
       "power_plant": "Supplies 100 MW per level. Cities / Factories / Oil Factories / Copper Mines need 20 / 30 / 40 / 25 MW per level. Missile Factories need 30 MW. Unlimited buildings and levels; disabling this unit removes power requirements.",
       "port": "Sends trade ships to generate gold",
       "sam_launcher": "Defends against incoming nukes using manufactured air-defense interceptors.",

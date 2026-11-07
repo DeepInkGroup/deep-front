@@ -52,7 +52,10 @@ export class CommunityPage extends LitElement {
   @state() private draft: MapDraft = blankDraft();
   @state() private zoom = 1;
   @state() private mapFullscreen = false;
+  @state() private compactTools = false;
   @state() private grid = false;
+  @state() private overview = true;
+  private firstCanvasFit = true;
   @state() private paintMode: PaintMode = "brush";
   @state() private squareBrush = false;
   @state() private tool = 1;
@@ -117,6 +120,8 @@ export class CommunityPage extends LitElement {
     this.mapFullscreen =
       document.fullscreenElement ===
       this.querySelector<HTMLElement>(".terrain-panel");
+    this.compactTools = this.mapFullscreen;
+    void this.updateComplete.then(() => this.fitCanvas());
   };
   connectedCallback() {
     super.connectedCallback();
@@ -126,6 +131,7 @@ export class CommunityPage extends LitElement {
     window.addEventListener("keydown", this.editorKeyDown);
     window.addEventListener("keyup", this.editorKeyUp);
     window.addEventListener("blur", this.editorKeyUp);
+    window.addEventListener("resize", this.drawOverview);
     this.dashboardTimer = setInterval(() => {
       if (
         this.user &&
@@ -145,13 +151,66 @@ export class CommunityPage extends LitElement {
     window.removeEventListener("keydown", this.editorKeyDown);
     window.removeEventListener("keyup", this.editorKeyUp);
     window.removeEventListener("blur", this.editorKeyUp);
+    window.removeEventListener("resize", this.drawOverview);
     clearInterval(this.dashboardTimer);
     this.clearImageImport();
   }
   updated() {
     this.draw();
     this.drawImageImport();
+    if (
+      this.firstCanvasFit &&
+      this.querySelector<HTMLElement>(".terrain-viewport")?.clientWidth
+    ) {
+      this.firstCanvasFit = false;
+      this.fitCanvas();
+    }
   }
+  private fitCanvas() {
+    const viewport = this.querySelector<HTMLElement>(".terrain-viewport");
+    if (!viewport?.clientWidth || !viewport.clientHeight) return;
+    const fit = this.mapFullscreen
+      ? Math.min(1, (viewport.clientWidth * 3) / (viewport.clientHeight * 4))
+      : Math.min(1, (viewport.clientHeight * 4) / (viewport.clientWidth * 3));
+    this.zoom = Math.max(0.1, Math.min(4, (16 / this.draft.scale) * fit));
+    viewport.scrollLeft = 0;
+    viewport.scrollTop = 0;
+  }
+  private drawOverview = () => {
+    const mini = this.querySelector<HTMLCanvasElement>(".terrain-overview");
+    const canvas = this.querySelector<HTMLCanvasElement>(".terrain-editor");
+    const viewport = this.querySelector<HTMLElement>(".terrain-viewport");
+    const ctx = mini?.getContext("2d");
+    if (!mini || !canvas || !viewport || !ctx || !this.terrainCache) return;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(this.terrainCache, 0, 0, mini.width, mini.height);
+    const c = canvas.getBoundingClientRect(),
+      v = viewport.getBoundingClientRect();
+    const left = Math.max(0, (v.left - c.left) / c.width);
+    const top = Math.max(0, (v.top - c.top) / c.height);
+    ctx.strokeStyle = "#f5e3a4";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(
+      left * mini.width + 1,
+      top * mini.height + 1,
+      Math.min(1 - left, viewport.clientWidth / c.width) * mini.width - 2,
+      Math.min(1 - top, viewport.clientHeight / c.height) * mini.height - 2,
+    );
+  };
+  private navigateOverview = (event: PointerEvent) => {
+    event.preventDefault();
+    const mini = event.currentTarget as HTMLCanvasElement;
+    const viewport = this.querySelector<HTMLElement>(".terrain-viewport")!;
+    const canvas = this.querySelector<HTMLCanvasElement>(".terrain-editor")!;
+    const rect = mini.getBoundingClientRect();
+    viewport.scrollLeft =
+      ((event.clientX - rect.left) / rect.width) * canvas.clientWidth -
+      viewport.clientWidth / 2;
+    viewport.scrollTop =
+      ((event.clientY - rect.top) / rect.height) * canvas.clientHeight -
+      viewport.clientHeight / 2;
+    this.drawOverview();
+  };
   private key() {
     return `deepfront.map-draft.${this.user?.id}`;
   }
@@ -720,6 +779,12 @@ export class CommunityPage extends LitElement {
       ctx.strokeText(String(i + 1), (n.x + 0.5) * s + 6, (n.y + 0.5) * s - 4);
       ctx.fillText(String(i + 1), (n.x + 0.5) * s + 6, (n.y + 0.5) * s - 4);
     }
+    this.drawOverview();
+    const coordinates = this.querySelector(".canvas-coordinates");
+    if (coordinates)
+      coordinates.textContent = this.hoverPoint
+        ? `X ${this.hoverPoint.x + 1} · Y ${this.hoverPoint.y + 1}`
+        : `${this.gridWidth} × ${this.gridHeight} drawing grid`;
   }
   private point(event: PointerEvent) {
     const rect = (
@@ -778,6 +843,19 @@ export class CommunityPage extends LitElement {
       return;
     }
     if (event.ctrlKey || event.metaKey || event.altKey) return;
+    if (event.key.toLowerCase() === "0") {
+      event.preventDefault();
+      this.fitCanvas();
+      return;
+    }
+    if (event.key === "[" || event.key === "]") {
+      event.preventDefault();
+      this.brush = Math.max(
+        1,
+        Math.min(32, this.brush + (event.key === "]" ? 1 : -1)),
+      );
+      return;
+    }
     const modes: Record<string, PaintMode> = {
       b: "brush",
       f: "fill",
@@ -802,7 +880,7 @@ export class CommunityPage extends LitElement {
       x = event.clientX - rect.left,
       y = event.clientY - rect.top;
     const old = this.zoom,
-      next = Math.max(0.25, Math.min(4, old * (event.deltaY < 0 ? 1.25 : 0.8)));
+      next = Math.max(0.1, Math.min(4, old * (event.deltaY < 0 ? 1.25 : 0.8)));
     const left = ((viewport.scrollLeft + x) * next) / old - x,
       top = ((viewport.scrollTop + y) * next) / old - y;
     this.zoom = Number(next.toFixed(3));
@@ -1157,9 +1235,17 @@ export class CommunityPage extends LitElement {
   }
   private editor() {
     const stats = terrainStats(this.draft);
-    return html`<form class="map-workspace" @submit=${this.publish}>
+    return html`<div class="studio-steps" aria-label="Map creation steps">
+        <span><b>01</b> Shape your terrain</span
+        ><span><b>02</b> Place nation spawns</span
+        ><span><b>03</b> Publish for review</span>
+      </div>
+      <form class="map-workspace" @submit=${this.publish}>
         <div class="community-panel map-details">
-          <h2>Map details</h2>
+          <div class="studio-sidebar-title">
+            <span class="studio-eyebrow">YOUR WORLD</span>
+            <h2>Map details</h2>
+          </div>
           <label
             >Map name<input
               maxlength="60"
@@ -1189,7 +1275,7 @@ export class CommunityPage extends LitElement {
               placeholder="What makes this battlefield special?"
             ></textarea></label
           ><label
-            >Terrain detail<select
+            >Drawing detail<select
               aria-label="Terrain detail"
               .value=${String(this.gridWidth)}
               @change=${(e: Event) => {
@@ -1246,6 +1332,17 @@ export class CommunityPage extends LitElement {
               </option>
             </select></label
           >
+          <div class="studio-checklist" aria-label="Map readiness">
+            <span class=${stats.landPercent ? "ready" : ""}
+              >${stats.landPercent ? "✓" : "○"}
+              ${stats.landPercent
+                ? "Terrain ready"
+                : "Paint land to begin"}</span
+            ><span class=${this.draft.nations.length ? "ready" : ""}
+              >${this.draft.nations.length ? "✓" : "○"}
+              ${this.draft.nations.length} nation spawns</span
+            ><span>Private draft → admin review → playable map</span>
+          </div>
           <div class="draft-actions">
             <button
               type="button"
@@ -1271,13 +1368,42 @@ export class CommunityPage extends LitElement {
             game.
           </p>
         </div>
-        <div class="community-panel terrain-panel">
+        <div
+          class="community-panel terrain-panel ${this.compactTools
+            ? "canvas-focus"
+            : ""}"
+        >
+          <div class="fullscreen-focusbar">
+            <span class="studio-eyebrow"
+              >WORLD BUILDER · ${this.draft.name || "Untitled map"}</span
+            >
+            <button
+              type="button"
+              class="community-button small"
+              aria-expanded=${!this.compactTools}
+              @click=${async () => {
+                this.compactTools = !this.compactTools;
+                await this.updateComplete;
+                this.fitCanvas();
+              }}
+            >
+              ${this.compactTools ? "Show drawing tools" : "Hide drawing tools"}
+            </button>
+            <button
+              type="button"
+              class="community-button small"
+              aria-label="Exit full screen map"
+              @click=${() => void this.toggleMapFullscreen()}
+            >
+              Exit full screen
+            </button>
+          </div>
           <div class="studio-canvas-heading">
             <div>
               <span class="studio-eyebrow">WORLD BUILDER</span>
               <h2>${this.draft.name || "Your blank canvas"}</h2>
             </div>
-            <span class="studio-live-badge">Local draft</span>
+            <span class="studio-live-badge">● Autosaved on this device</span>
           </div>
           ${this.renderImageImport()}
           <div class="map-metrics" aria-label="Map statistics">
@@ -1323,12 +1449,14 @@ export class CommunityPage extends LitElement {
                 @change=${(e: Event) =>
                   (this.brush = Number((e.target as HTMLSelectElement).value))}
               >
-                ${[1, 4, 8, 12].map(
-                  (n) =>
-                    html`<option value=${n} ?selected=${this.brush === n}>
-                      ${n} ${n === 1 ? "cell" : "cells"}
-                    </option>`,
-                )}
+                ${[...new Set([1, 4, 8, 12, 16, 24, 32, this.brush])]
+                  .sort((a, b) => a - b)
+                  .map(
+                    (n) =>
+                      html`<option value=${n} ?selected=${this.brush === n}>
+                        ${n} ${n === 1 ? "cell" : "cells"}
+                      </option>`,
+                  )}
               </select></label
             >
           </div>
@@ -1364,7 +1492,7 @@ export class CommunityPage extends LitElement {
               ><input
                 aria-label="Editor zoom"
                 type="range"
-                min="0.25"
+                min="0.1"
                 max="4"
                 step="0.05"
                 .value=${String(this.zoom)}
@@ -1374,11 +1502,27 @@ export class CommunityPage extends LitElement {
             <button
               type="button"
               class="community-button small"
-              @click=${() => (this.zoom = 16 / this.draft.scale)}
+              @click=${() => this.fitCanvas()}
             >
               Fit canvas
             </button>
-            <label class="grid-toggle"
+            <button
+              type="button"
+              class="community-button small"
+              aria-label="Zoom out"
+              ?disabled=${this.zoom <= 0.1}
+              @click=${() => (this.zoom = Math.max(0.1, this.zoom / 1.25))}
+            >
+              −</button
+            ><button
+              type="button"
+              class="community-button small"
+              aria-label="Zoom in"
+              ?disabled=${this.zoom >= 4}
+              @click=${() => (this.zoom = Math.min(4, this.zoom * 1.25))}
+            >
+              +</button
+            ><label class="grid-toggle"
               ><input
                 type="checkbox"
                 .checked=${this.grid}
@@ -1438,30 +1582,69 @@ export class CommunityPage extends LitElement {
                   placeholder="Name a nation, then click the map"
               /></label>`
             : nothing}
-          <div
-            class="terrain-viewport"
-            tabindex="0"
-            aria-label="Map canvas. Scroll to pan when zoomed."
-            @wheel=${this.zoomAt}
-          >
-            <canvas
-              class="terrain-editor"
-              style=${this.mapFullscreen
-                ? `height:${(this.zoom * this.draft.scale * 100) / 16}%;width:auto;max-width:none`
-                : `width:${(this.zoom * this.draft.scale * 100) / 16}%;max-width:none`}
-              width="1024"
-              height="768"
-              aria-label="Map terrain editor. Drag to paint terrain."
-              @pointerdown=${this.pointerDown}
-              @pointermove=${this.pointerMove}
-              @pointerup=${this.pointerUp}
-              @pointercancel=${this.pointerCancel}
-              @pointerleave=${this.pointerLeave}
-            ></canvas>
+          <div class="canvas-stage">
+            <div
+              class="terrain-viewport"
+              tabindex="0"
+              aria-label="Map canvas. Scroll to pan when zoomed."
+              @wheel=${this.zoomAt}
+              @scroll=${this.drawOverview}
+            >
+              <canvas
+                class="terrain-editor"
+                style=${this.mapFullscreen
+                  ? `height:${(this.zoom * this.draft.scale * 100) / 16}%;width:auto;max-width:none`
+                  : `width:${(this.zoom * this.draft.scale * 100) / 16}%;max-width:none`}
+                width="1024"
+                height="768"
+                aria-label="Map terrain editor. Drag to paint terrain."
+                @pointerdown=${this.pointerDown}
+                @pointermove=${this.pointerMove}
+                @pointerup=${this.pointerUp}
+                @pointercancel=${this.pointerCancel}
+                @pointerleave=${this.pointerLeave}
+              ></canvas>
+            </div>
+            ${this.overview
+              ? html`<div class="map-overview">
+                  <span>OVERVIEW <small>Click to navigate</small></span
+                  ><canvas
+                    class="terrain-overview"
+                    width="192"
+                    height="144"
+                    aria-label="Map overview. Click to navigate."
+                    @pointerdown=${this.navigateOverview}
+                  ></canvas>
+                </div>`
+              : nothing}
+          </div>
+          <div class="canvas-status">
+            <span
+              class="canvas-coordinates"
+              aria-label="Canvas coordinates"
+            ></span
+            ><span
+              >${this.tool === 7
+                ? "Pan · drag to move"
+                : this.tool === 4
+                  ? "Nation spawn · click on land"
+                  : this.tool === 6
+                    ? "River / canal · drag through land"
+                    : ["Water", "Plains", "Hills"][this.tool] +
+                      " · " +
+                      this.paintMode}</span
+            ><button
+              type="button"
+              aria-pressed=${this.overview}
+              @click=${() => (this.overview = !this.overview)}
+            >
+              Overview
+            </button>
           </div>
           <div class="editor-bottom">
             <span class="community-muted"
-              >Drag to paint · Space + drag to pan · Ctrl + scroll to zoom</span
+              >Space + drag to pan · Ctrl + scroll to zoom · 0 to fit · [ ]
+              brush size</span
             ><button
               type="button"
               class="community-button small"

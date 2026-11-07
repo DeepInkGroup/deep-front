@@ -188,31 +188,16 @@ async function missileSequence(page, y, observer) {
   await panel.getByRole("button", { name: /^Missiles/ }).click();
   await expect(panel.locator("section")).toBeVisible();
   await expect(panel.locator("section")).toContainText("No electricity");
-  for (let i = 0; i < 5; i++)
-    await panel
-      .getByRole("button", { name: "Produce 1 EMP Missile", exact: true })
-      .click();
-  for (let i = 0; i < 3; i++)
-    await panel
-      .getByRole("button", {
-        name: "Produce 5 Air-defense interceptor",
-        exact: true,
-      })
-      .click();
-  await expect.poll(async () => (await arsenal(page)).jobs.length).toBe(20);
-  await expect(
-    panel.getByRole("button", { name: "Produce 1 EMP Missile", exact: true }),
-  ).toBeDisabled();
-  await page.waitForTimeout(2500);
-  assert.equal(
-    (await arsenal(page)).jobs.find((j) => j.missile === "EMP Missile")
-      .remainingTicks,
-    200,
-  );
+  await panel
+    .getByRole("button", { name: "Produce 1 EMP Missile", exact: true })
+    .click();
+  await expect.poll(async () => (await arsenal(page)).jobs.length).toBe(1);
+  await page.waitForTimeout(1800);
+  assert.equal((await arsenal(page)).jobs[0].remainingTicks, 200);
   if (observer)
     await expect
       .poll(async () => (await arsenal(observer, owner)).jobs.length)
-      .toBe(20);
+      .toBe(1);
   await page.screenshot({
     path:
       "artifacts/missile-" +
@@ -234,29 +219,63 @@ async function missileSequence(page, y, observer) {
   );
   const plant = await expandForBuilding(page, y, "Power Plant");
   await purchase(page, "Power Plant", plant);
+  await panel.getByRole("button", { name: /^Missiles/ }).click();
   await expect
-    .poll(async () => (await arsenal(page)).stock[6], { timeout: 15000 })
-    .toBe(15);
+    .poll(async () => (await arsenal(page)).jobs[0]?.remainingTicks, {
+      timeout: 20000,
+    })
+    .toBeLessThanOrEqual(100);
+  await panel
+    .getByRole("button", {
+      name: "Produce 1 Air-defense interceptor",
+      exact: true,
+    })
+    .click();
+  await expect.poll(async () => (await arsenal(page)).jobs.length).toBe(2);
+  assert.equal((await arsenal(page)).jobs[1].remainingTicks, 50);
+  await panel.getByRole("button", { name: "Queue (2)", exact: true }).click();
+  await expect(panel.locator("ol")).toContainText("Starts in");
+  await page.waitForTimeout(1500);
+  assert.equal((await arsenal(page)).jobs[1].remainingTicks, 50);
+  assert.equal((await arsenal(page)).stock[6], 0);
+  if (observer) {
+    await expect
+      .poll(async () => (await arsenal(observer, owner)).jobs.length)
+      .toBe(2);
+    assert.equal((await arsenal(observer, owner)).jobs[1].remainingTicks, 50);
+  }
+  await page.screenshot({
+    path:
+      "artifacts/missile-" + (observer ? "multiplayer" : "solo") + "-fifo.png",
+  });
   await expect
-    .poll(async () => (await arsenal(page)).stock[5], { timeout: 30000 })
-    .toBe(5);
+    .poll(async () => (await arsenal(page)).stock[5], { timeout: 15000 })
+    .toBe(1);
+  assert.equal((await arsenal(page)).stock[6], 0);
+  await expect
+    .poll(async () => (await arsenal(page)).stock[6], { timeout: 10000 })
+    .toBe(1);
   if (observer)
     await expect
       .poll(async () => (await arsenal(observer, owner)).stock[5])
-      .toBe(5);
+      .toBe(1);
+  await panel.getByRole("button", { name: "Close missile production" }).click();
   await page.evaluate(async (tile) => {
     const menu = document.querySelector("build-menu");
     const [bu] = await menu.game.myPlayer().buildables(tile, ["EMP Missile"]);
-    if (bu.cost !== 0n || bu.inventory !== 5 || bu.canBuild === false)
+    if (bu.cost !== 0n || bu.inventory !== 1 || bu.canBuild === false)
       throw Error("Stored missile not launchable");
     menu.sendBuildOrUpgrade(bu, tile);
   }, target);
-  await expect.poll(async () => (await arsenal(page)).stock[5]).toBe(4);
+  await expect.poll(async () => (await arsenal(page)).stock[5]).toBe(0);
   if (observer)
     await expect
       .poll(async () => (await arsenal(observer, owner)).stock[5])
-      .toBe(4);
+      .toBe(0);
   await panel.getByRole("button", { name: /^Missiles/ }).click();
+  await panel
+    .getByRole("button", { name: "Missile types", exact: true })
+    .click();
   await expect(panel.locator("section")).toContainText(
     "Air-defense interceptor",
   );
@@ -333,7 +352,7 @@ try {
   await missileSequence(solo, 384);
   await solo.context().close();
   console.log(
-    "Solo production, shared cap, power pause/recovery, inventory launch and responsive UI passed",
+    "Solo FIFO production, power pause/recovery, inventory launch and responsive UI passed",
   );
   const host = await player("MissileHost"),
     guest = await player("MissileGuest");
